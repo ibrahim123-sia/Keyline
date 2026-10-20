@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Separate build folder for the e2e server, so it can run next to `pnpm dev`.
   distDir: process.env.NEXT_DIST_DIR || ".next",
+  experimental: {
+    // The e2e dev server always starts cold: a restored dev cache next to files edited since
+    // (e.g. by the formatter) sent the browser into an endless reload loop.
+    turbopackFileSystemCacheForDev: process.env.NEXT_DIST_DIR !== ".next-e2e",
+  },
   turbopack: {
     rules: {
       "*.css": {

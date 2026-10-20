@@ -53,7 +53,7 @@ Done-when checklist (from `15-build-phases.md`):
 Done-when checklist:
 
 - [ ] Every master data type can be created, edited, ordered, merged and safely deleted
-- [ ] Uploads go to R2 and show in the media library with alt text
+- [x] Uploads go to R2 and show in the media library with alt text (e2e on the local-disk driver; the R2 driver shares the same interface, and a live R2 check waits for the Cloudflare account)
 - [ ] Settings validate and save; contrast checker works
 - [ ] Audit log shows every change with before/after
 
@@ -76,11 +76,12 @@ Done-when checklist:
 - Maps and locations: MapLibre base map (lazy, loads when visible), pin picker (click, drag, paste coordinates, address search), polygon editor (terra-draw); Google Maps Platform behind an interface (geocoding, Places nearby, Routes matrix, test connection). Locations tree (country -> building) with level and no-cycle rules, centre point, boundary, featured flag, SEO fields; safe delete; slug changes create 301s (`seo_redirects`, no chains or loops). e2e.
 - POIs: reusable admin DataTable (URL-driven paging/sort/search, filters, column picker, bulk actions, saved views); places with map point, bulk show/hide/delete, "Import from Google" by POI type around a location with duplicates skipped. Integration + e2e.
 - Media pipeline: storage drivers (R2 binding, local disk, memory for tests); signed single-use upload links; `media.process` job (real format from the bytes, HEIC fallback, lossless metadata strip, display dimensions, placeholder colour, 100 MP limit); `/media/<key>` with immutable caching, Range, ETag, sandboxing CSP and resized variants; usage tracking (`used_count` + "used in" list) wired into settings and locations; safe bulk delete, replace (same id, new key), crops, folders; hourly clean-up of abandoned uploads and a nightly usage recount. 108 Vitest tests passing.
+- Media library screen: folders (nested, counts, new folder), search, type/usage/alt filters, sort, grid and list views, drag-and-drop and multi-file upload queue (progress, HEIC converted in the browser, placeholder colour), bulk move and delete (unused only), details panel (alt text, caption, folder, crops per preset with keyboard support, "used in" links, replace, download, copy link). MediaPicker dialog (search, folders, upload, pick), first used for share images in the SEO fields. e2e covers upload -> stripped GPS -> alt text -> crop -> pick as a location share image -> "used in" -> bulk delete keeps it.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
 
-- Phase 2, item 5: media library screen (grid/list, folders, upload queue with HEIC conversion, details panel with alt text, crops, usage, replace, delete) and the MediaPicker.
+- Phase 2, item 4: developers (logo, description, website, year, SEO, safe delete, merge).
 
 ## Next
 
@@ -118,6 +119,8 @@ Done-when checklist:
 27. **Placeholder colour** is measured in the browser during upload (a 16x16 downscale averaged); in production the job falls back to a 1x1 Cloudflare Images thumbnail.
 28. **Uploadable types:** JPEG, PNG, WebP, GIF, AVIF, HEIC (converted), SVG and PDF, up to the limit in Settings -> General (default 20 MB) and 100 megapixels. Video is linked by URL (05: `video_url`), not uploaded.
 29. **`sharp` is a dev dependency** (tests only, same version Next ships) to build real photos with GPS metadata and check that stripped files still decode.
+30. **Admin toasts sit bottom-left.** Save buttons are right-aligned and side panels open on the right, so toasts there covered form fields or actions.
+31. **The e2e dev server starts cold** (`turbopackFileSystemCacheForDev` off for `.next-e2e`): a restored dev cache next to files edited since (e.g. by the formatter) sent the browser into an endless reload loop. CI runs e2e against a production build anyway.
 
 ## Data model changes (vs `05-data-model.md`)
 

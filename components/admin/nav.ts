@@ -49,7 +49,7 @@ export const adminNav: AdminNavGroup[] = [
     items: [
       { key: "properties", href: "/admin/properties", icon: HomeIcon, enabled: false },
       { key: "projects", href: "/admin/projects", icon: BuildingIcon, enabled: false },
-      { key: "media", href: "/admin/media", icon: ImageIcon, enabled: false },
+      { key: "media", href: "/admin/media", icon: ImageIcon, enabled: true },
     ],
   },
   {

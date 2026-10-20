@@ -83,6 +83,7 @@ export type MediaItem = {
   usedCount: number;
   crops: Partial<Record<CropPreset, CropRect>>;
   createdAt: string;
+  updatedAt: string;
 };
 
 type Row = typeof media.$inferSelect;
@@ -106,6 +107,7 @@ export function toMediaItem(r: Row): MediaItem {
     usedCount: r.usedCount,
     crops: r.crops ?? {},
     createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString(),
   };
 }
 

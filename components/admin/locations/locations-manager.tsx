@@ -473,6 +473,7 @@ export function LocationsManager({
                 seoDescription: draft.seoDescription,
                 canonicalUrl: draft.canonicalUrl,
                 noindex: draft.noindex,
+                ogImageId: draft.ogImageId,
               }}
               onChange={(patch) => set(patch)}
               urlPrefix={parentPrefix}

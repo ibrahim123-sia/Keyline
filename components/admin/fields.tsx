@@ -85,6 +85,7 @@ export function TextInputField({
   autoComplete,
   maxLength,
   disabled,
+  suggestions,
   ...base
 }: Base & {
   value: string;
@@ -94,10 +95,20 @@ export function TextInputField({
   autoComplete?: string;
   maxLength?: number;
   disabled?: boolean;
+  /** Values offered while typing (a native datalist). */
+  suggestions?: string[];
 }) {
   const id = useId();
+  const listId = `${id}-suggestions`;
   return (
     <AdminField {...base} htmlFor={id}>
+      {suggestions && suggestions.length > 0 && (
+        <datalist id={listId}>
+          {suggestions.map((s) => (
+            <option key={s} value={s} />
+          ))}
+        </datalist>
+      )}
       <Input
         id={id}
         type={type}
@@ -106,6 +117,7 @@ export function TextInputField({
         autoComplete={autoComplete}
         maxLength={maxLength}
         disabled={disabled}
+        list={suggestions && suggestions.length > 0 ? listId : undefined}
         aria-invalid={base.error ? true : undefined}
         onChange={(e) => onChange(e.target.value)}
       />

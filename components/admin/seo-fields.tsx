@@ -2,6 +2,7 @@
 
 import { cn } from "cn";
 import { SwitchField, TextInputField, TextareaField } from "./fields";
+import { MediaPicker } from "./media/media-picker";
 
 export type SeoValues = {
   slug: string;
@@ -9,6 +10,8 @@ export type SeoValues = {
   seoDescription: string | null;
   canonicalUrl: string | null;
   noindex: boolean;
+  /** Share image; omit to hide the picker. */
+  ogImageId?: string | null;
 };
 
 /** Rough pixel width of a Google title (≈ 580 px fits on desktop). */
@@ -116,6 +119,15 @@ export function SeoFields({
           {description || "Google will pick text from the page."}
         </p>
       </div>
+      {values.ogImageId !== undefined && (
+        <MediaPicker
+          label="Share image"
+          description="Shown when the page is shared on WhatsApp or social media. The share crop (1200×630) is used."
+          value={values.ogImageId}
+          onChange={(id) => onChange({ ogImageId: id })}
+          error={errorFor?.("ogImageId")}
+        />
+      )}
       <TextInputField
         label="Canonical URL"
         description="Leave empty to use this page's own address."
