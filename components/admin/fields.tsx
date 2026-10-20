@@ -316,14 +316,18 @@ export function ListField({
   onChange,
   placeholder = "Add an item",
   max = 50,
+  suggestions,
   ...base
 }: Base & {
   value: string[];
   onChange: (v: string[]) => void;
   placeholder?: string;
   max?: number;
+  /** Offered while typing (a native datalist); anything else can still be added. */
+  suggestions?: string[];
 }) {
   const id = useId();
+  const listId = `${id}-suggestions`;
   const [draft, setDraft] = useState("");
   const add = () => {
     const v = draft.trim();
@@ -355,10 +359,20 @@ export function ListField({
           </ul>
         )}
         <div className="flex gap-2">
+          {suggestions && (
+            <datalist id={listId}>
+              {suggestions
+                .filter((x) => !value.includes(x))
+                .map((x) => (
+                  <option key={x} value={x} />
+                ))}
+            </datalist>
+          )}
           <Input
             id={id}
             value={draft}
             placeholder={placeholder}
+            list={suggestions ? listId : undefined}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {

@@ -80,7 +80,7 @@ export const adminNav: AdminNavGroup[] = [
       { key: "poiTypes", href: "/admin/setup/poi-types", icon: WrenchIcon, enabled: true },
       { key: "pois", href: "/admin/setup/pois", icon: MapPinIcon, enabled: true },
       { key: "developers", href: "/admin/setup/developers", icon: BuildingIcon, enabled: true },
-      { key: "agents", href: "/admin/setup/agents", icon: UserRoundIcon, enabled: false },
+      { key: "agents", href: "/admin/setup/agents", icon: UserRoundIcon, enabled: true },
     ],
   },
   {

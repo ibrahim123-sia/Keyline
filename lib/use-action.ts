@@ -45,5 +45,11 @@ export function useAction<I, O>(
   );
 
   const errorFor = useCallback((field: string) => fieldErrors[field]?.[0], [fieldErrors]);
-  return { run, pending, fieldErrors, errorFor, setFieldErrors };
+  /** First error for a field or anything inside it ("workingHours" covers "workingHours.mon.0"). */
+  const errorUnder = useCallback(
+    (prefix: string) =>
+      Object.entries(fieldErrors).find(([k]) => k === prefix || k.startsWith(`${prefix}.`))?.[1][0],
+    [fieldErrors],
+  );
+  return { run, pending, fieldErrors, errorFor, errorUnder, setFieldErrors };
 }

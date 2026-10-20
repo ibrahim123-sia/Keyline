@@ -157,7 +157,11 @@ export const mergeDeveloper = adminAction(
       const from = await findDeveloper(tx, fromId);
       const into = await findDeveloper(tx, intoId);
       const usage = (await developerUsage(tx, [fromId])).get(fromId)!;
-      for (const ref of developerRefs()) await ref.merge(tx, fromId, intoId);
+      for (const ref of developerRefs()) {
+        // A reference that cannot be re-pointed would be left dangling: a programming error.
+        if (!ref.merge) throw new Error(`Developer usage "${ref.label}" has no merge`);
+        await ref.merge(tx, fromId, intoId);
+      }
       await tx.delete(developers).where(eq(developers.id, fromId));
       const [oldPath] = publicPaths.developer!(from.slug);
       const [newPath] = publicPaths.developer!(into.slug);
