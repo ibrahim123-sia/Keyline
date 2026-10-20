@@ -52,10 +52,10 @@ Done-when checklist (from `15-build-phases.md`):
 
 Done-when checklist:
 
-- [ ] Every master data type can be created, edited, ordered, merged and safely deleted
+- [x] Every master data type can be created, edited, ordered, merged and safely deleted (property types, facilities, badges, POI types; developers merge; locations order and safe delete)
 - [x] Uploads go to R2 and show in the media library with alt text (e2e on the local-disk driver; the R2 driver shares the same interface, and a live R2 check waits for the Cloudflare account)
 - [x] Settings validate and save; contrast checker works (integration + e2e)
-- [ ] Audit log shows every change with before/after
+- [x] Audit log shows every change with before/after (viewer with filters; integration + e2e)
 
 ## Done
 
@@ -84,11 +84,12 @@ Done-when checklist:
 - Leads and CRM settings: pipeline stage editor (drag to reorder, name/colour/kind, delete that moves leads to another stage, ready-made default pipeline for a fresh install, always keeps an open, a won and a lost stage once complete) and the lead rules form (types, lost reasons, response alert, assignment rule, duplicate matching, follow-up, when sign-ups and newsletter subscribers become leads, automatic first reply, portal inboxes). Integration + e2e.
 - Integrations settings: Google Maps Platform, WhatsApp Cloud API, Resend, Google Calendar, analytics and pixels (ID formats checked), social ad lead forms, property portals, AI provider (Anthropic or the built-in test provider, optional Cloudflare AI Gateway). Keys save on their own, encrypted, shown masked, replaceable and removable; webhook tokens can be generated (shown once); webhook addresses with copy buttons; "Test connection" for Maps, Resend, WhatsApp and AI with the last result and error kept on the key. Integration (fetch stubbed) + e2e.
 - Admin users (Settings): list with status (active, invite sent, deactivated, two-step on/off, read-only demo) and last sign-in; invite by email (a 7-day "set your password" link through Better Auth's reset flow, then two-step setup), resend invite, deactivate (signs them out at once; never the last active admin) and reactivate, reset another admin's two-step verification; personal API tokens for MCP clients (read or read + propose, expiry, shown once, stored as SHA-256, revocable). All sensitive actions need a recent sign-in and offer "sign in again". Integration + e2e (invite email -> set password -> admin sign-in).
+- Audit log viewer (Settings): newest first, URL-driven filters (who, module, action words, date range), readable action names, details panel with every changed field before and after, links to the item, truncated IP and browser. Integration + e2e.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
 
-- Phase 2, item 7: audit log viewer and Jobs page.
+- Phase 2, item 7: Jobs page (recent runs, failures, retry, cron tasks).
 
 ## Next
 
