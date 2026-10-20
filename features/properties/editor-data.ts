@@ -12,12 +12,7 @@ import {
 import { media } from "@/db/schema/media";
 import { agents } from "@/db/schema/people";
 import { projectUnitTypes, projects } from "@/db/schema/projects";
-import {
-  priceHistory,
-  propertyBadges,
-  propertyDailyStats,
-  propertyPois,
-} from "@/db/schema/properties";
+import { priceHistory, propertyBadges, propertyDailyStats } from "@/db/schema/properties";
 import { auditLog } from "@/db/schema/system";
 import { users } from "@/db/schema/auth";
 import { toMediaItem, type MediaItem } from "@/features/media/queries";
@@ -25,6 +20,7 @@ import { loadPlans, listTemplates, planInput } from "@/features/payment-plans/st
 import { builtInTemplates, type PlanTemplate } from "@/features/payment-plans/templates";
 import type { PaymentPlanInput } from "@/features/payment-plans/schema";
 import { listLocationNodes } from "@/features/locations/queries";
+import { listPropertyPois, type PropertyPoisView } from "@/features/pois/nearby-queries";
 import { loadProperty, type PropertyRecord } from "./load";
 import type { PropertyInput } from "./schema";
 
@@ -73,6 +69,7 @@ export type EditorData = {
   media: Record<string, MediaItem>;
   options: EditorOptions;
   activity: EditorActivity;
+  nearby: PropertyPoisView;
 };
 
 /** Everything the property editor shows, loaded one query at a time (shared connection). */
@@ -208,10 +205,7 @@ export async function loadEditorData(db: DbOrTx, id: string): Promise<EditorData
     })
     .from(propertyBadges)
     .where(and(eq(propertyBadges.propertyId, id), eq(propertyBadges.isAuto, true)));
-  const [pois] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(propertyPois)
-    .where(eq(propertyPois.propertyId, id));
+  const nearby = await listPropertyPois(db, id);
 
   return {
     row: loaded.row,
@@ -278,7 +272,8 @@ export async function loadEditorData(db: DbOrTx, id: string): Promise<EditorData
         reason: b.reason,
         expiresAt: b.expiresAt?.toISOString() ?? null,
       })),
-      poisComputed: (pois?.n ?? 0) > 0,
+      poisComputed: nearby.rows.length > 0,
     },
+    nearby,
   };
 }

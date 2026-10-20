@@ -9,11 +9,13 @@ import type { PropertyStatus } from "@/db/schema/properties";
 import { getMediaStatuses } from "@/features/media/actions";
 import type { MediaItem } from "@/features/media/queries";
 import { planProblem } from "@/features/payment-plans/schema";
+import type { PropertyPoisView } from "@/features/pois/nearby-queries";
 import { saveProperty, setPropertyStatus } from "@/features/properties/editor-actions";
 import type { EditorActivity, EditorOptions } from "@/features/properties/editor-data";
 import { completeness, publishProblems, type PropertyInput } from "@/features/properties/schema";
 import { isLiveStatus, statusLabels } from "@/features/properties/status";
 import { wordCount } from "@/lib/rich-text";
+import { NearbyPlaces } from "../nearby-places";
 import { EditorPanel, type SaveState } from "./editor-panel";
 import { MediaSection } from "./media-section";
 import {
@@ -50,6 +52,7 @@ export function PropertyEditor({
   media: initialMedia,
   options,
   activity,
+  nearby,
   market,
   serverNow,
   readOnly,
@@ -62,6 +65,7 @@ export function PropertyEditor({
   media: Record<string, MediaItem>;
   options: EditorOptions;
   activity: EditorActivity;
+  nearby: PropertyPoisView;
   market: EditorMarket;
   /** When the page was rendered: "verified in the last 30 days" is measured from it. */
   serverNow: string;
@@ -294,13 +298,15 @@ export function PropertyEditor({
         <FormSection
           id="nearby"
           title="Nearby"
-          description="Schools, shops and transport measured from the map pin."
+          description="Schools, shops and transport measured from the saved map pin. Moving the pin measures them again."
         >
-          <p className="text-[13px] text-text-muted">
-            {activity.poisComputed
-              ? "Distances are measured. They are measured again when the pin moves."
-              : "Distances are measured after the pin is saved."}
-          </p>
+          <NearbyPlaces
+            propertyId={id}
+            initial={nearby}
+            hasPin={Boolean(saved.point)}
+            distanceUnit={market.distanceUnit}
+            readOnly={readOnly}
+          />
         </FormSection>
         <TrustSection {...props} />
         <SeoSection {...props} />

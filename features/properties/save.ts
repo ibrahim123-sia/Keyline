@@ -15,6 +15,7 @@ import {
 } from "@/db/schema/properties";
 import { syncMediaUsage } from "@/features/media/usage";
 import { deletePlan, writePlan } from "@/features/payment-plans/store";
+import { queuePoiCompute } from "@/features/pois/distances";
 import { redirectSlugChange } from "@/features/seo/redirects";
 import { ActionError } from "@/lib/actions";
 import { auditChange, type AuditActor } from "@/lib/audit";
@@ -402,6 +403,8 @@ export async function saveListing(
   const pointMoved =
     (before.point?.lng ?? null) !== (data.point?.lng ?? null) ||
     (before.point?.lat ?? null) !== (data.point?.lat ?? null);
+  // 07 §4: a dropped or moved pin measures the nearby places again (in the background).
+  if (pointMoved && data.point) await queuePoiCompute(tx, row.id);
   return {
     updatedAt: after!.updatedAt.toISOString(),
     slug,

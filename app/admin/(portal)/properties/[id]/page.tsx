@@ -51,6 +51,7 @@ export default async function PropertyEditorPage(props: PageProps<"/admin/proper
         media={data.media}
         options={data.options}
         activity={data.activity}
+        nearby={data.nearby}
         serverNow={now}
         readOnly={user.readOnly || data.row.deletedAt !== null}
         market={{

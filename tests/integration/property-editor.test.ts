@@ -7,6 +7,7 @@ import { media } from "@/db/schema/media";
 import { paymentPlans } from "@/db/schema/payment-plans";
 import { priceHistory, properties, propertyBadges } from "@/db/schema/properties";
 import { seoRedirects } from "@/db/schema/seo";
+import { jobRuns } from "@/db/schema/system";
 import { builtInTemplates, planFromTemplate } from "@/features/payment-plans/templates";
 import { createProperty } from "@/features/properties/actions";
 import { saveProperty, setPropertyStatus } from "@/features/properties/editor-actions";
@@ -138,7 +139,36 @@ describe("property editor", () => {
       "property_types",
       "audit_log",
       "settings",
+      "job_runs",
     );
+  });
+
+  it("dropping or moving the pin queues the nearby places measurement once", async () => {
+    const { db, id, input, version } = await setup();
+    const jobs = () =>
+      db
+        .select({ name: jobRuns.name, status: jobRuns.status })
+        .from(jobRuns)
+        .where(eq(jobRuns.dedupeKey, `poi.compute:${id}`));
+    const a = await saveProperty({
+      id,
+      data: { ...input, title: "No pin yet" },
+      expectedUpdatedAt: version,
+    });
+    expect(await jobs()).toEqual([]);
+    const b = await saveProperty({
+      id,
+      data: { ...input, point: { lng: 55.27, lat: 25.2 } },
+      expectedUpdatedAt: a.ok ? a.data.updatedAt : "",
+    });
+    expect(await jobs()).toEqual([{ name: "poi.compute", status: "queued" }]);
+    // Moved again while the first run still waits: the waiting run covers it.
+    await saveProperty({
+      id,
+      data: { ...input, point: { lng: 55.28, lat: 25.21 } },
+      expectedUpdatedAt: b.ok ? b.data.updatedAt : "",
+    });
+    expect(await jobs()).toHaveLength(1);
   });
 
   it("saves every section and loads it back the same", async () => {
