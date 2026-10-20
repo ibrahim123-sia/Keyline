@@ -112,8 +112,11 @@ export async function signInAsAdmin(page: Page, request: APIRequestContext) {
   const password = "admin-e2e-password-1";
   createAdmin(email, password, "Admin E2E");
   await signIn(page, "/admin/sign-in", email, password);
-  // The first sign-in after the dev server starts also compiles the auth route and admin pages.
-  await expect(page).toHaveURL(/\/admin(\?|$)/, { timeout: 60_000 });
+  // The first sign-in after the dev server starts also compiles the auth route and admin
+  // pages, which takes minutes on a busy machine (CI runs a production build instead).
+  await expect(page).toHaveURL(/\/admin(\?|$)/, {
+    timeout: process.env.E2E_MODE === "prod" ? 30_000 : 180_000,
+  });
   return { email, password };
 }
 

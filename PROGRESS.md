@@ -83,11 +83,12 @@ Done-when checklist:
 - Branding settings: every colour token grouped by role, live contrast report (14 text/background pairs, warns below 4.5:1 or 3:1 for icons), heading and body fonts with samples, corner style, "Reset to Desert Modern", and a live preview (heading, buttons, property card, dark section) drawn with the draft tokens; saving restyles the public site. e2e.
 - Leads and CRM settings: pipeline stage editor (drag to reorder, name/colour/kind, delete that moves leads to another stage, ready-made default pipeline for a fresh install, always keeps an open, a won and a lost stage once complete) and the lead rules form (types, lost reasons, response alert, assignment rule, duplicate matching, follow-up, when sign-ups and newsletter subscribers become leads, automatic first reply, portal inboxes). Integration + e2e.
 - Integrations settings: Google Maps Platform, WhatsApp Cloud API, Resend, Google Calendar, analytics and pixels (ID formats checked), social ad lead forms, property portals, AI provider (Anthropic or the built-in test provider, optional Cloudflare AI Gateway). Keys save on their own, encrypted, shown masked, replaceable and removable; webhook tokens can be generated (shown once); webhook addresses with copy buttons; "Test connection" for Maps, Resend, WhatsApp and AI with the last result and error kept on the key. Integration (fetch stubbed) + e2e.
+- Admin users (Settings): list with status (active, invite sent, deactivated, two-step on/off, read-only demo) and last sign-in; invite by email (a 7-day "set your password" link through Better Auth's reset flow, then two-step setup), resend invite, deactivate (signs them out at once; never the last active admin) and reactivate, reset another admin's two-step verification; personal API tokens for MCP clients (read or read + propose, expiry, shown once, stored as SHA-256, revocable). All sensitive actions need a recent sign-in and offer "sign in again". Integration + e2e (invite email -> set password -> admin sign-in).
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
 
-- Phase 2, item 7: admin users (invite, deactivate, reset 2FA, API tokens), audit log viewer, Jobs page.
+- Phase 2, item 7: audit log viewer and Jobs page.
 
 ## Next
 
@@ -134,6 +135,8 @@ Done-when checklist:
 36. **Default pipeline** for a fresh install: New, Contacted, Viewing, Offer (open), Won, Lost, all editable. A pipeline that has an open, a won and a lost stage keeps them: edits or deletes that would remove the last one are refused.
 37. **Integration tests make cheap read-only calls** (Resend: list domains, a sending-only key counts as valid; WhatsApp: read the phone number on Graph API v23.0; Anthropic: list models and check the configured ones exist), time out after 10 seconds and keep the outcome on the key.
 38. **Webhook tokens Lintel generates are shown once** (to paste into Meta, TikTok, Google Ads or a portal) and masked afterwards, like every other key.
+39. **Admin invites reuse Better Auth's password reset** (same screen, rules and token check) with a 7-day token instead of the 1-hour reset token; resending an invite cancels the earlier link. Invites refuse emails that already belong to an admin or a customer, so roles never mix.
+40. **API tokens** look like `lnt_` + 40 random characters, are shown once and stored as a SHA-256 hash with an 8-character prefix for recognition; "propose" access lets MCP write tools prepare changes that an admin confirms in Lintel (10 §4).
 
 ## Data model changes (vs `05-data-model.md`)
 

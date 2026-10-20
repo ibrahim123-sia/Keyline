@@ -1,10 +1,12 @@
 "use client";
 
 import { CopyIcon, PlugZapIcon, PlusIcon, XIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { SelectField, SwitchField, TextInputField } from "@/components/admin/fields";
 import { FormSection } from "@/components/admin/page-header";
+import { actionErrorToast } from "@/components/admin/reauth-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { testIntegration } from "@/features/integrations/actions";
@@ -31,6 +33,7 @@ export function IntegrationsSettingsForm({
   keys: KeyStatus[];
   appUrl: string;
 }) {
+  const router = useRouter();
   const [keys, setKeys] = useState(initialKeys);
   const [testing, setTesting] = useState<TestableIntegration | null>(null);
   const statusOf = (key: SecretKey) => keys.find((k) => k.key === key)!;
@@ -46,7 +49,7 @@ export function IntegrationsSettingsForm({
     setTesting(name);
     const res = await testIntegration({ name });
     setTesting(null);
-    if (!res.ok) return toast.error(res.error);
+    if (!res.ok) return actionErrorToast(res, router);
     setKeys(res.data.status);
     if (res.data.ok) toast.success(res.data.message);
     else toast.error(res.data.message);

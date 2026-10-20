@@ -1,9 +1,11 @@
 "use client";
 
 import { CopyIcon, KeyRoundIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { actionErrorToast } from "@/components/admin/reauth-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { isGeneratable, keyInfo } from "@/features/integrations/catalog";
@@ -37,6 +39,7 @@ export function SecretKeyField({
   onChange: (status: KeyStatus) => void;
   readOnly?: boolean;
 }) {
+  const router = useRouter();
   const labelId = useId();
   const inputId = useId();
   const info = keyInfo[status.key];
@@ -51,7 +54,7 @@ export function SecretKeyField({
     setBusy(true);
     const res = await saveIntegrationKey({ key: status.key, value });
     setBusy(false);
-    if (!res.ok) return toast.error(res.error);
+    if (!res.ok) return actionErrorToast(res, router);
     onChange(res.data);
     setValue("");
     setEditing(false);
@@ -63,7 +66,7 @@ export function SecretKeyField({
     setBusy(true);
     const res = await generateIntegrationKey({ key: status.key });
     setBusy(false);
-    if (!res.ok) return toast.error(res.error);
+    if (!res.ok) return actionErrorToast(res, router);
     onChange(res.data.status);
     setShown(res.data.value);
     setEditing(false);
@@ -151,7 +154,7 @@ export function SecretKeyField({
                 destructive
                 onConfirm={async () => {
                   const res = await removeIntegrationKey({ key: status.key });
-                  if (!res.ok) return toast.error(res.error);
+                  if (!res.ok) return actionErrorToast(res, router);
                   onChange(res.data);
                   toast.success(`${info.label} removed`);
                 }}

@@ -13,7 +13,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-/** Confirm before destructive or important actions (02 §4: ConfirmDialog). */
+/**
+ * Confirm before destructive or important actions (02 §4: ConfirmDialog). Opens from its own
+ * `trigger`, or is controlled with `open`/`onOpenChange` (e.g. from a menu item).
+ */
 export function ConfirmDialog({
   trigger,
   title,
@@ -21,19 +24,28 @@ export function ConfirmDialog({
   confirmLabel = "Confirm",
   destructive,
   onConfirm,
+  open: openProp,
+  onOpenChange,
 }: {
-  trigger: ReactNode;
+  trigger?: ReactNode;
   title: string;
   description?: ReactNode;
   confirmLabel?: string;
   destructive?: boolean;
   onConfirm: () => Promise<unknown> | unknown;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (next: boolean) => {
+    setOpenState(next);
+    onOpenChange?.(next);
+  };
   const [busy, setBusy] = useState(false);
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

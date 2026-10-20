@@ -18,6 +18,7 @@ export const settingsTabs = [
   { href: "/admin/settings/notifications", label: "Notifications" },
   { href: "/admin/settings/legal", label: "Legal and privacy" },
   { href: "/admin/settings/security", label: "Security" },
+  { href: "/admin/settings/users", label: "Admin users" },
 ] as const;
 
 export function SettingsNav() {

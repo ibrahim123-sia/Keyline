@@ -12,6 +12,7 @@ import { PASSWORD_MIN_LENGTH } from "@/lib/auth/constants";
 import {
   forgotPasswordSchema,
   resetPasswordSchema,
+  safeNext,
   type ForgotPasswordValues,
   type ResetPasswordValues,
 } from "@/lib/auth/schemas";
@@ -74,6 +75,9 @@ export function ResetPasswordForm() {
   const params = useSearchParams();
   const token = params.get("token");
   const linkError = params.get("error");
+  // Admin invites reuse this screen ("set your password"), then go to the admin sign-in.
+  const invite = params.get("invite") === "1";
+  const next = safeNext(params.get("next"), "/sign-in");
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const form = useForm<ResetPasswordValues>({
@@ -114,7 +118,7 @@ export function ResetPasswordForm() {
       <div className="flex flex-col gap-4">
         <FormAlert tone="success">{t.resetDone}</FormAlert>
         <Button asChild size="md">
-          <Link href="/sign-in">{t.submitSignIn}</Link>
+          <Link href={next}>{t.submitSignIn}</Link>
         </Button>
       </div>
     );
@@ -128,6 +132,7 @@ export function ResetPasswordForm() {
       className="flex flex-col gap-5"
     >
       {error && <FormAlert>{error}</FormAlert>}
+      {invite && <p className="text-[15px] text-text">{t.inviteIntro}</p>}
       <TextField
         label={t.password}
         type="password"

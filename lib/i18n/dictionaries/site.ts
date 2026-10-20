@@ -82,6 +82,8 @@ export const site = {
     resetTitle: "Choose a new password",
     resetSubmit: "Save new password",
     resetDone: "Password changed. You can sign in now.",
+    inviteIntro:
+      "Welcome! Choose a password for your admin account. Next you will set up two-step verification.",
     resetInvalid: "This reset link has expired or was already used.",
     twoFactorTitle: "Two-step verification",
     twoFactorText: "Enter the 6-digit code from your authenticator app.",
