@@ -37,8 +37,8 @@ jobs:
             git status --porcelain db/migrations
             exit 1
           fi
-      - run: pnpm test:unit
-      - run: pnpm test:integration
+      - run: scripts/ci/run.sh "Unit tests" pnpm test:unit
+      - run: scripts/ci/run.sh "Integration tests" pnpm test:integration
 
   audit:
     name: Dependency audit
@@ -51,7 +51,7 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-      - run: pnpm audit --prod --audit-level high
+      - run: scripts/ci/run.sh "Dependency audit" pnpm audit --prod --audit-level high
 
   e2e:
     name: Playwright (production build)
@@ -67,7 +67,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+      - run: scripts/ci/run.sh "Playwright" pnpm test:e2e
         env:
           CI: "true"
           E2E_MODE: prod
@@ -100,7 +100,7 @@ jobs:
         run: |
           nohup pnpm exec tsx scripts/test-db-server.ts 5433 > test-db.log 2>&1 &
           for i in $(seq 1 60); do (echo > /dev/tcp/127.0.0.1/5433) 2>/dev/null && break; sleep 2; done
-      - run: pnpm exec opennextjs-cloudflare build
+      - run: scripts/ci/run.sh "OpenNext build" pnpm exec opennextjs-cloudflare build
       - name: Bundle size
         run: du -sh .open-next/worker.js .open-next/server-functions .open-next/assets
 
