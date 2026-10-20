@@ -6,5 +6,13 @@
   "endOfLine": "lf",
   "plugins": ["prettier-plugin-tailwindcss"],
   "tailwindStylesheet": "./app/globals.css",
-  "tailwindFunctions": ["cn", "cva"]
+  "tailwindFunctions": ["cn", "cva"],
+  "overrides": [
+    {
+      "files": ["*.jsonc"],
+      "options": {
+        "trailingComma": "none"
+      }
+    }
+  ]
 }

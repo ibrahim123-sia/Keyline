@@ -21,13 +21,13 @@
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "lintel" }],
   "r2_buckets": [
     { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "lintel-cache" },
-    { "binding": "MEDIA_BUCKET", "bucket_name": "lintel-media" },
+    { "binding": "MEDIA_BUCKET", "bucket_name": "lintel-media" }
   ],
   "durable_objects": {
     "bindings": [
       { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" },
-      { "name": "NEXT_TAG_CACHE_DO_SHARDED", "class_name": "DOShardedTagCache" },
-    ],
+      { "name": "NEXT_TAG_CACHE_DO_SHARDED", "class_name": "DOShardedTagCache" }
+    ]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOQueueHandler", "DOShardedTagCache"] }],
   "queues": {
@@ -38,16 +38,16 @@
         "max_batch_size": 10,
         "max_batch_timeout": 5,
         "max_retries": 5,
-        "dead_letter_queue": "lintel-jobs-dlq",
-      },
-    ],
+        "dead_letter_queue": "lintel-jobs-dlq"
+      }
+    ]
   },
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
       "id": "__HYPERDRIVE_ID__",
-      "localConnectionString": "postgres://postgres:postgres@127.0.0.1:5433/postgres",
-    },
+      "localConnectionString": "postgres://postgres:postgres@127.0.0.1:5433/postgres"
+    }
   ],
   "images": { "binding": "IMAGES" },
   "browser": { "binding": "BROWSER" },
@@ -55,7 +55,7 @@
     "LINTEL_ENV": "production",
     "STORAGE_DRIVER": "r2",
     "JOBS_DRIVER": "queue",
-    "DEMO_MODE": "false",
+    "DEMO_MODE": "false"
   },
   "env": {
     "staging": {
@@ -64,13 +64,13 @@
       "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "lintel-staging" }],
       "r2_buckets": [
         { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "lintel-staging-cache" },
-        { "binding": "MEDIA_BUCKET", "bucket_name": "lintel-staging-media" },
+        { "binding": "MEDIA_BUCKET", "bucket_name": "lintel-staging-media" }
       ],
       "durable_objects": {
         "bindings": [
           { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" },
-          { "name": "NEXT_TAG_CACHE_DO_SHARDED", "class_name": "DOShardedTagCache" },
-        ],
+          { "name": "NEXT_TAG_CACHE_DO_SHARDED", "class_name": "DOShardedTagCache" }
+        ]
       },
       "queues": {
         "producers": [{ "binding": "JOBS_QUEUE", "queue": "lintel-staging-jobs" }],
@@ -80,16 +80,16 @@
             "max_batch_size": 10,
             "max_batch_timeout": 5,
             "max_retries": 5,
-            "dead_letter_queue": "lintel-staging-jobs-dlq",
-          },
-        ],
+            "dead_letter_queue": "lintel-staging-jobs-dlq"
+          }
+        ]
       },
       "hyperdrive": [
         {
           "binding": "HYPERDRIVE",
           "id": "__HYPERDRIVE_ID_STAGING__",
-          "localConnectionString": "postgres://postgres:postgres@127.0.0.1:5433/postgres",
-        },
+          "localConnectionString": "postgres://postgres:postgres@127.0.0.1:5433/postgres"
+        }
       ],
       "images": { "binding": "IMAGES" },
       "browser": { "binding": "BROWSER" },
@@ -97,8 +97,8 @@
         "LINTEL_ENV": "staging",
         "STORAGE_DRIVER": "r2",
         "JOBS_DRIVER": "queue",
-        "DEMO_MODE": "true",
-      },
-    },
-  },
+        "DEMO_MODE": "true"
+      }
+    }
+  }
 }
