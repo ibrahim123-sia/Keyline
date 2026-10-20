@@ -189,9 +189,16 @@ function PickerDialog({
   const uploader = useUploader({
     folder: folder ?? "",
     onUploaded: (item) => {
-      setData((prev) =>
-        prev ? { ...prev, rows: [item, ...prev.rows], total: prev.total + 1 } : prev,
-      );
+      // The list may already hold it (loaded while it was processing): replace, never duplicate.
+      setData((prev) => {
+        if (!prev) return prev;
+        const known = prev.rows.some((r) => r.id === item.id);
+        return {
+          ...prev,
+          rows: [item, ...prev.rows.filter((r) => r.id !== item.id)],
+          total: known ? prev.total : prev.total + 1,
+        };
+      });
       setChosen(item.id);
     },
   });
