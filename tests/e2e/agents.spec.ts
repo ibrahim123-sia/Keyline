@@ -66,11 +66,25 @@ test("agents: profile with languages, areas and hours; team order; hide", async 
     .getByRole("button", { name: "Save" })
     .click();
   await expect(page.getByRole("button", { name: "Edit Omar Nasser" })).toBeVisible();
-  const handles = page.getByRole("button", { name: "Drag to reorder (team page order)" });
-  await handles.nth(1).focus();
+  const ids = Object.fromEntries(
+    (await db().query("select id, name from agents")).rows.map((r) => [r.name, r.id]),
+  ) as Record<string, string>;
+  const omarHandle = page
+    .getByRole("listitem")
+    .filter({ hasText: "Omar Nasser" })
+    .getByRole("button", { name: "Drag to reorder (team page order)" });
+  const announcement = page.getByRole("status").filter({ hasText: /droppable area/ });
+  // Each step waits for dnd-kit to catch up: a fast browser can send the arrow key before
+  // the keyboard drag has started.
+  await omarHandle.focus();
   await page.keyboard.press("Space");
+  await expect(omarHandle).toHaveAttribute("aria-pressed", "true");
   await page.keyboard.press("ArrowUp");
+  await expect(announcement).toHaveText(
+    `Draggable item ${ids["Omar Nasser"]} was moved over droppable area ${ids["Layla Haddad"]}.`,
+  );
   await page.keyboard.press("Space");
+  await expect(omarHandle).not.toHaveAttribute("aria-pressed", "true");
   await expect
     .poll(async () =>
       (await db().query("select name from agents order by sort_order")).rows.map((r) => r.name),
