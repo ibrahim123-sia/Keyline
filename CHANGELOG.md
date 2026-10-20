@@ -12,3 +12,8 @@ All notable changes to Lintel. Format: [Keep a Changelog](https://keepachangelog
 - Design tokens from Branding settings, shadcn/ui, i18n dictionaries, site/account/admin shells.
 - Authentication: customer sign-up with email verification, password reset, admin 2FA, login lockout, setup command.
 - Background jobs with retries and dead-lettering; rate limits; health check.
+- Admin UI kit (fields, side panels, confirm dialogs, sortable lists, URL-driven data table).
+- Setup: locations tree with map pin and boundary drawing, property types, facilities, badges, POI types, places (with Google import), developers (merge), agent profiles; slug changes create 301 redirects.
+- Media library on R2 (local disk in development): signed uploads, processing job (lossless metadata strip, HEIC conversion in the browser, dimensions, placeholder colour), folders, alt text, crops, usage, replace, safe delete, resized variants; media picker.
+- Settings screens for all 12 groups, including the branding editor with live preview and contrast check, pipeline stages, and integrations with encrypted keys and connection tests.
+- Admin users (invite, deactivate, reset two-step verification, API tokens), audit log viewer, System page (jobs, scheduled tasks, integration status, retry).

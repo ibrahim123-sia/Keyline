@@ -8,7 +8,8 @@ Spec: `lintel-spec/lintel-spec/` (README + `docs/01..16`).
 | Phase | Name                     | Status                                      |
 | ----- | ------------------------ | ------------------------------------------- |
 | 1     | Foundation               | done (staging deploy waits for credentials) |
-| 2     | Settings and master data | in progress                                 |
+| 2     | Settings and master data | done (staging deploy waits for credentials) |
+| 3     | Properties and projects  | in progress                                 |
 | 3     | Properties and projects  | not started                                 |
 | 4     | Public site core         | not started                                 |
 | 5     | CMS and SEO              | not started                                 |
@@ -57,6 +58,26 @@ Done-when checklist:
 - [x] Settings validate and save; contrast checker works (integration + e2e)
 - [x] Audit log shows every change with before/after (viewer with filters; integration + e2e)
 
+## Phase 3 — Properties and projects (plan)
+
+1. Schema: payment plans and steps, projects (facilities, media, unit types), properties (generated price per area, yield and search vector; reference sequence), property media, facilities, badges, nearby places, price history, daily stats; usage registered for agents, developers, locations, property types, facilities, badges, media.
+2. Rich text: Tiptap 3 editor (headings, bold, italic, lists, links) stored as JSON; HTML rendered on the server from an allowlist, never from user HTML.
+3. Payment plan builder: steps (stage, label, percent, timing, due date, instalments), running total that must reach exactly 100%, templates (built-in and saved), preview, reusable across a project and its units.
+4. Property list: table with filters, saved views, bulk actions (status, agent, badges, feature, verify, export, archive), quick actions.
+5. Property editor: section nav, sticky status/publish/completeness panel, autosave every 10 s, unsaved-changes warning; basics, location and map pin, price, specs, off-plan, investment, description, media (upload, reorder, cover, alt, floor plans, brochure), facilities, badges, trust, SEO, activity; publish rules and completeness score.
+6. On save: price history and "Price reduced"; first publish sets published_at and "New"; status sold/rented; pin moved queues the POI job; auto badges kept current by a daily task.
+7. POI distances job: own places within each type's radius (PostGIS), optional Google nearby, Google Routes for the closest per type, straight-line fallback; admin table (show, override, order, recalculate); monthly refresh.
+8. Projects: list and editor (basics, dates, progress, pricing, description, highlights, media, facilities, unit types table, payment plan, nearby, SEO); "create listings from unit types".
+9. CSV import (template, upload, column mapping, validation preview, drafts in batches, photos fetched from URLs by a job) and export of any filtered list.
+
+Done-when checklist:
+
+- [ ] A listing can be fully created and published with all fields
+- [ ] Moving the pin computes POIs and travel times (or straight-line fallback)
+- [ ] Payment plan must total 100% to publish
+- [ ] Price change writes history and adds "Price reduced"
+- [ ] CSV import creates drafts with a validation preview
+
 ## Done
 
 - Read the whole spec. Checked the toolchain on this machine (Node 24, pnpm 12, no Docker/Postgres).
@@ -90,12 +111,12 @@ Done-when checklist:
 
 ## In progress
 
-- Phase 2, item 7: Jobs page (recent runs, failures, retry, cron tasks).
+- Phase 3, item 1: listings schema (projects, unit types, payment plans, properties, media, facilities, badges, nearby places, price history, daily stats).
 
 ## Next
 
-- Phase 2: developers, agent profiles, Settings screens for all groups, admin users, audit log viewer, Jobs page, Phase 2 e2e checklist.
-- Phase 3: properties and projects.
+- Phase 3 items 2-9 (see the Phase 3 plan).
+- Phase 4: public site core.
 
 ## Decisions (made by me, per spec 01 §5 "small decisions")
 
