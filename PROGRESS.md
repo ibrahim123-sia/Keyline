@@ -77,11 +77,12 @@ Done-when checklist:
 - POIs: reusable admin DataTable (URL-driven paging/sort/search, filters, column picker, bulk actions, saved views); places with map point, bulk show/hide/delete, "Import from Google" by POI type around a location with duplicates skipped. Integration + e2e.
 - Media pipeline: storage drivers (R2 binding, local disk, memory for tests); signed single-use upload links; `media.process` job (real format from the bytes, HEIC fallback, lossless metadata strip, display dimensions, placeholder colour, 100 MP limit); `/media/<key>` with immutable caching, Range, ETag, sandboxing CSP and resized variants; usage tracking (`used_count` + "used in" list) wired into settings and locations; safe bulk delete, replace (same id, new key), crops, folders; hourly clean-up of abandoned uploads and a nightly usage recount. 108 Vitest tests passing.
 - Media library screen: folders (nested, counts, new folder), search, type/usage/alt filters, sort, grid and list views, drag-and-drop and multi-file upload queue (progress, HEIC converted in the browser, placeholder colour), bulk move and delete (unused only), details panel (alt text, caption, folder, crops per preset with keyboard support, "used in" links, replace, download, copy link). MediaPicker dialog (search, folders, upload, pick), first used for share images in the SEO fields. e2e covers upload -> stripped GPS -> alt text -> crop -> pick as a location share image -> "used in" -> bulk delete keeps it.
+- Developers (Setup): table with logo, website, year and usage; side-panel editor with logo picker, description, website (http(s) only), year, SEO block and share image; unique slugs with 301 on change; safe delete (blocked while used) and "merge into…" that re-points references, deletes the duplicate and redirects its page without chains. Integration + e2e.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
 
-- Phase 2, item 4: developers (logo, description, website, year, SEO, safe delete, merge).
+- Phase 2, item 4: agent profiles (photo, languages, areas, working hours, calendar stub, SEO).
 
 ## Next
 
