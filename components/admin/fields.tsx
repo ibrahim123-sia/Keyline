@@ -280,7 +280,7 @@ export function ColorField({
       <div className="flex items-center gap-2">
         <input
           type="color"
-          aria-label="Pick colour"
+          aria-label={typeof base.label === "string" ? `Pick colour: ${base.label}` : "Pick colour"}
           value={HEX.test(value) ? value : "#000000"}
           onChange={(e) => onChange(e.target.value.toUpperCase())}
           className="h-8 w-10 shrink-0 cursor-pointer rounded-md border border-input bg-transparent p-0.5"

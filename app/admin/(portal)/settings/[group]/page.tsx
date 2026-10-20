@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/admin/page-header";
 import { AiSettingsForm } from "@/components/admin/settings/groups/ai-form";
+import { BrandingSettingsForm } from "@/components/admin/settings/groups/branding-form";
 import { ContactSettingsForm } from "@/components/admin/settings/groups/contact-form";
 import { GeneralSettingsForm } from "@/components/admin/settings/groups/general-form";
 import { LegalSettingsForm } from "@/components/admin/settings/groups/legal-form";
@@ -19,6 +20,7 @@ export const instant = false;
 
 const titles = {
   general: ["General", "Agency details, logos, region and maintenance mode."],
+  branding: ["Branding", "Colours, fonts and corners of the public site, with a live preview."],
   market: ["Market", "Currency, units, rentals and calculator defaults for your market."],
   contact: ["Contact", "How visitors reach you, and where new lead alerts go."],
   viewings: ["Viewings", "When viewings can be booked, video tools and reminders."],
@@ -54,6 +56,25 @@ export default async function SettingsGroupPage(props: PageProps<"/admin/setting
             initial={value}
             readOnly={readOnly}
             timeZones={Intl.supportedValuesOf("timeZone")}
+          />
+        );
+      }
+      case "branding": {
+        const [value, market] = await Promise.all([
+          loadSettings("branding", db),
+          loadSettings("market", db),
+        ]);
+        const c = market.baseCurrency;
+        const amount = (1_250_000).toLocaleString("en", { maximumFractionDigits: 0 });
+        return (
+          <BrandingSettingsForm
+            initial={value}
+            readOnly={readOnly}
+            preview={{
+              price:
+                c.symbolPosition === "before" ? `${c.symbol}${amount}` : `${amount} ${c.symbol}`,
+              area: market.areaUnit === "sqft" ? "1,450 sq.ft" : "135 m²",
+            }}
           />
         );
       }

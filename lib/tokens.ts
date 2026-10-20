@@ -24,23 +24,30 @@ export const colorCssVar: Record<ColorToken, string> = {
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
 /**
- * CSS injected in the root layout. Values come from validated settings (hex colours and
- * font names from a fixed list), and are re-checked here so nothing else can reach the page.
+ * CSS custom properties for a branding (02 §2). Values come from validated settings (hex
+ * colours and font names from a fixed list) and are re-checked here, so nothing else can
+ * reach the page. Used for the whole site and for the live preview in the branding editor.
  */
-export function brandingCss(branding: BrandingSettings): string {
-  const decls: string[] = [];
+export function brandingVars(branding: BrandingSettings): Record<string, string> {
+  const vars: Record<string, string> = {};
   for (const [key, cssVar] of Object.entries(colorCssVar) as Array<[ColorToken, string]>) {
     const value = branding.colors[key];
-    if (HEX.test(value)) decls.push(`${cssVar}:${value}`);
+    if (HEX.test(value)) vars[cssVar] = value;
   }
   if (HEX.test(branding.colors.accent)) {
-    decls.push(`--color-on-accent:${readableOn(branding.colors.accent)}`);
+    vars["--color-on-accent"] = readableOn(branding.colors.accent);
   }
   const display = fontCssVar[branding.fontDisplay];
   const body = fontCssVar[branding.fontBody];
-  if (display) decls.push(`--font-display:var(${display}),Georgia,serif`);
-  if (body) decls.push(`--font-body:var(${body}),ui-sans-serif,system-ui,sans-serif`);
-  decls.push(`--radius:${branding.cornerStyle === "sharp" ? "6px" : "12px"}`);
+  if (display) vars["--font-display"] = `var(${display}),Georgia,serif`;
+  if (body) vars["--font-body"] = `var(${body}),ui-sans-serif,system-ui,sans-serif`;
+  vars["--radius"] = branding.cornerStyle === "sharp" ? "6px" : "12px";
+  return vars;
+}
+
+/** The style injected in the root layout (`html:root` wins over the stylesheet defaults). */
+export function brandingCss(branding: BrandingSettings): string {
+  const decls = Object.entries(brandingVars(branding)).map(([k, v]) => `${k}:${v}`);
   return `html:root{${decls.join(";")}}`;
 }
 

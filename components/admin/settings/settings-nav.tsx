@@ -7,6 +7,7 @@ import { cn } from "cn";
 /** Settings tabs (04): one per group, then admin users and the audit log (04 §12). */
 export const settingsTabs = [
   { href: "/admin/settings/general", label: "General" },
+  { href: "/admin/settings/branding", label: "Branding" },
   { href: "/admin/settings/market", label: "Market" },
   { href: "/admin/settings/contact", label: "Contact" },
   { href: "/admin/settings/viewings", label: "Viewings" },
