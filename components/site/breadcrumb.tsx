@@ -53,7 +53,7 @@ export function Breadcrumb({
       {jsonLd && (
         <script
           type="application/ld+json"
-          // Built from our own data; </script> cannot appear in JSON.stringify output of these strings unescaped.
+          // "<" is escaped, so nothing in the data can close the script tag.
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\u003c") }}
         />
       )}
