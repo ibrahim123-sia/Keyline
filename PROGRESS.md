@@ -47,6 +47,7 @@ Done-when checklist (from `15-build-phases.md`):
 - Database layer: Drizzle schema (auth, settings, secrets, audit log, rate limits, jobs, email log, agents, media), PostGIS/pgvector column types, migrations (extensions, core, append-only audit), `pnpm db:start | db:migrate | db:reset`.
 - Settings: Zod schemas with defaults for all 12 groups (04-settings.md), lenient read (bad field falls back alone), strict admin input (unknown keys rejected), cached loader (`'use cache'` + `settings:<group>` tags), save helper with audit diff; encrypted secrets (AES-256-GCM) with masked status; audit helper (changed keys only, secrets redacted, truncated IPs).
 - Tests: Vitest unit + integration projects; integration uses an in-memory PGlite with a cached migrated snapshot (`.data/test-db-<hash>.tar.gz`). 40 tests passing.
+- UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
 
@@ -70,8 +71,11 @@ Done-when checklist (from `15-build-phases.md`):
 10. **Line endings.** `.gitattributes` forces LF; `core.autocrlf=false` in this clone.
 11. **Own PGlite wire bridge (`scripts/pglite.ts`) instead of `@electric-sql/pglite-socket`.** The socket server forwards an extra ReadyForQuery that PGlite's backend emits after an error in an extended-protocol message, so every later result on that connection is shifted by one (reproduced with a unique violation and with a trigger error). The bridge buffers each client batch up to Sync, skips the rest of a failed batch until Sync, forwards ReadyForQuery only for Sync/Query, and gives the session to one connection while it is inside a transaction (from the ReadyForQuery status byte). Verified: error sequences, aborted transactions, pipelining, a pool with mixed errors, crash recovery after a hard kill.
 12. **Search helpers in SQL.** `lintel_unaccent()` / `lintel_normalize()` are IMMUTABLE wrappers (unaccent itself is only STABLE) so they can be used in generated columns and trigram indexes.
-14. **Vitest uses Vite's native `resolve.tsconfigPaths`** (no extra plugin).
-13. **Audit log is append-only in the database** (trigger blocks UPDATE/DELETE/TRUNCATE), not only in app code. Test clean-up uses `session_replication_role = replica`.
+13. **Vitest uses Vite's native `resolve.tsconfigPaths`** (no extra plugin).
+14. **Accent on accent-soft is for icons only.** With the Desert Modern defaults, terracotta text on its soft tint is 4.44:1 (below the 4.5:1 rule). Accent icons on the tint pass the 3:1 UI-graphics rule; badge/label text on the tint uses ink. The branding contrast report checks both pairs.
+15. **Form-control borders** use a mix of the muted text colour (≥ 3:1, WCAG 1.4.11) instead of the decorative border token (~1.3:1 on white).
+16. **shadcn/ui 4 (Radix base, `rtl: true`)** so generated components use logical properties. shadcn's `accent` (hover background) is replaced by `muted` in components because `--color-accent` is the spec's terracotta token. Toasts do not use next-themes (light site, admin passes its theme).
+17. **Audit log is append-only in the database** (trigger blocks UPDATE/DELETE/TRUNCATE), not only in app code. Test clean-up uses `session_replication_role = replica`.
 
 ## Data model changes (vs `05-data-model.md`)
 

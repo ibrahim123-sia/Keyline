@@ -1,1 +1,300 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Desert Modern design tokens (02-design-system.md §2). These are defaults only: the root
+ * layout injects the values saved in Admin -> Settings -> Branding (html:root wins over
+ * :root), so changing a token in the database changes the site without a deploy.
+ */
+@theme {
+  --color-bg: #f7f3ee;
+  --color-surface: #ffffff;
+  --color-surface-soft: #fbf9f6;
+  --color-surface-muted: #ede5da;
+  --color-ink: #14232b;
+  --color-ink-soft: #1c2f38;
+  --color-text: #4a5560;
+  --color-text-muted: #5b6670;
+  --color-border: #e6ded3;
+  --color-accent: #a9502f;
+  --color-accent-soft: #f3e6df;
+  /* Text on accent-coloured buttons; computed from the accent for contrast. */
+  --color-on-accent: #ffffff;
+  --color-success: #4f6b57;
+  --color-success-soft: #e3ebe4;
+  --color-danger: #b4402a;
+  --color-photo-placeholder: #dcd3c6;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+
+  /* Only two shadows (§2): floating cards, and map pins / floating buttons. */
+  --shadow-soft: 0 12px 40px rgba(20, 35, 43, 0.06);
+  --shadow-pin: 0 4px 14px rgba(20, 35, 43, 0.16);
+
+  --breakpoint-xs: 26rem;
+}
+
+/* Radius scale follows --radius (12px soft, 6px "sharper"); inline so scopes can override it. */
+@theme inline {
+  --radius-input: var(--radius);
+  --radius-button: calc(var(--radius) * 1.1667);
+  --radius-card: calc(var(--radius) * 1.6667);
+  --radius-image: calc(var(--radius) * 2);
+
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-display);
+
+  /* shadcn/ui semantic colours, mapped onto the spec tokens. */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * The semantic layer is declared on every element that changes the base tokens (the root,
+ * and the admin scope), so `var()` resolves against that scope's values.
+ */
+:root,
+[data-theme-scope] {
+  --radius: 12px;
+  --background: var(--color-bg);
+  --foreground: var(--color-ink);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-on-accent);
+  --secondary: var(--color-surface-muted);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-surface-soft);
+  --muted-foreground: var(--color-text-muted);
+  --destructive: var(--color-danger);
+  --border: var(--color-border);
+  /* Form controls need 3:1 against their background (WCAG 1.4.11); the decorative border
+     token is lighter than that, so inputs use a stronger mix of the muted text colour. */
+  --input: color-mix(in oklab, var(--color-text-muted) 80%, var(--color-surface));
+  --ring: var(--color-accent);
+  --chart-1: var(--color-accent);
+  --chart-2: #4f6b57;
+  --chart-3: #3b6e8f;
+  --chart-4: #c9a227;
+  --chart-5: #7a5c99;
+  --sidebar: var(--color-surface);
+  --sidebar-foreground: var(--color-ink);
+  --sidebar-primary: var(--color-accent);
+  --sidebar-primary-foreground: var(--color-on-accent);
+  --sidebar-accent: var(--color-surface-muted);
+  --sidebar-accent-foreground: var(--color-ink);
+  --sidebar-border: var(--color-border);
+  --sidebar-ring: var(--color-accent);
+}
+
+/* Admin portal (§3): neutral, compact, Manrope only, 14px base; light and dark per admin. */
+.theme-admin {
+  --color-bg: #f5f6f7;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f8f9fa;
+  --color-surface-muted: #eef0f2;
+  --color-ink: #1f2a30;
+  --color-ink-soft: #2b3840;
+  --color-text: #1f2a30;
+  --color-text-muted: #66727a;
+  --color-border: #e5e8eb;
+  --font-display: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --radius: 8px;
+  font-size: 14px;
+}
+
+.theme-admin.dark {
+  --color-bg: #11181c;
+  --color-surface: #192227;
+  --color-surface-soft: #1e292f;
+  --color-surface-muted: #24313a;
+  --color-ink: #e7ecef;
+  --color-ink-soft: #cdd5da;
+  --color-text: #e7ecef;
+  --color-text-muted: #9aa6ae;
+  --color-border: #2a353b;
+  --color-accent-soft: #3a2a24;
+  color-scheme: dark;
+}
+
+/* Layout helpers (§2 spacing and container rules). */
+@utility container-site {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1200px;
+  padding-inline: 20px;
+  @media (width >= 48rem) {
+    padding-inline: 32px;
+  }
+}
+
+@utility container-wide {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1360px;
+  padding-inline: 20px;
+  @media (width >= 48rem) {
+    padding-inline: 32px;
+  }
+}
+
+@utility section-y {
+  padding-block: 64px;
+  @media (width >= 64rem) {
+    padding-block: 104px;
+  }
+}
+
+/* Typography scale (§2). Phone first, then desktop. */
+@utility text-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  @media (width >= 64rem) {
+    font-size: 64px;
+  }
+}
+
+@utility text-h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  @media (width >= 64rem) {
+    font-size: 46px;
+  }
+}
+
+@utility text-h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  @media (width >= 64rem) {
+    font-size: 44px;
+  }
+}
+
+@utility text-h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 1.25;
+  @media (width >= 64rem) {
+    font-size: 25px;
+  }
+}
+
+@utility text-eyebrow {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+@utility text-meta {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  @media (width >= 64rem) {
+    font-size: 14px;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-background font-body text-text antialiased;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-ink;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  img {
+    background-color: var(--color-photo-placeholder);
+  }
+  img[data-no-placeholder] {
+    background-color: transparent;
+  }
+}
+
+/* Motion (§7): subtle only, and none at all when the visitor asks for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

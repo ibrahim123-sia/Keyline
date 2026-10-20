@@ -1,0 +1,23 @@
+import { AccountNav } from "@/components/account/account-nav";
+import { SiteFooter } from "@/components/site/site-footer";
+import { SiteHeader } from "@/components/site/site-header";
+import { Toaster } from "@/components/ui/sonner";
+
+export const instant = false;
+
+/** Customer area (12): public site theme, left menu on desktop, tabs on phone. */
+export default function AccountLayout({ children }: LayoutProps<"/account">) {
+  return (
+    <>
+      <SiteHeader />
+      <main id="main" className="container-site grid gap-8 py-10 md:grid-cols-[220px_1fr] md:py-14">
+        <aside>
+          <AccountNav enabled={["overview", "profile"]} />
+        </aside>
+        <div className="min-w-0">{children}</div>
+      </main>
+      <SiteFooter />
+      <Toaster position="bottom-center" />
+    </>
+  );
+}
