@@ -20,11 +20,12 @@ import type { SectionProps } from "./types";
 type Kind = ListingMedia["kind"];
 
 /** Replaces the items of one kind, keeping the others where they are. */
-function withKind(all: ListingMedia[], kind: Kind, items: ListingMedia[]): ListingMedia[] {
+export function withKind(all: ListingMedia[], kind: Kind, items: ListingMedia[]): ListingMedia[] {
   return [...all.filter((m) => m.kind !== kind), ...items];
 }
 
-function MediaList({
+/** Ordered files of one kind with alt text, captions, cover (photos) and remove. */
+export function MediaList({
   kind,
   label,
   items,
@@ -127,22 +128,26 @@ function MediaList({
   );
 }
 
-function Uploads({
+/** Drop zone and upload button; finished uploads are passed to `onAdd`. */
+export function Uploads({
   kind,
   label,
   onAdd,
   readOnly,
+  folder,
 }: {
   kind: Kind;
   label: string;
   onAdd: (items: MediaItem[]) => void;
   readOnly: boolean;
+  /** Media library folder for the uploads (listings by default). */
+  folder?: string;
 }) {
   const inputId = useId();
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const uploader = useUploader({
-    folder: kind === "photo" ? "listings" : "listings/plans",
+    folder: folder ?? (kind === "photo" ? "listings" : "listings/plans"),
     onUploaded: (item) => onAdd([item]),
   });
   if (readOnly) return null;
