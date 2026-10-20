@@ -21,8 +21,7 @@ export function mediaUrl(r2Key: string): string {
 }
 
 /** Widths and qualities /media resizes to (the same lists next/image uses). */
-export const variantWidths = [64, 128, 256, 384, 640, 750, 828, 1080, 1200, 1920, 2048, 3840];
-export const variantQualities = [60, 75, 90];
+export { variantQualities, variantWidths } from "@/lib/media-src";
 
 /** A resized copy, e.g. for thumbnails: /media/<key>?w=384&q=60. */
 export function mediaVariantUrl(r2Key: string, width: number, quality = 75): string {
