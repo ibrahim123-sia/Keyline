@@ -12,6 +12,13 @@ export type LngLat = { lng: number; lat: number };
 export type MapLibreModule = typeof import("maplibre-gl");
 
 /**
+ * MapLibre 6 builds its worker path from a variable, which bundlers cannot follow, so the
+ * worker file is referenced here instead: the bundler emits it as a hashed static asset.
+ */
+const workerUrl = () =>
+  new URL("../../node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).href;
+
+/**
  * MapLibre map that loads its library only when it is about to be visible (14 §1: the map
  * loads when visible). `onReady` receives the map once its style has loaded.
  */
@@ -70,6 +77,7 @@ export function BaseMap({
     import("maplibre-gl")
       .then((maplibre) => {
         if (cancelled || !container.current) return;
+        if (!maplibre.getWorkerUrl()) maplibre.setWorkerUrl(workerUrl());
         map = new maplibre.Map({
           container: container.current,
           style: styleUrl,

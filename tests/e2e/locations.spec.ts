@@ -7,11 +7,21 @@ test("locations: tree, map point, slug redirect and safe delete", async ({ page,
   await db().query("delete from seo_redirects");
   await db().query("delete from locations where parent_id is not null");
   await db().query("delete from locations");
+  const mapErrors: string[] = [];
+  page.on("console", (m) => {
+    if (m.type() === "error" && /maplibre|worker|webgl/i.test(m.text())) mapErrors.push(m.text());
+  });
   await signInAsAdmin(page, request);
   await page.goto("/admin/setup/locations");
 
   // Country
   await page.getByRole("button", { name: "New top-level location" }).click();
+  // The map really draws: a sized WebGL canvas, and its worker started without errors.
+  const canvas = page.locator("canvas.maplibregl-canvas");
+  await expect(canvas).toBeVisible({ timeout: 60_000 });
+  expect(
+    await canvas.evaluate((c: HTMLCanvasElement) => c.clientHeight > 100 && !!c.getContext("webgl2")),
+  ).toBe(true);
   await field(page, "Name").fill("United Arab Emirates");
   await page.getByRole("button", { name: "Save location" }).click();
   await expect(page.getByRole("treeitem", { name: /United Arab Emirates/ })).toBeVisible();
@@ -56,4 +66,5 @@ test("locations: tree, map point, slug redirect and safe delete", async ({ page,
   await page.getByRole("button", { name: "Delete" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
   await expect(page.getByText(/Still used by 1 sub-locations/)).toBeVisible();
+  expect(mapErrors).toEqual([]);
 });
