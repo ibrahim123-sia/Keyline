@@ -99,7 +99,7 @@ test("property editor: new draft, fill the required sections, autosave, publish"
 
   await panel.getByRole("button", { name: "Publish" }).click();
   await expect(page.getByText(/is live$/)).toBeVisible();
-  await expect(panel.getByText("Available", { exact: true })).toBeVisible();
+  await expect(panel.getByRole("combobox", { name: "Change status" })).toHaveValue("available");
   await expect(panel.getByRole("button", { name: "Unpublish" })).toBeVisible();
 
   const row = await db().query(
