@@ -151,7 +151,10 @@ async function checkReferences(tx: Tx, data: PropertyInput, current: PropertyInp
 }
 
 /** Location names (with the areas above it), project and type: what visitors type to find it. */
-async function searchTextFor(tx: Tx, data: PropertyInput): Promise<string> {
+export async function searchTextFor(
+  tx: Tx,
+  data: Pick<PropertyInput, "locationId" | "projectId" | "propertyTypeId">,
+): Promise<string> {
   const parts: string[] = [];
   if (data.locationId) {
     const res = await tx.execute<{ names: string | null }>(sql`

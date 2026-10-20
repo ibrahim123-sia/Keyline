@@ -13,6 +13,7 @@ import { refreshAutoBadges } from "./badges";
 import type { ImportContext, ImportDraft } from "./csv";
 import { nextPropertyReference } from "./reference";
 import { propertySlug } from "./write";
+import { searchTextFor } from "./save";
 
 /** CSV import (07 §7), server side. The checks themselves live in ./csv (shared with the browser). */
 
@@ -78,7 +79,7 @@ export async function loadImportContext(db: DbOrTx): Promise<ImportContext> {
 export async function createImportedDraft(
   tx: Tx,
   draft: ImportDraft,
-  meta: { actor: AuditActor; userId: string; line: number; locationText: string | null },
+  meta: { actor: AuditActor; userId: string; line: number },
 ): Promise<{ id: string; reference: string; photos: number }> {
   const reference = await nextPropertyReference(tx);
   const [row] = await tx
@@ -129,7 +130,11 @@ export async function createImportedDraft(
       agentId: draft.agentId,
       seoTitle: draft.seoTitle,
       seoDescription: draft.seoDescription,
-      searchText: meta.locationText,
+      searchText: await searchTextFor(tx, {
+        locationId: draft.locationId,
+        projectId: null,
+        propertyTypeId: draft.propertyTypeId,
+      }),
       source: "import",
       createdBy: meta.userId,
       updatedBy: meta.userId,
@@ -162,10 +167,4 @@ export async function createImportedDraft(
     );
   }
   return { id, reference: row!.reference, photos: draft.photoUrls.length };
-}
-
-/** Location words a draft can be found by in the admin search before its first save. */
-export function locationSearchText(ctx: ImportContext, locationId: string | null): string | null {
-  const loc = ctx.locations.find((l) => l.id === locationId);
-  return loc ? [loc.name, loc.parentName].filter(Boolean).join(" ") : null;
 }

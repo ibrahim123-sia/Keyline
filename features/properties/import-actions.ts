@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getDb } from "@/db/client";
 import { ActionError, adminAction } from "@/lib/actions";
 import { checkRow, importableKeys, mappingProblems, type ImportRowResult } from "./csv";
-import { createImportedDraft, loadImportContext, locationSearchText } from "./import";
+import { createImportedDraft, loadImportContext } from "./import";
 
 /**
  * CSV import, one batch (07 §7): the browser sends at most 50 checked rows at a time; each is
@@ -42,7 +42,6 @@ export const importPropertyRows = adminAction(
           actor: ctx.actor,
           userId: ctx.user.id,
           line: row.line,
-          locationText: locationSearchText(context, draft.locationId),
         }),
       );
       results.push({

@@ -110,7 +110,7 @@ describe("CSV import", () => {
       currency: "AED",
       beds: 2,
       publishedAt: null,
-      searchText: "Dubai Marina Dubai",
+      searchText: "Dubai Marina Dubai Apartment",
     });
     expect(a!.reference).toMatch(/^LT-\d+$/);
     expect(a!.size).toBeCloseTo(111.48, 2);
