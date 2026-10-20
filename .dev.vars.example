@@ -1,0 +1,4 @@
+# Used only by `pnpm preview` (the app running inside the local Workers runtime).
+# App variables come from .env / .env.local (see .env.example); this file only picks the
+# Next.js environment for those .env files. Copy to `.dev.vars`.
+NEXTJS_ENV=development

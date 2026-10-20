@@ -31,7 +31,8 @@
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "test:unit": "vitest run --project unit",
-    "test:integration": "vitest run --project integration"
+    "test:integration": "vitest run --project integration",
+    "dev:cron": "tsx scripts/dev-cron.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "5.9.2",

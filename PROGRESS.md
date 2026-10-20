@@ -52,6 +52,9 @@ Done-when checklist (from `15-build-phases.md`):
 - Rate limiting: fixed-window counters in Postgres (forms 5/min, chat 20/min + 200/day, login lockout).
 - Health check `/api/health`; internal revalidation `/api/internal/revalidate` (shared secret).
 - E2E: Playwright with its own server (`scripts/e2e-server.ts`: in-memory DB from the migrated snapshot + Next in `.next-e2e`). 5 flows pass: guests blocked from /admin and /account; customer sign-up -> email -> verify -> /account, kept out of /admin; first admin via setup command -> 2FA enrolment -> sign-out -> sign-in with TOTP; colour token change -> revalidate -> site restyled; internal endpoint needs the secret.
+- Cloudflare: `wrangler.jsonc` (production + staging: R2, Queues + DLQ, Hyperdrive, Durable Objects for the tag cache and revalidation queue, Images, Browser Rendering, every-minute cron), `open-next.config.ts`, custom worker (`worker/index.ts`) forwarding queue messages and cron ticks to internal routes; cron dispatcher that schedules tasks in the agency time zone; `pnpm dev:cron`.
+- CI (GitHub Actions): lint, types, format, migration drift check, unit + integration tests, dependency audit, Playwright against a production build, Workers bundle build on Linux, staging deploy (migrate -> build -> deploy -> health check) once secrets exist.
+- `next build` verified locally (public pages are partial prerenders, admin is dynamic). The OpenNext bundling step needs Linux/WSL (symlinks), so CI builds it.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
