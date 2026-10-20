@@ -68,7 +68,7 @@ export const adminNav: AdminNavGroup[] = [
   {
     label: "setup",
     items: [
-      { key: "locations", href: "/admin/setup/locations", icon: MapPinIcon, enabled: false },
+      { key: "locations", href: "/admin/setup/locations", icon: MapPinIcon, enabled: true },
       {
         key: "propertyTypes",
         href: "/admin/setup/property-types",

@@ -38,9 +38,16 @@ try {
     page.on("pageerror", (e) => errors.push(e.message));
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
     const res = await page.goto(baseUrl + path, { waitUntil: "load", timeout: 120_000 });
-    await page.waitForTimeout(1500);
+    if (process.env.CLICK) {
+      const [role, ...name] = process.env.CLICK.split(":");
+      await page
+        .getByRole(role as "button", { name: name.join(":") })
+        .first()
+        .click();
+    }
+    await page.waitForTimeout(Number(process.env.WAIT_MS ?? 1500));
     const file = join(outDir, `${path.replace(/[^a-z0-9]+/gi, "_") || "home"}-${width}.png`);
-    await page.screenshot({ path: file, fullPage: true });
+    await page.screenshot({ path: file, fullPage: process.env.FULL !== "0" });
     console.log(
       `${path} @${width}: ${res?.status()} -> ${file}${errors.length ? `\n  errors: ${errors.join(" | ")}` : ""}`,
     );

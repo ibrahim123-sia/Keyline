@@ -58,7 +58,8 @@ export function AdminShell({
         </div>
       </PortalContainerContext>
       <div ref={setPortalContainer} />
-      <Toaster theme={optimisticTheme} position="bottom-right" />
+      {/* Top-right, under the top bar: bottom toasts would cover the sticky Save bars. */}
+      <Toaster theme={optimisticTheme} position="top-right" offset={{ top: 64 }} />
     </div>
   );
 }

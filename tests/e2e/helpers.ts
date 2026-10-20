@@ -112,6 +112,14 @@ export async function signInAsAdmin(page: Page, request: APIRequestContext) {
   const password = "admin-e2e-password-1";
   createAdmin(email, password, "Admin E2E");
   await signIn(page, "/admin/sign-in", email, password);
-  await expect(page).toHaveURL(/\/admin(\?|$)/);
+  // The first sign-in after the dev server starts also compiles the auth route and admin pages.
+  await expect(page).toHaveURL(/\/admin(\?|$)/, { timeout: 60_000 });
   return { email, password };
+}
+
+/** Saves a review screenshot when E2E_SNAP_DIR is set (local visual review; off in CI). */
+export async function snap(page: Page, name: string): Promise<void> {
+  const dir = process.env.E2E_SNAP_DIR;
+  if (!dir) return;
+  await page.screenshot({ path: `${dir}/${name}.png`, fullPage: true });
 }
