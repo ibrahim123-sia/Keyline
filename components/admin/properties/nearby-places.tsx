@@ -1,7 +1,7 @@
 "use client";
 
 import { RefreshCwIcon, TriangleAlertIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "cn";
 import { SortableList } from "@/components/admin/sortable-list";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
+  getPropertyPois,
   recalculatePropertyPois,
   reorderPropertyPois,
   updatePropertyPoi,
@@ -41,15 +42,39 @@ export function NearbyPlaces({
   hasPin,
   distanceUnit,
   readOnly,
+  watch = 0,
 }: {
   propertyId: string;
   initial: PropertyPoisView;
   hasPin: boolean;
   distanceUnit: DistanceUnit;
   readOnly?: boolean;
+  /** Bump after a save that moved the pin: follows the background measurement until it ends. */
+  watch?: number;
 }) {
   const hydrated = useHydrated();
   const [view, setView] = useState(initial);
+  useEffect(() => {
+    if (!watch) return;
+    let stop = false;
+    let tries = 0;
+    const tick = async () => {
+      if (stop || tries++ > 40) return;
+      const res = await getPropertyPois({ propertyId });
+      if (stop) return;
+      if (res.ok) {
+        setView(res.data);
+        const run = res.data.lastRun;
+        if (run && run.status !== "queued" && run.status !== "running") return;
+      }
+      setTimeout(tick, 1500);
+    };
+    const first = setTimeout(tick, 800);
+    return () => {
+      stop = true;
+      clearTimeout(first);
+    };
+  }, [watch, propertyId]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const recalc = useAction(recalculatePropertyPois, {
     success: (v) =>

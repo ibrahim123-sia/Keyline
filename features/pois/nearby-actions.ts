@@ -18,6 +18,21 @@ import { listPropertyPois } from "./nearby-queries";
  * shown instead of the measured one, and order the list.
  */
 
+/** The current list and last run, for the editor to follow a measurement in the background. */
+export const getPropertyPois = adminAction(
+  z.object({ propertyId: z.uuid() }),
+  {},
+  async ({ propertyId }) => {
+    const db = await getDb();
+    const [listing] = await db
+      .select({ id: properties.id })
+      .from(properties)
+      .where(and(eq(properties.id, propertyId), eq(properties.agencyId, currentAgencyId())));
+    if (!listing) throw new ActionError("This listing no longer exists.", "NOT_FOUND");
+    return listPropertyPois(db, propertyId);
+  },
+);
+
 /** "Recalculate": measures now and returns the fresh list (a run already waiting is reused). */
 export const recalculatePropertyPois = adminAction(
   z.object({ propertyId: z.uuid() }),

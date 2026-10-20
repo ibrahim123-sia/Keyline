@@ -4,6 +4,7 @@ import { jobRuns } from "@/db/schema/system";
 import { cleanupStaleUploads } from "@/features/media/maintenance";
 import { recountAllMediaUsage } from "@/features/media/usage";
 import { refreshStalePois } from "@/features/pois/distances";
+import { dailyListingMaintenance } from "@/features/properties/maintenance";
 import { loadSettings } from "@/features/settings/queries";
 import { newId } from "@/lib/ids";
 import { purgeExpired } from "@/lib/rate-limit";
@@ -45,6 +46,13 @@ export const cronTasks: CronTask[] = [
     schedule: "every hour",
     due: every(60),
     run: () => cleanupStaleUploads(),
+  },
+  // Just after midnight: featured dates end, automatic badges start and end (05 §3).
+  {
+    name: "listings.daily",
+    schedule: "daily at 00:15",
+    due: at(0, 15),
+    run: async () => dailyListingMaintenance(await getDb()),
   },
   // Daily 02:00-03:30: clean-ups and repairs.
   { name: "rate-limits.purge", schedule: "daily at 02:00", due: at(2), run: () => purgeExpired() },

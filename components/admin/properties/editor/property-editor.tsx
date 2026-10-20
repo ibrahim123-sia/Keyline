@@ -79,6 +79,7 @@ export function PropertyEditor({
   const [saveState, setSaveState] = useState<SaveState>({ kind: "idle" });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [busy, setBusy] = useState(false);
+  const [nearbyWatch, setNearbyWatch] = useState(0);
 
   const dirty = !same(data, saved);
   const live = isLiveStatus(status);
@@ -150,6 +151,7 @@ export function PropertyEditor({
         setData((d) => (d.slug === snapshot.slug ? { ...d, slug: res.data.slug } : d));
         setFieldErrors({});
         setSaveState({ kind: "saved", at: new Date().toISOString() });
+        if (res.data.pointMoved) setNearbyWatch((n) => n + 1);
         return true;
       }
       setFieldErrors(res.fieldErrors ?? {});
@@ -306,6 +308,7 @@ export function PropertyEditor({
             hasPin={Boolean(saved.point)}
             distanceUnit={market.distanceUnit}
             readOnly={readOnly}
+            watch={nearbyWatch}
           />
         </FormSection>
         <TrustSection {...props} />

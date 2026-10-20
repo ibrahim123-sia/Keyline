@@ -20,7 +20,7 @@ export const saveProperty = adminAction(
       saveListing(tx, { id, data, expectedUpdatedAt, actor: ctx.actor, userId: ctx.user.id }),
     );
     await revalidateListings([id], result.projectIds);
-    return { updatedAt: result.updatedAt, slug: result.slug };
+    return { updatedAt: result.updatedAt, slug: result.slug, pointMoved: result.pointMoved };
   },
 );
 
