@@ -60,7 +60,8 @@ async function schoolType(googlePlaceType: string | null = "school") {
 describe("POIs", () => {
   beforeEach(async () => {
     adminState.user = testAdmin;
-    await truncate("pois", "poi_types", "audit_log");
+    // Other files store integration keys; "no key" must not depend on the file order.
+    await truncate("pois", "poi_types", "audit_log", "secrets");
   });
   afterEach(() => setMapsProvider(null));
 
