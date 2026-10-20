@@ -11,6 +11,8 @@ import {
   setPoisActive,
 } from "@/features/pois/actions";
 import { listPois } from "@/features/pois/queries";
+import { saveSettings } from "@/features/settings/mutations";
+import { loadSettings } from "@/features/settings/queries";
 import { parseTableParams } from "@/lib/table-params";
 import { adminState, testAdmin } from "../helpers/admin-context";
 import { truncate } from "../helpers/db";
@@ -61,9 +63,32 @@ describe("POIs", () => {
   beforeEach(async () => {
     adminState.user = testAdmin;
     // Other files store integration keys; "no key" must not depend on the file order.
-    await truncate("pois", "poi_types", "audit_log", "secrets");
+    await truncate("pois", "poi_types", "audit_log", "secrets", "settings");
   });
   afterEach(() => setMapsProvider(null));
+
+  it("refuses Google search and import when Import from Google is turned off", async () => {
+    const db = await getDb();
+    const integrations = await loadSettings("integrations", db);
+    await saveSettings(
+      db,
+      "integrations",
+      { ...integrations, googleMaps: { ...integrations.googleMaps, importPlaces: false } },
+      { type: "admin", id: testAdmin.id },
+    );
+    const typeId = await schoolType();
+    expect(
+      await searchGooglePlaces({ poiTypeId: typeId, center: marina, radiusM: 2000 }),
+    ).toMatchObject({ ok: false, code: "DISABLED" });
+    expect(
+      await importGooglePlaces({
+        poiTypeId: typeId,
+        places: [
+          { googlePlaceId: "g-x", name: "X School", address: "", point: marina, website: null },
+        ],
+      }),
+    ).toMatchObject({ ok: false, code: "DISABLED" });
+  });
 
   it("explains that Google needs a key when none is configured", async () => {
     const typeId = await schoolType();

@@ -2,10 +2,11 @@
 
 import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import { z } from "zod";
-import { getDb } from "@/db/client";
+import { getDb, type Db } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { poiTypes, pois } from "@/db/schema/master-data";
 import { getMapsProvider, MapsNotConfiguredError } from "@/features/integrations/google-maps";
+import { loadSettings } from "@/features/settings/queries";
 import { ActionError, adminAction } from "@/lib/actions";
 import { auditChange, writeAudit } from "@/lib/audit";
 import { lngLatSchema as lngLat, poiInputSchema } from "./schema";
@@ -101,6 +102,16 @@ export const deletePois = adminAction(
 );
 
 /** "Import from Google" step 1: nearby places of one type around a point (07 §1). */
+/** Settings -> Integrations "Allow Import from Google for places" (04 §8). */
+async function assertImportAllowed(db: Db) {
+  const integrations = await loadSettings("integrations", db);
+  if (!integrations.googleMaps.importPlaces)
+    throw new ActionError(
+      "Import from Google is turned off in Settings -> Integrations.",
+      "DISABLED",
+    );
+}
+
 export const searchGooglePlaces = adminAction(
   z.object({
     poiTypeId: z.uuid(),
@@ -110,6 +121,7 @@ export const searchGooglePlaces = adminAction(
   { write: true },
   async ({ poiTypeId, center, radiusM }) => {
     const db = await getDb();
+    await assertImportAllowed(db);
     const [type] = await db
       .select()
       .from(poiTypes)
@@ -169,6 +181,7 @@ export const importGooglePlaces = adminAction(
   { write: true },
   async ({ poiTypeId, places }, ctx) => {
     const db = await getDb();
+    await assertImportAllowed(db);
     const inserted = await db.transaction(async (tx) => {
       const rows = await tx
         .insert(pois)

@@ -59,6 +59,7 @@ export default async function PoisPage(props: PageProps<"/admin/setup/pois">) {
         styleUrl={resolveMapStyle(integrations.googleMaps).styleUrl}
         mapCenter={market.mapCenter}
         googleReady={googleReady}
+        importAllowed={integrations.googleMaps.importPlaces}
         readOnly={user.readOnly}
       />
     </>

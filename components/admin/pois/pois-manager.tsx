@@ -51,6 +51,7 @@ export function PoisManager({
   styleUrl,
   mapCenter,
   googleReady,
+  importAllowed,
   readOnly,
 }: {
   rows: PoiRow[];
@@ -63,6 +64,8 @@ export function PoisManager({
   styleUrl: string;
   mapCenter: LngLat;
   googleReady: boolean;
+  /** Settings -> Integrations "Allow Import from Google for places". */
+  importAllowed: boolean;
   readOnly?: boolean;
 }) {
   const router = useRouter();
@@ -194,21 +197,23 @@ export function PoisManager({
             />
             {!readOnly && (
               <>
-                <Button
-                  variant="outline"
-                  disabled={types.length === 0}
-                  onClick={() =>
-                    setImporting({
-                      poiTypeId: types.find((t) => t.googlePlaceType)?.id ?? types[0]?.id ?? "",
-                      centerId: centers[0]?.id ?? "",
-                      radiusM: types[0]?.defaultSearchRadiusM ?? 3000,
-                      results: null,
-                      chosen: new Set(),
-                    })
-                  }
-                >
-                  <DownloadCloudIcon /> Import from Google
-                </Button>
+                {importAllowed && (
+                  <Button
+                    variant="outline"
+                    disabled={types.length === 0}
+                    onClick={() =>
+                      setImporting({
+                        poiTypeId: types.find((t) => t.googlePlaceType)?.id ?? types[0]?.id ?? "",
+                        centerId: centers[0]?.id ?? "",
+                        radiusM: types[0]?.defaultSearchRadiusM ?? 3000,
+                        results: null,
+                        chosen: new Set(),
+                      })
+                    }
+                  >
+                    <DownloadCloudIcon /> Import from Google
+                  </Button>
+                )}
                 <Button
                   disabled={types.length === 0}
                   onClick={() => setEditing({ id: null, data: newPoi() })}
