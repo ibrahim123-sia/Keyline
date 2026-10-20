@@ -17,6 +17,8 @@ export type LocalTime = { hour: number; minute: number; weekday: number; day: nu
 
 export type CronTask = {
   name: string;
+  /** When it runs, for the System page ("every minute", "daily at 02:00"). */
+  schedule: string;
   due: (t: LocalTime) => boolean;
   run: () => Promise<unknown>;
 };
@@ -30,12 +32,27 @@ export const every = (minutes: number) => (t: LocalTime) =>
 
 export const cronTasks: CronTask[] = [
   // Every minute: queued jobs whose time has come (retries, delayed jobs, lost messages).
-  { name: "jobs.run-due", due: () => true, run: () => runDueJobs() },
-  { name: "jobs.requeue-stuck", due: every(15), run: () => requeueStuckJobs() },
-  { name: "media.cleanup", due: every(60), run: () => cleanupStaleUploads() },
+  { name: "jobs.run-due", schedule: "every minute", due: () => true, run: () => runDueJobs() },
+  {
+    name: "jobs.requeue-stuck",
+    schedule: "every 15 minutes",
+    due: every(15),
+    run: () => requeueStuckJobs(),
+  },
+  {
+    name: "media.cleanup",
+    schedule: "every hour",
+    due: every(60),
+    run: () => cleanupStaleUploads(),
+  },
   // Daily 02:00-03:30: clean-ups and repairs.
-  { name: "rate-limits.purge", due: at(2), run: () => purgeExpired() },
-  { name: "media.recount", due: at(3, 30), run: async () => recountAllMediaUsage(await getDb()) },
+  { name: "rate-limits.purge", schedule: "daily at 02:00", due: at(2), run: () => purgeExpired() },
+  {
+    name: "media.recount",
+    schedule: "daily at 03:30",
+    due: at(3, 30),
+    run: async () => recountAllMediaUsage(await getDb()),
+  },
 ];
 
 const WEEKDAYS: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };

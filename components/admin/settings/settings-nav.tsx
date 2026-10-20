@@ -20,6 +20,7 @@ export const settingsTabs = [
   { href: "/admin/settings/security", label: "Security" },
   { href: "/admin/settings/users", label: "Admin users" },
   { href: "/admin/settings/audit", label: "Audit log" },
+  { href: "/admin/settings/system", label: "System" },
 ] as const;
 
 export function SettingsNav() {

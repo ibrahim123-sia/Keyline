@@ -45,6 +45,11 @@ export async function enqueue(
   return id;
 }
 
+/** Sends already-queued runs on their way again (Jobs page "Retry"). */
+export async function redispatch(ids: string[]): Promise<void> {
+  for (const id of ids) await dispatch(id, 0);
+}
+
 async function dispatch(id: string, delayMs: number): Promise<void> {
   const driver = process.env.JOBS_DRIVER ?? env().JOBS_DRIVER;
   if (driver === "manual") return;
