@@ -1,12 +1,13 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { db, field, signInAsAdmin, snap } from "./helpers";
+import { clearListings, db, field, signInAsAdmin, snap } from "./helpers";
 
 test("developers: logo from the picker, slug redirect, merge duplicates", async ({
   page,
   request,
 }) => {
   test.setTimeout(300_000);
+  await clearListings();
   await db().query("delete from developers");
   await db().query("delete from seo_redirects");
   await signInAsAdmin(page, request);

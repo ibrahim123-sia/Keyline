@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { db, field, signInAsAdmin, snap } from "./helpers";
+import { clearListings, db, field, signInAsAdmin, snap } from "./helpers";
 
 const AGENCY = process.env.AGENCY_ID || "0192f000-0000-7000-8000-000000000001";
 
@@ -8,6 +8,7 @@ test("agents: profile with languages, areas and hours; team order; hide", async 
   request,
 }) => {
   test.setTimeout(300_000);
+  await clearListings();
   await db().query("delete from agents");
   await db().query("delete from locations");
   await db().query(

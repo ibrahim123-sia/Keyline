@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { db, field, signInAsAdmin, snap } from "./helpers";
+import { clearListings, db, field, signInAsAdmin, snap } from "./helpers";
 
 test("places: add by hand with a pasted point, list, and hide in bulk", async ({
   page,
   request,
 }) => {
   test.setTimeout(180_000);
+  await clearListings();
   await db().query("delete from pois");
   await db().query("delete from poi_types");
   await db().query(

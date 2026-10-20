@@ -126,3 +126,10 @@ export async function snap(page: Page, name: string): Promise<void> {
   if (!dir) return;
   await page.screenshot({ path: `${dir}/${name}.png`, fullPage: true });
 }
+
+/** Listings and projects point at master data and files with "restrict": clear them first. */
+export async function clearListings(): Promise<void> {
+  await db().query("delete from properties");
+  await db().query("delete from projects");
+  await db().query("delete from payment_plans where not is_template");
+}

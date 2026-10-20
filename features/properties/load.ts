@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { propertyTypes } from "@/db/schema/master-data";
@@ -31,7 +31,10 @@ export async function loadProperty(
     .select()
     .from(propertyMedia)
     .where(eq(propertyMedia.propertyId, id))
-    .orderBy(asc(propertyMedia.kind), asc(propertyMedia.sortOrder));
+    .orderBy(
+      sql`array_position(array['photo','floor_plan','video','brochure','document']::text[], ${propertyMedia.kind})`,
+      asc(propertyMedia.sortOrder),
+    );
   const facilityRows = await db
     .select({ id: propertyFacilities.facilityId })
     .from(propertyFacilities)

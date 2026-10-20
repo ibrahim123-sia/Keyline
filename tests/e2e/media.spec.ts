@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { db, field, signInAsAdmin, snap } from "./helpers";
+import { clearListings, db, field, signInAsAdmin, snap } from "./helpers";
 
 const OWNER = "E2E Camera Owner";
 
@@ -19,6 +19,7 @@ test("media library: upload, strip location data, edit, crop, use in a page, saf
   request,
 }) => {
   test.setTimeout(300_000);
+  await clearListings();
   await db().query("delete from media");
   await db().query("delete from locations");
   await db().query("delete from seo_redirects");

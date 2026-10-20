@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { db, field, signInAsAdmin } from "./helpers";
+import { clearListings, db, field, signInAsAdmin } from "./helpers";
 
 test.describe("Phase 2: master data", () => {
   test.beforeAll(async () => {
+    await clearListings();
     await db().query("delete from facilities");
     await db().query("delete from badges");
   });
