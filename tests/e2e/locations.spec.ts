@@ -20,7 +20,9 @@ test("locations: tree, map point, slug redirect and safe delete", async ({ page,
   const canvas = page.locator("canvas.maplibregl-canvas");
   await expect(canvas).toBeVisible({ timeout: 60_000 });
   expect(
-    await canvas.evaluate((c: HTMLCanvasElement) => c.clientHeight > 100 && !!c.getContext("webgl2")),
+    await canvas.evaluate(
+      (c: HTMLCanvasElement) => c.clientHeight > 100 && !!c.getContext("webgl2"),
+    ),
   ).toBe(true);
   await field(page, "Name").fill("United Arab Emirates");
   await page.getByRole("button", { name: "Save location" }).click();

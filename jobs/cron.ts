@@ -1,6 +1,8 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { jobRuns } from "@/db/schema/system";
+import { cleanupStaleUploads } from "@/features/media/maintenance";
+import { recountAllMediaUsage } from "@/features/media/usage";
 import { loadSettings } from "@/features/settings/queries";
 import { newId } from "@/lib/ids";
 import { purgeExpired } from "@/lib/rate-limit";
@@ -30,8 +32,10 @@ export const cronTasks: CronTask[] = [
   // Every minute: queued jobs whose time has come (retries, delayed jobs, lost messages).
   { name: "jobs.run-due", due: () => true, run: () => runDueJobs() },
   { name: "jobs.requeue-stuck", due: every(15), run: () => requeueStuckJobs() },
-  // Daily 02:00: clean-ups.
+  { name: "media.cleanup", due: every(60), run: () => cleanupStaleUploads() },
+  // Daily 02:00-03:30: clean-ups and repairs.
   { name: "rate-limits.purge", due: at(2), run: () => purgeExpired() },
+  { name: "media.recount", due: at(3, 30), run: async () => recountAllMediaUsage(await getDb()) },
 ];
 
 const WEEKDAYS: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };

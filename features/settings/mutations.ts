@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { settings, type SettingGroup } from "@/db/schema/system";
+import { settingsMediaIds, syncMediaUsage } from "@/features/media/usage";
 import { auditChange, type AuditActor } from "@/lib/audit";
 import { loadSettings } from "./queries";
 import { settingsSchemas, type SettingsOf } from "./schema";
@@ -39,6 +40,8 @@ export async function saveSettings<G extends SettingGroup>(
     before,
     after: parsed,
   });
+  const mediaIds = [...settingsMediaIds(group, before), ...settingsMediaIds(group, parsed)];
+  if (mediaIds.length) await syncMediaUsage(db, mediaIds);
   return parsed;
 }
 

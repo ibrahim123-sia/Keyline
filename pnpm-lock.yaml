@@ -208,6 +208,9 @@ importers:
       drizzle-orm:
         specifier: 0.45.4
         version: 0.45.4(@electric-sql/pglite@0.5.10)(@types/pg@8.23.1)(kysely@0.29.7)(pg@8.23.1)(postgres@3.4.9)
+      heic-to:
+        specifier: 1.6.5
+        version: 1.6.5
       lucide-react:
         specifier: 1.59.0
         version: 1.59.0(@types/react@19.3.0)(react@19.3.1)
@@ -296,6 +299,9 @@ importers:
       shadcn:
         specifier: 4.22.1
         version: 4.22.1(supports-color@10.2.2)
+      sharp:
+        specifier: 0.35.5
+        version: 0.35.5(@types/node@24.19.2)
       tailwindcss:
         specifier: 4.3.3
         version: 4.3.3
@@ -4543,6 +4549,9 @@ packages:
   hasown@2.0.4:
     resolution: {integrity: sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==}
     engines: {node: '>= 0.4'}
+
+  heic-to@1.6.5:
+    resolution: {integrity: sha512-xPH6gvrzSRIFo/GyzYbr+DZX1JoQliw1oJBT1PCduR0ruDVs1DjlAdU1m5Thed2ZXBoLqYMCd5UXiJteRl3BNQ==}
 
   hermes-estree@0.25.1:
     resolution: {integrity: sha512-0wUoCcLp+5Ev5pDW2OriHC2MJCbwLwuRx+gAqMTOkGKJJiBCLjtrvy4PWUGn6MIVefecRpzoOZ/UV6iGdOr+Cw==}
@@ -10856,6 +10865,8 @@ snapshots:
   hasown@2.0.4:
     dependencies:
       function-bind: 1.1.2
+
+  heic-to@1.6.5: {}
 
   hermes-estree@0.25.1: {}
 

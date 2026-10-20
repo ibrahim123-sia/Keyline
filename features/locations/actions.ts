@@ -10,6 +10,7 @@ import { redirectSlugChange } from "@/features/seo/redirects";
 import { geocode as geocodeQuery } from "@/features/locations/geocode";
 import { ActionError, adminAction } from "@/lib/actions";
 import { auditChange, writeAudit } from "@/lib/audit";
+import { syncMediaUsage } from "@/features/media/usage";
 import { tags } from "@/lib/cache-tags";
 import { uniqueSlug } from "@/lib/slug";
 import { getLocationForAdmin, listLocationNodes, locationUsage } from "./queries";
@@ -91,6 +92,7 @@ export const saveLocation = adminAction(
           newSlug: slug,
           actorId: ctx.user.id,
         });
+        await syncMediaUsage(tx, [before.ogImageId, after!.ogImageId]);
         return after!;
       }
       const siblings = nodes.filter((n) => n.parentId === data.parentId);
@@ -109,6 +111,7 @@ export const saveLocation = adminAction(
         entityId: created!.id,
         after: { ...created, geom: created!.geom ? "[shape]" : null },
       });
+      await syncMediaUsage(tx, [created!.ogImageId]);
       return created!;
     });
     updateTag(tags.locations);
@@ -137,6 +140,7 @@ export const deleteLocation = adminAction(
     }
     await db.transaction(async (tx) => {
       await tx.delete(locations).where(eq(locations.id, id));
+      await syncMediaUsage(tx, [before.ogImageId]);
       await writeAudit(tx, {
         actor: ctx.actor,
         action: "location.delete",
