@@ -14,11 +14,14 @@ import {
   ArrowUpIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  BookmarkPlusIcon,
   Columns3Icon,
   SearchIcon,
+  XIcon,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useState, useTransition, type ReactNode } from "react";
+import { toast } from "sonner";
 import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +32,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { deleteView, saveView } from "@/features/saved-views/actions";
+import { viewQuery, type SavedView, type SavedViewTable } from "@/features/saved-views/schema";
 
 export type { ColumnDef };
 
@@ -53,6 +59,7 @@ export function DataTable<T>({
   toolbar,
   bulkActions,
   views,
+  savedViews,
   empty,
 }: {
   tableId: string;
@@ -68,6 +75,8 @@ export function DataTable<T>({
   toolbar?: ReactNode;
   bulkActions?: (selectedIds: string[], clear: () => void) => ReactNode;
   views?: Array<{ label: string; params: Record<string, string> }>;
+  /** Views the agency saved for this table (stored in the database). */
+  savedViews?: { tableId: SavedViewTable; items: SavedView[]; canEdit: boolean };
   empty?: ReactNode;
 }) {
   const router = useRouter();
@@ -143,9 +152,9 @@ export function DataTable<T>({
 
   return (
     <div className="flex flex-col gap-3">
-      {views && views.length > 0 && (
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Saved views">
-          {views.map((v) => {
+      {((views && views.length > 0) || savedViews) && (
+        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Saved views">
+          {(views ?? []).map((v) => {
             const active = Object.entries(v.params).every(([k, val]) => params.get(k) === val);
             return (
               <button
@@ -170,6 +179,30 @@ export function DataTable<T>({
               </button>
             );
           })}
+          {savedViews && (
+            <SavedViewChips
+              {...savedViews}
+              current={viewQuery(params)}
+              onApply={(query) => {
+                const next = new URLSearchParams(query);
+                const q = params.get("q");
+                if (q) next.set("q", q);
+                startTransition(() =>
+                  router.replace(`${pathname}${next.size ? `?${next}` : ""}`, { scroll: false }),
+                );
+                setSelection({});
+              }}
+              onClear={() => {
+                const q = params.get("q");
+                startTransition(() =>
+                  router.replace(q ? `${pathname}?q=${encodeURIComponent(q)}` : pathname, {
+                    scroll: false,
+                  }),
+                );
+                setSelection({});
+              }}
+            />
+          )}
         </div>
       )}
       <div className="flex flex-wrap items-center gap-2">
@@ -403,5 +436,119 @@ export function UrlFilterSelect({
         </option>
       ))}
     </select>
+  );
+}
+
+function SavedViewChips({
+  tableId,
+  items,
+  canEdit,
+  current,
+  onApply,
+  onClear,
+}: {
+  tableId: SavedViewTable;
+  items: SavedView[];
+  canEdit: boolean;
+  current: string;
+  onApply: (query: string) => void;
+  onClear: () => void;
+}) {
+  const router = useRouter();
+  const inputId = useId();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const match = items.find((v) => v.query === current);
+
+  async function save() {
+    setBusy(true);
+    const res = await saveView({ tableId, name, query: current });
+    setBusy(false);
+    if (!res.ok) return toast.error(res.error);
+    toast.success(`View “${res.data.name}” saved`);
+    setOpen(false);
+    setName("");
+    router.refresh();
+  }
+
+  return (
+    <>
+      {items.map((v) => {
+        const active = v.id === match?.id;
+        return (
+          <span
+            key={v.id}
+            className={cn(
+              "inline-flex items-center rounded-full border text-[12.5px] font-medium transition-colors",
+              active
+                ? "border-accent bg-accent-soft text-ink"
+                : "border-border bg-surface text-text-muted hover:text-ink",
+            )}
+          >
+            <button
+              type="button"
+              aria-pressed={active}
+              onClick={() => (active ? onClear() : onApply(v.query))}
+              className={cn("py-1 ps-3", canEdit ? "pe-1.5" : "pe-3")}
+            >
+              {v.name}
+            </button>
+            {canEdit && (
+              <button
+                type="button"
+                aria-label={`Delete view ${v.name}`}
+                className="me-1 rounded-full p-0.5 hover:bg-surface-muted"
+                onClick={async () => {
+                  const res = await deleteView({ id: v.id });
+                  if (!res.ok) return toast.error(res.error);
+                  toast.success(`View “${v.name}” deleted`);
+                  router.refresh();
+                }}
+              >
+                <XIcon className="size-3" />
+              </button>
+            )}
+          </span>
+        );
+      })}
+      {canEdit && current && !match && (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 rounded-full text-[12.5px]">
+              <BookmarkPlusIcon /> Save view
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="flex w-72 flex-col gap-2">
+            <form
+              className="flex flex-col gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void save();
+              }}
+            >
+              <label htmlFor={inputId} className="text-[13px] font-semibold text-ink">
+                View name
+              </label>
+              <Input
+                id={inputId}
+                value={name}
+                maxLength={40}
+                placeholder="e.g. Marina drafts"
+                onChange={(e) => setName(e.target.value)}
+              />
+              <p className="text-[12px] text-text-muted">
+                Saves the current filters for everyone on the team.
+              </p>
+              <div className="flex justify-end">
+                <Button type="submit" size="sm" disabled={busy || !name.trim()}>
+                  {busy ? "Saving…" : "Save view"}
+                </Button>
+              </div>
+            </form>
+          </PopoverContent>
+        </Popover>
+      )}
+    </>
   );
 }

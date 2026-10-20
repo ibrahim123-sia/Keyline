@@ -1,10 +1,8 @@
 import { z } from "zod";
 import { optionalHttpUrl } from "@/features/seo/schema";
+import { lngLatSchema } from "@/lib/schemas";
 
-export const lngLatSchema = z.object({
-  lng: z.number().min(-180).max(180),
-  lat: z.number().min(-90).max(90),
-});
+export { lngLatSchema };
 
 export const poiInputSchema = z
   .object({

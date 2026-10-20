@@ -60,3 +60,9 @@ export const workingHoursSchema = z.object({
   sat: dayRanges,
   sun: dayRanges,
 });
+
+/** A map point (WGS 84). */
+export const lngLatSchema = z.object({
+  lng: z.number().min(-180).max(180),
+  lat: z.number().min(-90).max(90),
+});
