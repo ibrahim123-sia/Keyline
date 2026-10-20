@@ -41,6 +41,8 @@ export const generalSchema = z.object({
     .default("d MMM yyyy"),
   firstDayOfWeek: z.union([z.literal(0), z.literal(1), z.literal(6)]).default(1),
   maintenanceMode: z.boolean().default(false),
+  /** Media library upload limit (07 §8). */
+  maxUploadMb: z.number().int().min(1).max(100).default(20),
   maintenanceMessage: z
     .string()
     .max(500)

@@ -11,6 +11,7 @@ import { join, resolve } from "node:path";
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { localDataPath } from "./paths";
 import { startPgliteServer } from "./pglite";
 
 /**
@@ -20,7 +21,7 @@ import { startPgliteServer } from "./pglite";
  */
 
 const MIGRATIONS_DIR = resolve("db/migrations");
-const CACHE_DIR = resolve(".data");
+const CACHE_DIR = localDataPath("cache");
 
 function migrationsHash(): string {
   const h = createHash("sha256");

@@ -40,6 +40,23 @@ Done-when checklist (from `15-build-phases.md`):
 - [x] Changing a color token in the DB changes the site after revalidation (e2e)
 - [x] `/admin` is blocked for guests and customers (e2e + unit)
 
+## Phase 2 — Settings and master data (plan)
+
+1. Admin UI kit: page header, form sections, fields (text, number, select, switch, colour with contrast, list, checkbox list, icon picker), side panel, confirm dialog, empty state, drag-to-reorder list, portalled UI kept inside the admin theme.
+2. Master data (Setup): property types, facilities, badges, POI types with create/edit in a side panel, drag to reorder, usage counts, safe delete and "merge into…".
+3. Maps: MapLibre map, pin picker and polygon drawing (tile key from settings, keyless fallback style).
+4. Locations tree (country -> building) with map pin and boundary, SEO block; POIs with map point and "Import from Google" (stub without a key); developers; agent profiles.
+5. Media library on R2 (local folder in dev): signed uploads, processing job (dimensions, colour, re-encode/EXIF strip), folders, alt text, crops, usage, replace, bulk delete unused; media picker.
+6. Settings screens for all 12 groups (integrations as stubs with test buttons), branding editor with live preview and contrast checker.
+7. Admin users (invite, deactivate, reset 2FA, API tokens), audit log viewer, Jobs page.
+
+Done-when checklist:
+
+- [ ] Every master data type can be created, edited, ordered, merged and safely deleted
+- [ ] Uploads go to R2 and show in the media library with alt text
+- [ ] Settings validate and save; contrast checker works
+- [ ] Audit log shows every change with before/after
+
 ## Done
 
 - Read the whole spec. Checked the toolchain on this machine (Node 24, pnpm 12, no Docker/Postgres).
@@ -55,6 +72,7 @@ Done-when checklist (from `15-build-phases.md`):
 - Cloudflare: `wrangler.jsonc` (production + staging: R2, Queues + DLQ, Hyperdrive, Durable Objects for the tag cache and revalidation queue, Images, Browser Rendering, every-minute cron), `open-next.config.ts`, custom worker (`worker/index.ts`) forwarding queue messages and cron ticks to internal routes; cron dispatcher that schedules tasks in the agency time zone; `pnpm dev:cron`.
 - CI (GitHub Actions): lint, types, format, migration drift check, unit + integration tests, dependency audit, Playwright against a production build, Workers bundle build on Linux, staging deploy (migrate -> build -> deploy -> health check) once secrets exist.
 - `next build` verified locally (public pages are partial prerenders, admin is dynamic). The OpenNext bundling step needs Linux/WSL (symlinks), so CI builds it.
+- Phase 2 (in progress): admin UI kit; master data for property types, facilities, badges and POI types (side-panel editor, drag reorder, usage counts, safe delete, merge), audited and cache-tagged; integration + e2e tests.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress

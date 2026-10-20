@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { expect, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import { Pool } from "pg";
 
 /** The e2e database started by scripts/e2e-server.ts. */
@@ -80,4 +80,38 @@ export async function expectPath(page: Page, path: string | RegExp) {
       ? new RegExp(`${path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\?|$)`)
       : path,
   );
+}
+
+const AGENCY_ID = process.env.AGENCY_ID || "0192f000-0000-7000-8000-000000000001";
+
+/** Stores one settings group (merged over what is there) and expires its cache tag. */
+export async function setSettings(
+  request: APIRequestContext,
+  group: string,
+  patch: Record<string, unknown>,
+): Promise<void> {
+  await db().query(
+    `insert into settings (id, agency_id, "group", value) values (gen_random_uuid(), $1, $2, $3::jsonb)
+     on conflict (agency_id, "group") do update set value = settings.value || excluded.value, updated_at = now()`,
+    [AGENCY_ID, group, JSON.stringify(patch)],
+  );
+  const res = await request.post("/api/internal/revalidate", {
+    headers: { authorization: `Bearer ${INTERNAL_SECRET}` },
+    data: { tags: [`settings:${group}`] },
+  });
+  if (!res.ok()) throw new Error(`revalidate failed: ${res.status()}`);
+}
+
+/**
+ * Signs in as a fresh admin. Admin feature specs relax the 2FA requirement (as the demo
+ * preset does); the 2FA flow itself is covered in auth.spec.ts.
+ */
+export async function signInAsAdmin(page: Page, request: APIRequestContext) {
+  await setSettings(request, "security", { require2fa: false });
+  const email = uniqueEmail("admin");
+  const password = "admin-e2e-password-1";
+  createAdmin(email, password, "Admin E2E");
+  await signIn(page, "/admin/sign-in", email, password);
+  await expect(page).toHaveURL(/\/admin(\?|$)/);
+  return { email, password };
 }

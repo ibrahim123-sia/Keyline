@@ -1,7 +1,8 @@
 "use client";
 
-import { useOptimistic, useTransition, type ReactNode } from "react";
+import { useOptimistic, useState, useTransition, type ReactNode } from "react";
 import { cn } from "cn";
+import { PortalContainerContext } from "@/components/ui/portal-container";
 import { Toaster } from "@/components/ui/sonner";
 import { AdminSidebar } from "./admin-sidebar";
 import { AdminTopbar } from "./admin-topbar";
@@ -24,6 +25,8 @@ export function AdminShell({
   children: ReactNode;
 }) {
   const [optimisticTheme, setOptimisticTheme] = useOptimistic(theme);
+  // Portalled UI (dialogs, menus, popovers) renders here, inside the admin theme scope.
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const [, startTransition] = useTransition();
 
   const toggle = saveTheme
@@ -44,14 +47,17 @@ export function AdminShell({
         optimisticTheme === "dark" && "dark",
       )}
     >
-      <AdminSidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        {banner}
-        <AdminTopbar theme={optimisticTheme} onToggleTheme={toggle} userMenu={userMenu} />
-        <main id="main" className="flex-1 px-4 py-6 lg:px-8">
-          {children}
-        </main>
-      </div>
+      <PortalContainerContext value={portalContainer}>
+        <AdminSidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          {banner}
+          <AdminTopbar theme={optimisticTheme} onToggleTheme={toggle} userMenu={userMenu} />
+          <main id="main" className="flex-1 px-4 py-6 lg:px-8">
+            {children}
+          </main>
+        </div>
+      </PortalContainerContext>
+      <div ref={setPortalContainer} />
       <Toaster theme={optimisticTheme} position="bottom-right" />
     </div>
   );

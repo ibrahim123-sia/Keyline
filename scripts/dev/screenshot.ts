@@ -13,11 +13,27 @@ if (!outDir || !baseUrl || targets.length === 0) {
 }
 mkdirSync(outDir, { recursive: true });
 const browser = await chromium.launch();
+const context = await browser.newContext();
+// Optional sign-in first (SHOT_EMAIL / SHOT_PASSWORD), e.g. for admin screens.
+if (process.env.SHOT_EMAIL && process.env.SHOT_PASSWORD) {
+  const page = await context.newPage();
+  await page.goto(`${baseUrl}${process.env.SHOT_LOGIN_PATH ?? "/admin/sign-in"}`, {
+    waitUntil: "load",
+  });
+  await page.getByRole("textbox", { name: "Email", exact: true }).fill(process.env.SHOT_EMAIL);
+  await page
+    .getByRole("textbox", { name: "Password", exact: true })
+    .fill(process.env.SHOT_PASSWORD);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForURL((u) => !u.pathname.includes("sign-in"), { timeout: 60_000 });
+  await page.close();
+}
 try {
   for (const target of targets) {
     const [path, widthStr] = target.split("@");
     const width = Number(widthStr ?? 1280);
-    const page = await browser.newPage({ viewport: { width, height: width < 600 ? 844 : 900 } });
+    const page = await context.newPage();
+    await page.setViewportSize({ width, height: width < 600 ? 844 : 900 });
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));

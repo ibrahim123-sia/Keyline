@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { createRequire } from "node:module";
+import { localDataPath } from "./paths";
 import { startTestDatabase } from "./test-db";
 
 /**
@@ -29,7 +30,7 @@ const env: NodeJS.ProcessEnv = {
   LINTEL_ENV: "development",
   JOBS_DRIVER: "inline",
   STORAGE_DRIVER: "fs",
-  STORAGE_FS_DIR: ".data/e2e-media",
+  STORAGE_FS_DIR: localDataPath("e2e-media"),
   // Many sign-ins from one IP in a short run; the limits themselves are covered by integration tests.
   RATE_LIMITS: "off",
   TURNSTILE_SECRET_KEY: "off",

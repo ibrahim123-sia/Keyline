@@ -4,11 +4,9 @@ import { z } from "zod";
 import { AuthError, type AdminCheck, type AdminContext } from "@/lib/permissions";
 import { requireAdmin } from "@/lib/auth/guards";
 import { admin } from "@/lib/i18n";
+import type { ActionResult } from "./action-result";
 
-/** Every Server Action returns this shape, so forms can show field errors and messages. */
-export type ActionResult<T = undefined> =
-  | { ok: true; data: T; message?: string }
-  | { ok: false; error: string; code?: string; fieldErrors?: Record<string, string[]> };
+export type { ActionResult } from "./action-result";
 
 export class ActionError extends Error {
   constructor(

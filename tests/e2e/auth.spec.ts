@@ -6,6 +6,7 @@ import {
   field,
   latestEmail,
   linkFrom,
+  setSettings,
   signIn,
   uniqueEmail,
 } from "./helpers";
@@ -45,7 +46,8 @@ test.describe("Phase 1: access control", () => {
     await expect(page.getByText("This area is only for agency staff.")).toBeVisible();
   });
 
-  test("first admin from the setup command signs in with 2FA", async ({ page }) => {
+  test("first admin from the setup command signs in with 2FA", async ({ page, request }) => {
+    await setSettings(request, "security", { require2fa: true });
     const email = uniqueEmail("owner");
     const password = "tidal-orchard-lamp-42";
     createAdmin(email, password, "Nadia Owner");

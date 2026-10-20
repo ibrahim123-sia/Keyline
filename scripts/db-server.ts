@@ -1,6 +1,7 @@
 import "./_env";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
+import { localDataPath } from "./paths";
 import { startPgliteServer } from "./pglite";
 
 /**
@@ -12,7 +13,7 @@ const args = process.argv.slice(2);
 const memory = args.includes("--memory");
 const portArg = args.indexOf("--port");
 const port = Number(portArg >= 0 ? args[portArg + 1] : (process.env.DB_DEV_PORT ?? 5433));
-const dataDir = resolve(process.env.DB_DEV_DATA_DIR ?? ".data/pglite");
+const dataDir = resolve(process.env.DB_DEV_DATA_DIR ?? localDataPath("pglite"));
 
 if (!memory) mkdirSync(dataDir, { recursive: true });
 

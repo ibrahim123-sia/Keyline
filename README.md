@@ -24,7 +24,7 @@ production.
 ```bash
 pnpm install
 cp .env.example .env.local        # then fill BETTER_AUTH_SECRET, SECRETS_ENCRYPTION_KEY, INTERNAL_JOB_SECRET
-pnpm db:start                     # terminal 1: local database on 127.0.0.1:5433 (data in .data/pglite)
+pnpm db:start                     # terminal 1: local database on 127.0.0.1:5433 (data in ~/.lintel/pglite)
 pnpm db:migrate                   # apply migrations
 pnpm admin:create --email you@agency.com --name "Your Name"   # prints a generated password
 pnpm dev                          # terminal 2: http://localhost:3000

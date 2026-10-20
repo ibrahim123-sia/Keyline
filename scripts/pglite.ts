@@ -159,6 +159,23 @@ export class PgliteWireServer {
   private enqueue(batch: Batch) {
     this.queue.push(batch);
     void this.pump();
+    if (this.owner && batch.conn !== this.owner) this.watchForDeadlock(batch);
+  }
+
+  /**
+   * One connection holds a transaction and another waits: fine for a moment, but if it lasts,
+   * the code probably queries through a second connection inside a transaction (use the
+   * transaction handle instead). Real Postgres would not block here, so say it loudly.
+   */
+  private watchForDeadlock(batch: Batch) {
+    setTimeout(() => {
+      if (this.queue.includes(batch) && this.owner && this.owner !== batch.conn) {
+        console.warn(
+          "[db] a query has waited 5 s for another connection's open transaction. " +
+            "Is code inside db.transaction() using getDb() instead of `tx`?",
+        );
+      }
+    }, 5000).unref();
   }
 
   /** Index of the next batch allowed to run: the transaction owner's, or the oldest one. */

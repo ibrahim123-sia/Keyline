@@ -26,7 +26,8 @@ const serverEnvSchema = z.object({
   INTERNAL_JOB_SECRET: z.string().optional(),
 
   STORAGE_DRIVER: z.enum(["fs", "r2"]).default("fs"),
-  STORAGE_FS_DIR: z.string().default(".data/media"),
+  /** Local media folder for the fs driver; defaults to ~/.lintel/media (see lib/storage). */
+  STORAGE_FS_DIR: z.string().optional(),
   JOBS_DRIVER: z.enum(["inline", "queue", "manual"]).default("inline"),
 
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().default("1x00000000000000000000AA"),
