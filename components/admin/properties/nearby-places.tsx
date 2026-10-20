@@ -1,7 +1,7 @@
 "use client";
 
 import { RefreshCwIcon, TriangleAlertIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "cn";
 import { SortableList } from "@/components/admin/sortable-list";
@@ -15,9 +15,26 @@ import {
   updatePropertyPoi,
 } from "@/features/pois/nearby-actions";
 import type { PropertyPoiView, PropertyPoisView } from "@/features/pois/nearby-queries";
+import type { ActionResult } from "@/lib/action-result";
 import { useAction } from "@/lib/use-action";
 import { useHydrated } from "@/lib/use-hydrated";
 import { formatDistance, formatDuration, type DistanceUnit } from "@/lib/units";
+
+/** Server actions behind the table; listings by default, projects pass their own. */
+export type NearbyActions = {
+  /** Current list and last run; lets the table follow a background measurement. */
+  get?: (ownerId: string) => Promise<ActionResult<PropertyPoisView>>;
+  recalculate: (ownerId: string) => Promise<ActionResult<PropertyPoisView>>;
+  update: typeof updatePropertyPoi;
+  reorder: (ownerId: string, ids: string[]) => Promise<ActionResult<{ ids: string[] }>>;
+};
+
+const listingActions: NearbyActions = {
+  get: (propertyId) => getPropertyPois({ propertyId }),
+  recalculate: (propertyId) => recalculatePropertyPois({ propertyId }),
+  update: (input) => updatePropertyPoi(input),
+  reorder: (propertyId, ids) => reorderPropertyPois({ propertyId, ids }),
+};
 
 const measuredAt = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" });
 
@@ -34,6 +51,7 @@ function travel(seconds: number | null, metres: number | null, unit: DistanceUni
  *
  * Props: `propertyId` of the saved listing; `initial` from `listPropertyPois(db, id)`;
  * `hasPin` whether the listing has a map pin; `distanceUnit` from Settings -> Market;
+ * `actions` for another owner (a project passes its id as `propertyId` and its actions);
  * `readOnly` for the demo viewer. Changes save at once (they are not part of the form).
  */
 export function NearbyPlaces({
@@ -43,6 +61,7 @@ export function NearbyPlaces({
   distanceUnit,
   readOnly,
   watch = 0,
+  actions = listingActions,
 }: {
   propertyId: string;
   initial: PropertyPoisView;
@@ -51,16 +70,18 @@ export function NearbyPlaces({
   readOnly?: boolean;
   /** Bump after a save that moved the pin: follows the background measurement until it ends. */
   watch?: number;
+  actions?: NearbyActions;
 }) {
   const hydrated = useHydrated();
   const [view, setView] = useState(initial);
   useEffect(() => {
-    if (!watch) return;
+    const get = actions.get;
+    if (!watch || !get) return;
     let stop = false;
     let tries = 0;
     const tick = async () => {
       if (stop || tries++ > 40) return;
-      const res = await getPropertyPois({ propertyId });
+      const res = await get(propertyId);
       if (stop) return;
       if (res.ok) {
         setView(res.data);
@@ -74,9 +95,13 @@ export function NearbyPlaces({
       stop = true;
       clearTimeout(first);
     };
-  }, [watch, propertyId]);
+  }, [watch, propertyId, actions]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const recalc = useAction(recalculatePropertyPois, {
+  const recalculate = useCallback(
+    (input: { propertyId: string }) => actions.recalculate(input.propertyId),
+    [actions],
+  );
+  const recalc = useAction(recalculate, {
     success: (v) =>
       v.rows.length === 0
         ? "No places found within the search radius"
@@ -96,7 +121,7 @@ export function NearbyPlaces({
       ...(patch.isShown !== undefined ? { isShown: patch.isShown } : {}),
       ...(patch.overrideText !== undefined ? { overrideText: patch.overrideText || null } : {}),
     });
-    const res = await updatePropertyPoi({ id: row.id, ...patch });
+    const res = await actions.update({ id: row.id, ...patch });
     if (!res.ok) {
       setRow(row.id, previous);
       toast.error(res.error);
@@ -109,7 +134,10 @@ export function NearbyPlaces({
   async function reorder(rows: PropertyPoiView[]) {
     const before = view.rows;
     setView((v) => ({ ...v, rows }));
-    const res = await reorderPropertyPois({ propertyId, ids: rows.map((r) => r.id) });
+    const res = await actions.reorder(
+      propertyId,
+      rows.map((r) => r.id),
+    );
     if (!res.ok) {
       setView((v) => ({ ...v, rows: before }));
       toast.error(res.error);

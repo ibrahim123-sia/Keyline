@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { Db, DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { poiTypes, pois } from "@/db/schema/master-data";
+import { projectPois, projects } from "@/db/schema/projects";
 import { properties, propertyPois } from "@/db/schema/properties";
 import { jobRuns } from "@/db/schema/system";
 import {
@@ -30,8 +31,9 @@ import {
 } from "./distance-rules";
 
 /**
- * Distances and travel times from a listing to nearby places (07 §4). Runs as the
- * `poi.compute` job (pin moved, "Recalculate", monthly refresh), never on a page view.
+ * Distances and travel times from a listing (or a project, 07 §6) to nearby places (07 §4).
+ * Runs as the `poi.compute` / `project_poi.compute` jobs (pin moved, "Recalculate", monthly
+ * refresh), never on a page view.
  */
 
 export type PoiComputeResult = {
@@ -46,6 +48,11 @@ export type PoiComputeResult = {
   added: number;
 };
 
+/** The same for a project (07 §6). */
+export type ProjectPoiComputeResult = Omit<PoiComputeResult, "propertyId"> & { projectId: string };
+
+type Measurement = Omit<PoiComputeResult, "propertyId">;
+
 const NO_KEY_NOTE =
   "No Google Maps key, so these are straight-line distances. Add the key in Settings -> Integrations for travel times.";
 
@@ -54,6 +61,122 @@ const systemActor = { type: "system", id: null } as const;
 class PinMoved extends Error {}
 
 type Route = { seconds: number | null; meters: number | null };
+
+type Measured = {
+  straightDistanceM: number;
+  driveSeconds: number | null;
+  driveDistanceM: number | null;
+  walkSeconds: number | null;
+  walkDistanceM: number | null;
+  computedAt: Date;
+};
+
+/** Where an owner's measured places are kept: listings in property_pois, projects in project_pois. */
+type OwnerStore = {
+  kind: "property" | "project";
+  missing: string;
+  /** The owner's pin (undefined when it no longer exists); `lock` inside the write transaction. */
+  point(db: DbOrTx, id: string, lock?: boolean): Promise<{ point: LngLat | null } | undefined>;
+  existing(
+    db: DbOrTx,
+    id: string,
+  ): Promise<Array<{ poiId: string; sortOrder: number; isManualOverride: boolean }>>;
+  upsert(db: DbOrTx, id: string, poiId: string, sortOrder: number, m: Measured): Promise<void>;
+  remove(db: DbOrTx, id: string, poiIds: string[]): Promise<void>;
+  /** No pin: keep only what the admin wrote by hand. */
+  removeMeasured(db: DbOrTx, id: string): Promise<void>;
+  count(db: DbOrTx, id: string): Promise<number>;
+};
+
+const propertyStore: OwnerStore = {
+  kind: "property",
+  missing: "This listing no longer exists.",
+  async point(db, id, lock) {
+    const q = db
+      .select({ point: properties.point })
+      .from(properties)
+      .where(and(eq(properties.id, id), eq(properties.agencyId, currentAgencyId())));
+    const [row] = lock ? await q.for("update") : await q;
+    return row;
+  },
+  existing: (db, id) =>
+    db
+      .select({
+        poiId: propertyPois.poiId,
+        sortOrder: propertyPois.sortOrder,
+        isManualOverride: propertyPois.isManualOverride,
+      })
+      .from(propertyPois)
+      .where(eq(propertyPois.propertyId, id)),
+  async upsert(db, id, poiId, sortOrder, m) {
+    await db
+      .insert(propertyPois)
+      .values({ propertyId: id, poiId, sortOrder, ...m })
+      .onConflictDoUpdate({ target: [propertyPois.propertyId, propertyPois.poiId], set: m });
+  },
+  async remove(db, id, poiIds) {
+    await db
+      .delete(propertyPois)
+      .where(and(eq(propertyPois.propertyId, id), inArray(propertyPois.poiId, poiIds)));
+  },
+  async removeMeasured(db, id) {
+    await db
+      .delete(propertyPois)
+      .where(and(eq(propertyPois.propertyId, id), eq(propertyPois.isManualOverride, false)));
+  },
+  async count(db, id) {
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(propertyPois)
+      .where(eq(propertyPois.propertyId, id));
+    return row?.n ?? 0;
+  },
+};
+
+const projectStore: OwnerStore = {
+  kind: "project",
+  missing: "This project no longer exists.",
+  async point(db, id, lock) {
+    const q = db
+      .select({ point: projects.point })
+      .from(projects)
+      .where(and(eq(projects.id, id), eq(projects.agencyId, currentAgencyId())));
+    const [row] = lock ? await q.for("update") : await q;
+    return row;
+  },
+  existing: (db, id) =>
+    db
+      .select({
+        poiId: projectPois.poiId,
+        sortOrder: projectPois.sortOrder,
+        isManualOverride: projectPois.isManualOverride,
+      })
+      .from(projectPois)
+      .where(eq(projectPois.projectId, id)),
+  async upsert(db, id, poiId, sortOrder, m) {
+    await db
+      .insert(projectPois)
+      .values({ projectId: id, poiId, sortOrder, ...m })
+      .onConflictDoUpdate({ target: [projectPois.projectId, projectPois.poiId], set: m });
+  },
+  async remove(db, id, poiIds) {
+    await db
+      .delete(projectPois)
+      .where(and(eq(projectPois.projectId, id), inArray(projectPois.poiId, poiIds)));
+  },
+  async removeMeasured(db, id) {
+    await db
+      .delete(projectPois)
+      .where(and(eq(projectPois.projectId, id), eq(projectPois.isManualOverride, false)));
+  },
+  async count(db, id) {
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(projectPois)
+      .where(eq(projectPois.projectId, id));
+    return row?.n ?? 0;
+  },
+};
 
 /** Own active places within each type's search radius, closest `perType` per type (PostGIS). */
 async function ownCandidates(db: DbOrTx, pin: LngLat, perType: number): Promise<Candidate[]> {
@@ -107,7 +230,8 @@ async function addGooglePlaces(
   pin: LngLat,
   have: Candidate[],
   perType: number,
-  propertyId: string,
+  /** For the audit entry: { propertyId } or { projectId }. */
+  owner: Record<string, string>,
 ): Promise<{ candidates: Candidate[]; added: number; note: string | null }> {
   const types = await db
     .select()
@@ -178,7 +302,7 @@ async function addGooglePlaces(
           actor: systemActor,
           action: "poi.import_nearby",
           entityType: "poi",
-          after: { poiTypeId: type.id, imported: rows.map((r) => r.name), propertyId },
+          after: { poiTypeId: type.id, imported: rows.map((r) => r.name), ...owner },
         });
       return rows;
     });
@@ -219,29 +343,25 @@ async function routeAll(
   return out;
 }
 
-async function measureOnce(db: Db, propertyId: string, now: Date): Promise<PoiComputeResult> {
-  const [listing] = await db
-    .select({ point: properties.point, deletedAt: properties.deletedAt })
-    .from(properties)
-    .where(and(eq(properties.id, propertyId), eq(properties.agencyId, currentAgencyId())));
-  if (!listing)
+async function measureOnce(
+  db: Db,
+  store: OwnerStore,
+  ownerId: string,
+  now: Date,
+): Promise<Measurement> {
+  const owner = await store.point(db, ownerId);
+  if (!owner)
     return {
-      propertyId,
       mode: "no_pin",
-      note: "This listing no longer exists.",
+      note: store.missing,
       places: 0,
       added: 0,
     };
-  const pin = listing.point;
+  const pin = owner.point;
   if (!pin) {
     // No pin, nothing to measure: keep only what the admin wrote by hand.
-    await db
-      .delete(propertyPois)
-      .where(
-        and(eq(propertyPois.propertyId, propertyId), eq(propertyPois.isManualOverride, false)),
-      );
+    await store.removeMeasured(db, ownerId);
     return {
-      propertyId,
       mode: "no_pin",
       note: "Drop the pin on the map to measure nearby places.",
       places: 0,
@@ -263,14 +383,9 @@ async function measureOnce(db: Db, propertyId: string, now: Date): Promise<PoiCo
   if (provider) {
     const integrations = await loadSettings("integrations", db);
     if (integrations.googleMaps.addNearbyPlaces) {
-      const google = await addGooglePlaces(
-        db,
-        provider,
-        pin,
-        candidates,
-        PLACES_PER_TYPE,
-        propertyId,
-      );
+      const google = await addGooglePlaces(db, provider, pin, candidates, PLACES_PER_TYPE, {
+        [`${store.kind}Id`]: ownerId,
+      });
       added = google.added;
       if (google.note) notes.push(google.note);
       candidates = closestPerType([...candidates, ...google.candidates]);
@@ -306,60 +421,48 @@ async function measureOnce(db: Db, propertyId: string, now: Date): Promise<PoiCo
 
   const places = await db.transaction(async (tx) => {
     // Written only if the pin is where it was when we measured; otherwise measure again.
-    const [current] = await tx
-      .select({ point: properties.point })
-      .from(properties)
-      .where(eq(properties.id, propertyId))
-      .for("update");
+    const current = await store.point(tx, ownerId, true);
     if (!samePoint(current?.point, pin)) throw new PinMoved();
-    const existing = await tx
-      .select({
-        poiId: propertyPois.poiId,
-        sortOrder: propertyPois.sortOrder,
-        isManualOverride: propertyPois.isManualOverride,
-      })
-      .from(propertyPois)
-      .where(eq(propertyPois.propertyId, propertyId));
+    const existing = await store.existing(tx, ownerId);
     const plan = planPoiRows(existing, candidates, typeOrder);
     const byId = new Map(candidates.map((c) => [c.poiId, c]));
     for (const row of plan.upserts) {
       const c = byId.get(row.poiId)!;
-      const measured = {
+      await store.upsert(tx, ownerId, c.poiId, row.sortOrder ?? 0, {
         straightDistanceM: c.straightDistanceM,
         driveSeconds: drive.get(c.poiId)?.seconds ?? null,
         driveDistanceM: drive.get(c.poiId)?.meters ?? null,
         walkSeconds: walk.get(c.poiId)?.seconds ?? null,
         walkDistanceM: walk.get(c.poiId)?.meters ?? null,
         computedAt: now,
-      };
-      await tx
-        .insert(propertyPois)
-        .values({ propertyId, poiId: c.poiId, sortOrder: row.sortOrder ?? 0, ...measured })
-        .onConflictDoUpdate({
-          target: [propertyPois.propertyId, propertyPois.poiId],
-          set: measured,
-        });
+      });
     }
-    if (plan.deletes.length)
-      await tx
-        .delete(propertyPois)
-        .where(
-          and(eq(propertyPois.propertyId, propertyId), inArray(propertyPois.poiId, plan.deletes)),
-        );
-    const [count] = await tx
-      .select({ n: sql<number>`count(*)::int` })
-      .from(propertyPois)
-      .where(eq(propertyPois.propertyId, propertyId));
-    return count?.n ?? 0;
+    if (plan.deletes.length) await store.remove(tx, ownerId, plan.deletes);
+    return store.count(tx, ownerId);
   });
 
   return {
-    propertyId,
     mode: candidates.length === 0 && provider ? "routes" : mode,
     note: notes.length ? notes.join(" ") : null,
     places,
     added,
   };
+}
+
+/** Measures; if the pin moves while this runs, measures again (up to three times). */
+async function measureSettled(
+  db: Db,
+  store: OwnerStore,
+  ownerId: string,
+  now: Date,
+): Promise<Measurement> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await measureOnce(db, store, ownerId, now);
+    } catch (err) {
+      if (!(err instanceof PinMoved) || attempt >= 3) throw err;
+    }
+  }
 }
 
 /**
@@ -371,15 +474,20 @@ export async function computePropertyPois(
   propertyId: string,
   now = new Date(),
 ): Promise<PoiComputeResult> {
-  for (let attempt = 1; ; attempt++) {
-    try {
-      const result = await measureOnce(db, propertyId, now);
-      revalidateTag(tags.listing(propertyId), { expire: 0 });
-      return result;
-    } catch (err) {
-      if (!(err instanceof PinMoved) || attempt >= 3) throw err;
-    }
-  }
+  const result = await measureSettled(db, propertyStore, propertyId, now);
+  revalidateTag(tags.listing(propertyId), { expire: 0 });
+  return { propertyId, ...result };
+}
+
+/** The same for a project (07 §6: nearby places on the project page). */
+export async function computeProjectPois(
+  db: Db,
+  projectId: string,
+  now = new Date(),
+): Promise<ProjectPoiComputeResult> {
+  const result = await measureSettled(db, projectStore, projectId, now);
+  revalidateTag(tags.project(projectId), { expire: 0 });
+  return { projectId, ...result };
 }
 
 export const poiComputeJob = defineJob({
@@ -445,5 +553,66 @@ export async function refreshStalePois(
     .limit(limit);
   let queued = 0;
   for (const row of rows) if (await queuePoiCompute(db, row.id)) queued++;
+  return { queued };
+}
+
+/* Projects (07 §6) ------------------------------------------------------------ */
+
+export const projectPoiComputeJob = defineJob({
+  name: "project_poi.compute",
+  payload: z.object({ projectId: z.uuid() }),
+  maxAttempts: 3,
+  run: ({ projectId }, ctx) => computeProjectPois(ctx.db, projectId),
+});
+
+const projectDedupeKey = (projectId: string) => `project_poi.compute:${projectId}`;
+
+/** Queues a measurement for a project (pin dropped or moved); null if one is already waiting. */
+export function queueProjectPoiCompute(db: DbOrTx, projectId: string): Promise<string | null> {
+  return enqueue(
+    "project_poi.compute",
+    { projectId },
+    { db, dedupeKey: projectDedupeKey(projectId), maxAttempts: 3 },
+  );
+}
+
+/** The waiting or running measurement for a project, if any. */
+export async function pendingProjectPoiJob(db: DbOrTx, projectId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ id: jobRuns.id })
+    .from(jobRuns)
+    .where(
+      and(
+        eq(jobRuns.dedupeKey, projectDedupeKey(projectId)),
+        inArray(jobRuns.status, ["queued", "running"]),
+      ),
+    )
+    .limit(1);
+  return row?.id ?? null;
+}
+
+/** Monthly refresh for published projects with a pin, as for listings (07 §4.7). */
+export async function refreshStaleProjectPois(
+  db: DbOrTx,
+  now = new Date(),
+  limit = 200,
+): Promise<{ queued: number }> {
+  const cutoff = new Date(now.getTime() - 90 * 86_400_000);
+  const rows = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(
+      and(
+        eq(projects.agencyId, currentAgencyId()),
+        sql`${projects.deletedAt} is null`,
+        eq(projects.isPublished, true),
+        isNotNull(projects.point),
+        sql`coalesce((select max(${projectPois.computedAt}) from ${projectPois} where ${projectPois.projectId} = ${projects.id}), '-infinity'::timestamptz) < ${cutoff}`,
+      ),
+    )
+    .orderBy(projects.id)
+    .limit(limit);
+  let queued = 0;
+  for (const row of rows) if (await queueProjectPoiCompute(db, row.id)) queued++;
   return { queued };
 }

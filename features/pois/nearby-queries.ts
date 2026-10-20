@@ -3,6 +3,7 @@ import { and, asc, desc, eq, sql } from "drizzle-orm";
 import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { poiTypes, pois, type PoiCategory } from "@/db/schema/master-data";
+import { projectPois } from "@/db/schema/projects";
 import { propertyPois } from "@/db/schema/properties";
 import { jobRuns } from "@/db/schema/system";
 import { mapsConfigured } from "@/features/integrations/google-maps";
@@ -46,16 +47,92 @@ export type PropertyPoisView = {
   mapsConfigured: boolean;
 };
 
+type StoredPoi = {
+  id: string;
+  poiId: string;
+  straightDistanceM: number;
+  driveSeconds: number | null;
+  driveDistanceM: number | null;
+  walkSeconds: number | null;
+  walkDistanceM: number | null;
+  computedAt: Date;
+  isShown: boolean;
+  isManualOverride: boolean;
+  overrideText: string | null;
+  sortOrder: number;
+};
+
+type PoiInfo = {
+  name: string;
+  typeName: string;
+  typeIcon: string | null;
+  category: PoiCategory;
+  travelMode: "drive" | "walk";
+};
+
+function toView(row: StoredPoi, p: PoiInfo): PropertyPoiView {
+  return {
+    id: row.id,
+    poiId: row.poiId,
+    name: p.name,
+    typeName: p.typeName,
+    typeIcon: p.typeIcon,
+    category: p.category,
+    travelMode: p.travelMode,
+    straightDistanceM: row.straightDistanceM,
+    driveSeconds: row.driveSeconds,
+    driveDistanceM: row.driveDistanceM,
+    walkSeconds: row.walkSeconds,
+    walkDistanceM: row.walkDistanceM,
+    computedAt: row.computedAt.toISOString(),
+    isShown: row.isShown,
+    isManualOverride: row.isManualOverride,
+    overrideText: row.overrideText,
+    sortOrder: row.sortOrder,
+  };
+}
+
+/** The latest measurement job for an owner (payload key propertyId or projectId). */
+async function lastRun(
+  db: DbOrTx,
+  job: "poi.compute" | "project_poi.compute",
+  key: "propertyId" | "projectId",
+  id: string,
+): Promise<PoiRunView | null> {
+  const [last] = await db
+    .select()
+    .from(jobRuns)
+    .where(
+      and(
+        eq(jobRuns.agencyId, currentAgencyId()),
+        eq(jobRuns.name, job),
+        sql`${jobRuns.payload}->>${key} = ${id}`,
+      ),
+    )
+    .orderBy(desc(jobRuns.createdAt))
+    .limit(1);
+  if (!last) return null;
+  const result = (last.result ?? null) as Partial<PoiComputeResult> | null;
+  return {
+    status: last.status,
+    at: (last.finishedAt ?? last.createdAt).toISOString(),
+    mode: result?.mode ?? null,
+    note: result?.note ?? null,
+    error: last.status === "succeeded" ? null : last.lastError,
+  };
+}
+
+const poiInfo = {
+  name: pois.name,
+  typeName: poiTypes.name,
+  typeIcon: poiTypes.icon,
+  category: poiTypes.category,
+  travelMode: poiTypes.travelMode,
+};
+
 export async function listPropertyPois(db: DbOrTx, propertyId: string): Promise<PropertyPoisView> {
   const rows = await db
-    .select({
-      row: propertyPois,
-      name: pois.name,
-      typeName: poiTypes.name,
-      typeIcon: poiTypes.icon,
-      category: poiTypes.category,
-      travelMode: poiTypes.travelMode,
-    })
+    .select({ row: propertyPois, ...poiInfo })
     .from(propertyPois)
     .innerJoin(pois, eq(pois.id, propertyPois.poiId))
     .innerJoin(poiTypes, eq(poiTypes.id, pois.poiTypeId))
@@ -63,48 +140,25 @@ export async function listPropertyPois(db: DbOrTx, propertyId: string): Promise<
       and(eq(propertyPois.propertyId, propertyId), eq(propertyPois.agencyId, currentAgencyId())),
     )
     .orderBy(asc(propertyPois.sortOrder), asc(propertyPois.straightDistanceM), asc(pois.name));
-  const [last] = await db
-    .select()
-    .from(jobRuns)
-    .where(
-      and(
-        eq(jobRuns.agencyId, currentAgencyId()),
-        eq(jobRuns.name, "poi.compute"),
-        sql`${jobRuns.payload}->>'propertyId' = ${propertyId}`,
-      ),
-    )
-    .orderBy(desc(jobRuns.createdAt))
-    .limit(1);
-  const result = (last?.result ?? null) as Partial<PoiComputeResult> | null;
   return {
-    rows: rows.map(({ row, ...p }) => ({
-      id: row.id,
-      poiId: row.poiId,
-      name: p.name,
-      typeName: p.typeName,
-      typeIcon: p.typeIcon,
-      category: p.category,
-      travelMode: p.travelMode,
-      straightDistanceM: row.straightDistanceM,
-      driveSeconds: row.driveSeconds,
-      driveDistanceM: row.driveDistanceM,
-      walkSeconds: row.walkSeconds,
-      walkDistanceM: row.walkDistanceM,
-      computedAt: row.computedAt.toISOString(),
-      isShown: row.isShown,
-      isManualOverride: row.isManualOverride,
-      overrideText: row.overrideText,
-      sortOrder: row.sortOrder,
-    })),
-    lastRun: last
-      ? {
-          status: last.status,
-          at: (last.finishedAt ?? last.createdAt).toISOString(),
-          mode: result?.mode ?? null,
-          note: result?.note ?? null,
-          error: last.status === "succeeded" ? null : last.lastError,
-        }
-      : null,
+    rows: rows.map(({ row, ...p }) => toView(row, p)),
+    lastRun: await lastRun(db, "poi.compute", "propertyId", propertyId),
+    mapsConfigured: await mapsConfigured(db),
+  };
+}
+
+/** The same for a project (07 §6). */
+export async function listProjectPois(db: DbOrTx, projectId: string): Promise<PropertyPoisView> {
+  const rows = await db
+    .select({ row: projectPois, ...poiInfo })
+    .from(projectPois)
+    .innerJoin(pois, eq(pois.id, projectPois.poiId))
+    .innerJoin(poiTypes, eq(poiTypes.id, pois.poiTypeId))
+    .where(and(eq(projectPois.projectId, projectId), eq(projectPois.agencyId, currentAgencyId())))
+    .orderBy(asc(projectPois.sortOrder), asc(projectPois.straightDistanceM), asc(pois.name));
+  return {
+    rows: rows.map(({ row, ...p }) => toView(row, p)),
+    lastRun: await lastRun(db, "project_poi.compute", "projectId", projectId),
     mapsConfigured: await mapsConfigured(db),
   };
 }

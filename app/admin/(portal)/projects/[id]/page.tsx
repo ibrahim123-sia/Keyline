@@ -38,6 +38,7 @@ export default async function ProjectEditorPage(props: PageProps<"/admin/project
         media={data.media}
         options={data.options}
         activity={data.activity}
+        nearby={data.nearby}
         readOnly={user.readOnly}
         market={{
           baseCurrency: market.baseCurrency.code,

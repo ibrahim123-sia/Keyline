@@ -23,7 +23,7 @@ import {
   softDelete,
   timestamps,
 } from "./_common";
-import { developers, facilities, locations } from "./master-data";
+import { developers, facilities, locations, pois } from "./master-data";
 import { media } from "./media";
 import { paymentPlans } from "./payment-plans";
 import type { RichDoc } from "@/lib/rich-text";
@@ -141,4 +141,33 @@ export const projectUnitTypes = pgTable(
     ...timestamps(),
   },
   (t) => [index("project_unit_types_project_idx").on(t.projectId, t.sortOrder)],
+);
+
+/** Measured distances and travel times from a project to nearby places (07 §6, as 07 §4). */
+export const projectPois = pgTable(
+  "project_pois",
+  {
+    id: idColumn(),
+    agencyId: agencyColumn(),
+    projectId: uuid()
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    poiId: uuid()
+      .notNull()
+      .references(() => pois.id, { onDelete: "cascade" }),
+    straightDistanceM: integer().notNull(),
+    driveSeconds: integer(),
+    driveDistanceM: integer(),
+    walkSeconds: integer(),
+    walkDistanceM: integer(),
+    computedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    isShown: boolean().notNull().default(true),
+    isManualOverride: boolean().notNull().default(false),
+    overrideText: text(),
+    sortOrder: integer().notNull().default(0),
+  },
+  (t) => [
+    uniqueIndex("project_pois_unique").on(t.projectId, t.poiId),
+    index("project_pois_poi_idx").on(t.poiId),
+  ],
 );

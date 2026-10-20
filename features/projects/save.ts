@@ -7,6 +7,7 @@ import { media } from "@/db/schema/media";
 import { projectFacilities, projectMedia, projectUnitTypes, projects } from "@/db/schema/projects";
 import { syncMediaUsage } from "@/features/media/usage";
 import { deletePlan, writePlan } from "@/features/payment-plans/store";
+import { queueProjectPoiCompute } from "@/features/pois/distances";
 import { planProblem } from "@/features/payment-plans/schema";
 import { fitsKind } from "@/features/properties/save";
 import { redirectSlugChange } from "@/features/seo/redirects";
@@ -300,5 +301,7 @@ export async function saveProjectRecord(
   const pointMoved =
     (before.point?.lng ?? null) !== (data.point?.lng ?? null) ||
     (before.point?.lat ?? null) !== (data.point?.lat ?? null);
+  // A dropped or moved pin measures the nearby places again (in the background).
+  if (pointMoved && data.point) await queueProjectPoiCompute(tx, row.id);
   return { updatedAt: after!.updatedAt.toISOString(), slug, pointMoved };
 }

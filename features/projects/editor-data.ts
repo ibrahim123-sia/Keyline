@@ -9,6 +9,7 @@ import { properties, type PropertyStatus } from "@/db/schema/properties";
 import { auditLog } from "@/db/schema/system";
 import { developerOptions } from "@/features/developers/queries";
 import { listLocationNodes } from "@/features/locations/queries";
+import { listProjectPois, type PropertyPoisView } from "@/features/pois/nearby-queries";
 import { toMediaItem, type MediaItem } from "@/features/media/queries";
 import { listTemplates } from "@/features/payment-plans/store";
 import { builtInTemplates, type PlanTemplate } from "@/features/payment-plans/templates";
@@ -40,6 +41,7 @@ export type ProjectEditorData = {
   media: Record<string, MediaItem>;
   options: ProjectEditorOptions;
   activity: ProjectActivity;
+  nearby: PropertyPoisView;
 };
 
 /** Everything the project editor shows, loaded one query at a time (shared connection). */
@@ -90,6 +92,7 @@ export async function loadProjectEditorData(
     .where(and(eq(auditLog.entityType, "project"), eq(auditLog.entityId, id)))
     .orderBy(desc(auditLog.createdAt))
     .limit(20);
+  const nearby = await listProjectPois(db, id);
 
   return {
     row: loaded.row,
@@ -129,5 +132,6 @@ export async function loadProjectEditorData(
             : [],
       })),
     },
+    nearby,
   };
 }

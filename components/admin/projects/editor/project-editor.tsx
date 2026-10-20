@@ -4,12 +4,20 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { FormSection } from "@/components/admin/page-header";
+import { NearbyPlaces, type NearbyActions } from "@/components/admin/properties/nearby-places";
 import type { SaveState } from "@/components/admin/properties/editor/editor-panel";
 import { useUnsavedGuard } from "@/components/admin/properties/editor/use-unsaved-guard";
 import { getMediaStatuses } from "@/features/media/actions";
 import type { MediaItem } from "@/features/media/queries";
 import { planProblem } from "@/features/payment-plans/schema";
+import type { PropertyPoisView } from "@/features/pois/nearby-queries";
 import { deleteProject, saveProject, setProjectPublished } from "@/features/projects/actions";
+import {
+  recalculateProjectPois,
+  reorderProjectPois,
+  updateProjectPoi,
+} from "@/features/projects/nearby-actions";
 import type { ProjectActivity, ProjectEditorOptions } from "@/features/projects/editor-data";
 import { projectPublishProblems, type ProjectInput } from "@/features/projects/schema";
 import { CreateListingsDialog } from "./create-listings-dialog";
@@ -31,6 +39,12 @@ import { UnitTypesSection } from "./unit-types-section";
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
+const projectNearbyActions: NearbyActions = {
+  recalculate: (projectId) => recalculateProjectPois({ projectId }),
+  update: (input) => updateProjectPoi(input),
+  reorder: (projectId, ids) => reorderProjectPois({ projectId, ids }),
+};
+
 const sections = [
   { id: "basics", label: "Basics" },
   { id: "dates", label: "Dates and progress" },
@@ -40,6 +54,7 @@ const sections = [
   { id: "facilities", label: "Facilities" },
   { id: "units", label: "Unit types" },
   { id: "plan", label: "Payment plan" },
+  { id: "nearby", label: "Nearby" },
   { id: "seo", label: "SEO" },
   { id: "listings", label: "Listings" },
   { id: "activity", label: "Activity" },
@@ -58,6 +73,7 @@ export function ProjectEditor({
   media: initialMedia,
   options,
   activity,
+  nearby,
   market,
   readOnly,
 }: {
@@ -69,6 +85,7 @@ export function ProjectEditor({
   media: Record<string, MediaItem>;
   options: ProjectEditorOptions;
   activity: ProjectActivity;
+  nearby: PropertyPoisView;
   market: ProjectEditorMarket;
   readOnly: boolean;
 }) {
@@ -259,6 +276,20 @@ export function ProjectEditor({
         <FacilitiesSection {...props} />
         <UnitTypesSection {...props} onCreateListings={() => setCreating(true)} />
         <PlanSection {...props} />
+        <FormSection
+          id="nearby"
+          title="Nearby"
+          description="Schools, shops and transport measured from the saved map pin. Moving the pin measures them again."
+        >
+          <NearbyPlaces
+            propertyId={id}
+            initial={nearby}
+            hasPin={Boolean(saved.point)}
+            distanceUnit={market.distanceUnit}
+            readOnly={readOnly}
+            actions={projectNearbyActions}
+          />
+        </FormSection>
         <SeoSection {...props} />
         <ListingsSection {...props} onCreate={() => setCreating(true)} />
         <ActivitySection {...props} />

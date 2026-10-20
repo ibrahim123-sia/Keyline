@@ -3,7 +3,7 @@ import { getDb } from "@/db/client";
 import { jobRuns } from "@/db/schema/system";
 import { cleanupStaleUploads } from "@/features/media/maintenance";
 import { recountAllMediaUsage } from "@/features/media/usage";
-import { refreshStalePois } from "@/features/pois/distances";
+import { refreshStalePois, refreshStaleProjectPois } from "@/features/pois/distances";
 import { dailyListingMaintenance } from "@/features/properties/maintenance";
 import { loadSettings } from "@/features/settings/queries";
 import { newId } from "@/lib/ids";
@@ -67,7 +67,12 @@ export const cronTasks: CronTask[] = [
     name: "poi.refresh",
     schedule: "monthly on the 1st at 04:00",
     due: (t) => t.day === 1 && at(4)(t),
-    run: async () => refreshStalePois(await getDb()),
+    run: async () => {
+      const db = await getDb();
+      const listings = await refreshStalePois(db);
+      const projects = await refreshStaleProjectPois(db);
+      return { queued: listings.queued, projects: projects.queued };
+    },
   },
 ];
 
