@@ -29,7 +29,8 @@ import { badges, facilities, locations, pois, propertyTypes } from "./master-dat
 import { media } from "./media";
 import { paymentPlans } from "./payment-plans";
 import { agents } from "./people";
-import { listingMediaKinds, projectUnitTypes, projects, type RichDoc } from "./projects";
+import type { RichDoc } from "@/lib/rich-text";
+import { listingMediaKinds, projectUnitTypes, projects } from "./projects";
 
 export const propertyPurposes = ["sale", "rent"] as const;
 export const propertyStatuses = [

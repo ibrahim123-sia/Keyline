@@ -107,11 +107,12 @@ Done-when checklist:
 - Audit log viewer (Settings): newest first, URL-driven filters (who, module, action words, date range), readable action names, details panel with every changed field before and after, links to the item, truncated IP and browser. Integration + e2e.
 - System page (Settings -> System, also in the sidebar): environment, file storage and job driver; queue tiles (waiting, running, retrying, gave up, failed and done in 24 h); integration status (off, key missing, not tested, working, failing with the last error); AI spend this month against the limit; scheduled tasks with their schedule and last run; recent jobs with filters, details (input, result, error, next try) and retry (single or bulk). Integration + e2e.
 - Phase 3 schema: payment plans and steps, projects (facilities, media, unit types), properties (reference sequence, generated price per area, yield and search vector, GiST and trigram indexes), property media, facilities, badges, nearby places, price history, daily stats; listings and projects now count as usage for agents, developers (merge moves projects), locations, property types, facilities and badges (merge keeps one link per listing), and media. Integration tests.
+- Rich text: Tiptap 3 editor (toolbar with pressed states, link popover that only accepts https, mailto and tel, undo/redo, word count against a target, outside changes such as discard or AI drafts replace the text without moving the cursor while typing); server-side allowlist schema and HTML renderer shared by the site and admin (`.rich-text` styles). Unit tests including an editor/server schema check.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
 
-- Phase 3, item 2: rich text editor (Tiptap 3) with server-side HTML from an allowlist.
+- Phase 3, item 3: payment plan builder.
 
 ## Next
 
@@ -162,6 +163,7 @@ Done-when checklist:
 40. **API tokens** look like `lnt_` + 40 random characters, are shown once and stored as a SHA-256 hash with an 8-character prefix for recognition; "propose" access lets MCP write tools prepare changes that an admin confirms in Lintel (10 §4).
 41. **Listing references** come from a PostgreSQL sequence (`property_reference_seq`, from 1001) with the prefix from Settings -> General, so two admins saving at once never get the same number.
 42. **Listing search vector is a generated column** over title, building, reference and `search_text` (location names, kept current on save); generated columns cannot read other tables, so the names are copied in.
+43. **Rich text is Tiptap 3.31.4 JSON, rendered to HTML on the server.** The editor allows headings (2 and 3), bold, italic, lists, links (https, mailto, tel) and line breaks; `richDocSchema` accepts only those nodes, marks and attributes, and `renderRichText` escapes all text and sets `rel`/`target` itself. A unit test builds the editor's schema and checks it produces nothing the server would refuse. Stored as `description` (JSON) plus `description_html` (rendered on save).
 
 ## Data model changes (vs `05-data-model.md`)
 

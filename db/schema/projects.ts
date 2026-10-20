@@ -26,13 +26,12 @@ import {
 import { developers, facilities, locations } from "./master-data";
 import { media } from "./media";
 import { paymentPlans } from "./payment-plans";
+import type { RichDoc } from "@/lib/rich-text";
 
 export const projectStatuses = ["announced", "under_construction", "completed"] as const;
 export type ProjectStatus = (typeof projectStatuses)[number];
 
 /** Rich text as stored: the editor's JSON document plus the HTML rendered from it on save. */
-export type RichDoc = { type: "doc"; content?: unknown[] };
-
 /** Off-plan developments (05 §4, 07 §6). */
 export const projects = pgTable(
   "projects",
