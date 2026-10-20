@@ -1,3 +1,4 @@
+import { mediaFetchUrlJob } from "@/features/media/fetch-url";
 import { mediaProcessJob } from "@/features/media/process";
 import { emailSendJob } from "@/features/notifications/email";
 import { poiComputeJob } from "@/features/pois/distances";
@@ -7,6 +8,7 @@ import type { JobDefinition } from "./types";
 const jobs: JobDefinition[] = [
   emailSendJob as JobDefinition,
   mediaProcessJob as JobDefinition,
+  mediaFetchUrlJob as JobDefinition,
   poiComputeJob as JobDefinition,
 ];
 

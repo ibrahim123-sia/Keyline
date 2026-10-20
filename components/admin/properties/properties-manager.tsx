@@ -11,6 +11,7 @@ import {
   PencilIcon,
   StarIcon,
   StarOffIcon,
+  UploadIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -366,6 +367,13 @@ export function PropertiesManager({
             />
             <UrlToggle param="missingSeo" label="Missing SEO" />
             <UrlToggle param="featured" label="Featured" />
+            {!readOnly && (
+              <Button asChild variant="outline">
+                <Link href="/admin/properties/import">
+                  <UploadIcon /> Import
+                </Link>
+              </Button>
+            )}
             {!readOnly && <NewPropertyDialog types={types} />}
           </>
         }
