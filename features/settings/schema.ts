@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { SettingGroup } from "@/db/schema/system";
+import { httpUrl, phoneSchema, workingHoursSchema } from "@/lib/schemas";
 
 /**
  * Every setting the admin controls (04-settings.md), one Zod schema per group.
@@ -13,9 +14,17 @@ const optionalText = z.string().trim().max(500).default("");
 const id = z.uuid().nullable().default(null);
 const lngLat = z.object({ lng: z.number().min(-180).max(180), lat: z.number().min(-90).max(90) });
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM");
-const weekdays = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
-const dayHours = z.array(z.tuple([hhmm, hhmm])).max(4);
-const urlOrEmpty = z.union([z.url(), z.literal("")]).default("");
+const urlOrEmpty = z.union([httpUrl(), z.literal("")]).default("");
+
+/** An IANA time zone this runtime knows (cron schedules and dates depend on it). */
+export function isTimeZone(value: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /** z.object with the same schema for every key of a fixed key list (keeps key types precise). */
 function objectOf<const K extends readonly string[], S extends z.ZodType>(keys: K, schema: S) {
@@ -35,7 +44,11 @@ export const generalSchema = z.object({
   defaultLanguage: z.enum(["en"]).default("en"),
   /** Disabled until a second language exists (01 §1.5). */
   rtl: z.boolean().default(false),
-  timeZone: z.string().min(1).default("UTC"),
+  timeZone: z
+    .string()
+    .min(1)
+    .refine(isTimeZone, "Choose a time zone from the list (e.g. Europe/London)")
+    .default("UTC"),
   dateFormat: z
     .enum(["d MMM yyyy", "dd/MM/yyyy", "MM/dd/yyyy", "yyyy-MM-dd"])
     .default("d MMM yyyy"),
@@ -101,7 +114,9 @@ export const brandingSchema = z.object({
 });
 
 /* 3. Market --------------------------------------------------------------- */
-const currencyCode = z.string().regex(/^[A-Z]{3}$/, "Use an ISO 4217 code like AED");
+const currencyCode = z
+  .string()
+  .regex(/^[A-Z]{3}$/, "Use the three-letter currency code (ISO 4217)");
 export const currencySchema = z.object({
   code: currencyCode,
   symbol: z.string().min(1).max(5),
@@ -208,7 +223,7 @@ export const marketSchema = z.object({
 export const socialKeys = ["instagram", "facebook", "linkedin", "youtube", "tiktok", "x"] as const;
 export const contactSchema = z.object({
   phone: optionalText,
-  whatsapp: optionalText,
+  whatsapp: z.union([phoneSchema, z.literal("")]).default(""),
   email: z.union([z.email(), z.literal("")]).default(""),
   address: optionalText,
   officePoint: lngLat.nullable().default(null),
@@ -222,7 +237,7 @@ export const contactSchema = z.object({
     x: "",
   }),
   leadNotifyEmails: z.array(z.email()).max(10).default([]),
-  leadNotifyWhatsapp: optionalText,
+  leadNotifyWhatsapp: z.union([phoneSchema, z.literal("")]).default(""),
 });
 
 /* 5. Leads and CRM (stages live in the lead_stages table) --------------------- */
@@ -266,7 +281,7 @@ export const viewingsSchema = z.object({
   bufferMin: z.number().int().min(0).max(120).default(15),
   bookingWindowDays: z.number().int().min(1).max(180).default(30),
   minNoticeHours: z.number().int().min(0).max(168).default(4),
-  workingHours: objectOf(weekdays, dayHours).default({
+  workingHours: workingHoursSchema.default({
     mon: [["09:00", "18:00"]],
     tue: [["09:00", "18:00"]],
     wed: [["09:00", "18:00"]],
@@ -311,7 +326,7 @@ export const seoSchema = z.object({
       logoId: z.uuid().nullable(),
       phone: z.string().max(40),
       address: z.string().max(300),
-      sameAs: z.array(z.url()).max(10),
+      sameAs: z.array(httpUrl()).max(10),
     })
     .default({ name: "", logoId: null, phone: "", address: "", sameAs: [] }),
   /** Sold/rented listings drop out of search and sitemap after this many days (06 §5). */
@@ -346,7 +361,7 @@ export const integrationsSchema = z.object({
       enabled: z.boolean(),
       /** Client-side map tile key (MapTiler or similar). Public by nature. */
       tileKey: z.string().max(200),
-      tileStyleUrl: z.union([z.url(), z.literal("")]),
+      tileStyleUrl: z.union([httpUrl(), z.literal("")]),
       importPlaces: z.boolean(),
     })
     .default({ enabled: false, tileKey: "", tileStyleUrl: "", importPlaces: true }),

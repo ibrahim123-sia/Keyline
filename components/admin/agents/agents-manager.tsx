@@ -21,7 +21,7 @@ import type { LocationNode } from "@/features/locations/queries";
 import { describeUsage } from "@/lib/usage-registry";
 import { useAction } from "@/lib/use-action";
 import { LocationMultiSelect } from "./location-multi-select";
-import { WorkingHoursEditor, type WeekHours } from "./working-hours-editor";
+import { WorkingHoursEditor, type WeekHours } from "@/components/admin/working-hours-editor";
 
 type Editing = { id: string | null; data: AgentInput; row: AgentRow | null };
 

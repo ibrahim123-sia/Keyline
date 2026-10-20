@@ -207,17 +207,19 @@ export function SelectField<T extends string>({
   onChange,
   options,
   placeholder,
+  disabled,
   ...base
 }: Base & {
   value: T | "" | null;
   onChange: (v: T) => void;
   options: Array<{ value: T; label: string }>;
   placeholder?: string;
+  disabled?: boolean;
 }) {
   const id = useId();
   return (
     <AdminField {...base} htmlFor={id}>
-      <Select value={value ?? ""} onValueChange={(v) => onChange(v as T)}>
+      <Select value={value ?? ""} onValueChange={(v) => onChange(v as T)} disabled={disabled}>
         <SelectTrigger id={id} className="w-full" aria-invalid={base.error ? true : undefined}>
           <SelectValue placeholder={placeholder ?? "Choose…"} />
         </SelectTrigger>

@@ -4,9 +4,10 @@ import { adminState } from "./admin-context";
 /** Stand-in for lib/auth/guards.ts: same decisions (checkAdmin), user from adminState. */
 export async function requireAdmin(check: AdminCheck = {}): Promise<AdminContext> {
   const user = adminState.user;
+  const signedInAt = user ? (adminState.signedInAt ?? new Date()) : null;
   const error = checkAdmin(
     user,
-    user ? new Date() : null,
+    signedInAt,
     { require2fa: true, adminSessionHours: 12, reauthMinutes: 15 },
     check,
   );
@@ -14,7 +15,7 @@ export async function requireAdmin(check: AdminCheck = {}): Promise<AdminContext
   return {
     user: user!,
     sessionId: "test-session",
-    signedInAt: new Date(),
+    signedInAt: signedInAt!,
     actor: { type: "admin", id: user!.id },
   };
 }

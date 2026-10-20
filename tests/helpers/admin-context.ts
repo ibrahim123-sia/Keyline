@@ -20,4 +20,5 @@ export const testAdmin: SessionUser = {
   adminTheme: "light",
 };
 
-export const adminState: { user: SessionUser | null } = { user: testAdmin };
+/** `signedInAt` defaults to "just now"; set it in the past to test re-authentication. */
+export const adminState: { user: SessionUser | null; signedInAt?: Date } = { user: testAdmin };

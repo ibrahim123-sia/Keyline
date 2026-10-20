@@ -1,14 +1,7 @@
 import { z } from "zod";
+import { optionalHttpUrl } from "@/lib/schemas";
 
-/**
- * A web address that is safe to put in an href: http(s) only. `z.url()` alone would accept
- * `javascript:` and `data:` URLs, which run script when a visitor clicks them.
- */
-export const httpUrl = (message = "Enter a full web address, starting with https://") =>
-  z.url({ protocol: /^https?$/, message });
-
-/** Optional link field: a safe URL, or empty. */
-export const optionalHttpUrl = () => z.union([httpUrl(), z.literal("")]).nullable();
+export { httpUrl, optionalHttpUrl } from "@/lib/schemas";
 
 /** SEO block fields (05 "SEO-able tables"); the full panel with AI suggestions lands in Phase 5. */
 export const seoInputSchema = z.object({

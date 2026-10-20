@@ -44,22 +44,31 @@ export function toActionError(err: unknown): ActionResult<never> {
  * so a leading "data" is dropped: forms ask for `errorFor("website")`, not "data.website".
  */
 export function validationError(error: z.ZodError): ActionResult<never> {
-  const fieldErrors: Record<string, string[]> = {};
-  const formErrors: string[] = [];
-  for (const issue of error.issues) {
-    const path = issue.path[0] === "data" ? issue.path.slice(1) : issue.path;
-    if (path.length === 0) {
-      formErrors.push(issue.message);
-      continue;
-    }
-    (fieldErrors[path.map(String).join(".")] ??= []).push(issue.message);
-  }
+  const { fieldErrors, formErrors } = errorsByPath(error, "data");
   return {
     ok: false,
     error: formErrors[0] ?? "Please check the highlighted fields.",
     code: "VALIDATION",
     fieldErrors,
   };
+}
+
+/** Zod issues as { "a.b": [messages] }, without a leading wrapper key (e.g. "data"). */
+export function errorsByPath(
+  error: z.ZodError,
+  wrapper?: string,
+): { fieldErrors: Record<string, string[]>; formErrors: string[] } {
+  const fieldErrors: Record<string, string[]> = {};
+  const formErrors: string[] = [];
+  for (const issue of error.issues) {
+    const path = wrapper && issue.path[0] === wrapper ? issue.path.slice(1) : issue.path;
+    if (path.length === 0) {
+      formErrors.push(issue.message);
+      continue;
+    }
+    (fieldErrors[path.map(String).join(".")] ??= []).push(issue.message);
+  }
+  return { fieldErrors, formErrors };
 }
 
 /**

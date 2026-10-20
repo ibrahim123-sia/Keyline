@@ -85,7 +85,7 @@ export const adminNav: AdminNavGroup[] = [
   },
   {
     items: [
-      { key: "settings", href: "/admin/settings", icon: SettingsIcon, enabled: false },
+      { key: "settings", href: "/admin/settings", icon: SettingsIcon, enabled: true },
       { key: "system", href: "/admin/settings/system", icon: GaugeIcon, enabled: false },
     ],
   },
