@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { optionalHttpUrl } from "@/features/seo/schema";
 
 export const lngLatSchema = z.object({
   lng: z.number().min(-180).max(180),
@@ -12,7 +13,7 @@ export const poiInputSchema = z
     address: z.string().trim().max(300).nullable(),
     point: lngLatSchema,
     googlePlaceId: z.string().trim().max(200).nullable(),
-    website: z.union([z.url(), z.literal("")]).nullable(),
+    website: optionalHttpUrl(),
     ratingNote: z.string().trim().max(200).nullable(),
     isActive: z.boolean(),
   })

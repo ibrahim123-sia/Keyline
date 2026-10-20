@@ -121,6 +121,8 @@ Done-when checklist:
 29. **`sharp` is a dev dependency** (tests only, same version Next ships) to build real photos with GPS metadata and check that stripped files still decode.
 30. **Admin toasts sit bottom-left.** Save buttons are right-aligned and side panels open on the right, so toasts there covered form fields or actions.
 31. **The e2e dev server starts cold** (`turbopackFileSystemCacheForDev` off for `.next-e2e`): a restored dev cache next to files edited since (e.g. by the formatter) sent the browser into an endless reload loop. CI runs e2e against a production build anyway.
+32. **Field errors follow the input path.** Admin actions take `{ id, data }`; validation errors are keyed by path without the `data` wrapper ("website", "organisation.logoId"), so every form can highlight the field (before, nested errors only reached the toast).
+33. **Links must be http(s).** `z.url()` also accepts `javascript:` and `data:` URLs, which run script when clicked; websites and canonical URLs use a shared `httpUrl()` schema instead.
 
 ## Data model changes (vs `05-data-model.md`)
 

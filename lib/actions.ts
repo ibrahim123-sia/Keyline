@@ -1,6 +1,6 @@
 import "server-only";
 import { unstable_rethrow } from "next/navigation";
-import { z } from "zod";
+import type { z } from "zod";
 import { AuthError, type AdminCheck, type AdminContext } from "@/lib/permissions";
 import { requireAdmin } from "@/lib/auth/guards";
 import { admin } from "@/lib/i18n";
@@ -39,14 +39,24 @@ export function toActionError(err: unknown): ActionResult<never> {
   return { ok: false, error: "Something went wrong. Please try again.", code: "INTERNAL" };
 }
 
+/**
+ * Field errors keyed by path ("website", "organisation.logoId"). Actions take `{ id, data }`,
+ * so a leading "data" is dropped: forms ask for `errorFor("website")`, not "data.website".
+ */
 export function validationError(error: z.ZodError): ActionResult<never> {
-  const flat = z.flattenError(error);
   const fieldErrors: Record<string, string[]> = {};
-  const entries = Object.entries(flat.fieldErrors as Record<string, string[] | undefined>);
-  for (const [k, v] of entries) if (v && v.length) fieldErrors[k] = v;
+  const formErrors: string[] = [];
+  for (const issue of error.issues) {
+    const path = issue.path[0] === "data" ? issue.path.slice(1) : issue.path;
+    if (path.length === 0) {
+      formErrors.push(issue.message);
+      continue;
+    }
+    (fieldErrors[path.map(String).join(".")] ??= []).push(issue.message);
+  }
   return {
     ok: false,
-    error: flat.formErrors[0] ?? "Please check the highlighted fields.",
+    error: formErrors[0] ?? "Please check the highlighted fields.",
     code: "VALIDATION",
     fieldErrors,
   };

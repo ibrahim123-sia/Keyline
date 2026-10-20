@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { locationLevels, type LocationLevel } from "@/db/schema/master-data";
 import { SLUG_RE } from "@/lib/slug";
+import { seoInputSchema } from "@/features/seo/schema";
 
 export const levelRank: Record<LocationLevel, number> = {
   country: 0,
@@ -29,15 +30,6 @@ export const geoPolygonSchema = z.union([
   z.object({ type: z.literal("Polygon"), coordinates: polygonCoords }),
   z.object({ type: z.literal("MultiPolygon"), coordinates: z.array(polygonCoords).min(1).max(50) }),
 ]);
-
-/** SEO block fields (05 "SEO-able tables"); the full panel with AI suggestions lands in Phase 5. */
-export const seoInputSchema = z.object({
-  seoTitle: z.string().trim().max(120).nullable(),
-  seoDescription: z.string().trim().max(320).nullable(),
-  canonicalUrl: z.union([z.url(), z.literal("")]).nullable(),
-  noindex: z.boolean(),
-  ogImageId: z.uuid().nullable(),
-});
 
 export const locationInputSchema = z
   .object({
