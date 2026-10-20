@@ -14,6 +14,7 @@ CREATE OR REPLACE FUNCTION lintel_unaccent(input text) RETURNS text
   AS $$ SELECT public.unaccent('public.unaccent'::regdictionary, input) $$;
 --> statement-breakpoint
 -- Lowercased, unaccented text for typo-tolerant search (pg_trgm) and full-text.
+-- Schema-qualified: PostgreSQL 17+ builds indexes with a restricted search_path.
 CREATE OR REPLACE FUNCTION lintel_normalize(input text) RETURNS text
   LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT
-  AS $$ SELECT lower(lintel_unaccent(input)) $$;
+  AS $$ SELECT lower(public.lintel_unaccent(input)) $$;

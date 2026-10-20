@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // `pg` loads `pg-cloudflare` only under the `workerd` export condition, which Node's file
+  // tracing never resolves; include its files so the Workers bundle (OpenNext) can find them.
+  outputFileTracingIncludes: {
+    "/**": [
+      "./node_modules/.pnpm/pg-cloudflare@*/node_modules/pg-cloudflare/dist/**/*",
+      "./node_modules/.pnpm/pg-cloudflare@*/node_modules/pg-cloudflare/esm/**/*",
+    ],
+  },
   images: {
     // Media is served by our own /media route (R2 in production, local disk in development).
     localPatterns: [{ pathname: "/media/**" }, { pathname: "/images/**" }],
