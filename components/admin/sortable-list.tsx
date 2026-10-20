@@ -37,7 +37,8 @@ export function SortableList<T extends { id: string }>({
   onReorder: (items: T[]) => void;
   renderItem: (item: T) => ReactNode;
   disabled?: boolean;
-  label?: string;
+  /** Accessible name of each drag handle, e.g. (item) => `Move ${item.name}`. */
+  label?: string | ((item: T) => string);
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -63,7 +64,12 @@ export function SortableList<T extends { id: string }>({
       <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
         <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
           {items.map((item) => (
-            <SortableRow key={item.id} id={item.id} disabled={disabled} label={label}>
+            <SortableRow
+              key={item.id}
+              id={item.id}
+              disabled={disabled}
+              label={typeof label === "function" ? label(item) : label}
+            >
               {renderItem(item)}
             </SortableRow>
           ))}

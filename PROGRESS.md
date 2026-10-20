@@ -108,11 +108,12 @@ Done-when checklist:
 - System page (Settings -> System, also in the sidebar): environment, file storage and job driver; queue tiles (waiting, running, retrying, gave up, failed and done in 24 h); integration status (off, key missing, not tested, working, failing with the last error); AI spend this month against the limit; scheduled tasks with their schedule and last run; recent jobs with filters, details (input, result, error, next try) and retry (single or bulk). Integration + e2e.
 - Phase 3 schema: payment plans and steps, projects (facilities, media, unit types), properties (reference sequence, generated price per area, yield and search vector, GiST and trigram indexes), property media, facilities, badges, nearby places, price history, daily stats; listings and projects now count as usage for agents, developers (merge moves projects), locations, property types, facilities and badges (merge keeps one link per listing), and media. Integration tests.
 - Rich text: Tiptap 3 editor (toolbar with pressed states, link popover that only accepts https, mailto and tel, undo/redo, word count against a target, outside changes such as discard or AI drafts replace the text without moving the cursor while typing); server-side allowlist schema and HTML renderer shared by the site and admin (`.rich-text` styles). Unit tests including an editor/server schema check.
+- Payment plans: builder (steps with stage, name, percent, timing, due date and instalments; drag to reorder; running total that must reach exactly 100%; a new step continues from the last stage and takes what is left; start from a built-in or saved template, asking before replacing typed steps; live preview of the site block with amounts for an example price); Setup -> Payment plans for the agency's own templates (save, edit, delete, audit); shared `PaymentPlanView` for the site; money formatting from Market settings. Unit, integration and e2e tests.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
 
-- Phase 3, item 3: payment plan builder.
+- Phase 3, item 4: property list.
 
 ## Next
 
@@ -164,6 +165,8 @@ Done-when checklist:
 41. **Listing references** come from a PostgreSQL sequence (`property_reference_seq`, from 1001) with the prefix from Settings -> General, so two admins saving at once never get the same number.
 42. **Listing search vector is a generated column** over title, building, reference and `search_text` (location names, kept current on save); generated columns cannot read other tables, so the names are copied in.
 43. **Rich text is Tiptap 3.31.4 JSON, rendered to HTML on the server.** The editor allows headings (2 and 3), bold, italic, lists, links (https, mailto, tel) and line breaks; `richDocSchema` accepts only those nodes, marks and attributes, and `renderRichText` escapes all text and sets `rel`/`target` itself. A unit test builds the editor's schema and checks it produces nothing the server would refuse. Stored as `description` (JSON) plus `description_html` (rendered on save).
+44. **A payment plan has one owner.** A listing or project saves its own plan with it; a listing in a project without a plan of its own shows the project's plan (07 §5 "inherited by its units, or overridden per listing"). Templates are separate rows (`is_template`) that are copied into a plan, never shared, so editing one listing's plan never changes another. The four built-in templates live in code; an empty short label follows the steps ("60/40", "70/30 post-handover").
+45. **The 100% rule** (05 §6): drafts may hold an unfinished plan; templates, and plans shown on live listings or projects, must add up to exactly 100%. Percentages are compared in basis points; amounts per step use BigInt and the largest remainder, so they always add up to the price.
 
 ## Data model changes (vs `05-data-model.md`)
 

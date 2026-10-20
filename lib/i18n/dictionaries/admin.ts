@@ -25,6 +25,7 @@ export const admin = {
     poiTypes: "POI types",
     pois: "Places (POIs)",
     developers: "Developers",
+    paymentPlans: "Payment plans",
     agents: "Agents",
     settings: "Settings",
     system: "System",

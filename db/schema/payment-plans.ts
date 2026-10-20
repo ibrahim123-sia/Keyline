@@ -28,7 +28,7 @@ export const paymentPlanSteps = pgTable(
     sortOrder: integer().notNull().default(0),
     stage: text({ enum: paymentPlanStages }).notNull(),
     label: text().notNull(),
-    /** Percent of the price (0-100, up to 3 decimals). All steps together must be exactly 100. */
+    /** Percent of the price (0-100, up to 2 decimals). All steps together must be exactly 100. */
     percent: numericNumber().notNull(),
     /** e.g. "In 8 instalments to 2027", "Monthly over 24 months". */
     timingText: text(),
