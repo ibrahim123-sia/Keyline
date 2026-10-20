@@ -17,7 +17,8 @@ test("payment plans: template from a built-in one, 100% rule, preview with amoun
 
   await page.getByRole("button", { name: "New template" }).click();
   const panel = page.getByRole("dialog", { name: "New template" });
-  const total = panel.getByRole("status");
+  // The drag-and-drop list has its own (empty) live region, so match the total by its text.
+  const total = panel.getByRole("status").filter({ hasText: "%" });
   // Nothing typed yet, so the template applies without asking.
   await panel.getByRole("button", { name: "Start from a template" }).click();
   await page.getByRole("menuitem", { name: /^60\/40/ }).click();
@@ -66,7 +67,7 @@ test("payment plans: template from a built-in one, 100% rule, preview with amoun
   const confirm = page.getByRole("alertdialog", { name: "Use “1% monthly”?" });
   await confirm.getByRole("button", { name: "Cancel" }).click();
   await expect(edit.getByRole("group", { name: "Step 4" })).toBeVisible();
-  await expect(edit.getByRole("status")).toHaveText("100%: complete");
+  await expect(edit.getByRole("status").filter({ hasText: "%" })).toHaveText("100%: complete");
 
   await edit.getByRole("button", { name: "Delete" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
