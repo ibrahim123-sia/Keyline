@@ -10,6 +10,7 @@ export const settingsTabs = [
   { href: "/admin/settings/branding", label: "Branding" },
   { href: "/admin/settings/market", label: "Market" },
   { href: "/admin/settings/contact", label: "Contact" },
+  { href: "/admin/settings/leads", label: "Leads and CRM" },
   { href: "/admin/settings/viewings", label: "Viewings" },
   { href: "/admin/settings/seo", label: "SEO" },
   { href: "/admin/settings/ai", label: "AI" },

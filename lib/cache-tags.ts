@@ -11,6 +11,7 @@ export const tags = {
   agents: "agents",
   agent: (id: string) => `agent:${id}`,
   locations: "locations",
+  leadStages: "lead-stages",
   masterData: (kind: string) => `master:${kind}`,
   listing: (id: string) => `listing:${id}`,
   listings: "listings",

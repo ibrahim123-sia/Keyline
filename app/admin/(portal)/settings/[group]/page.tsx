@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
-import { PageHeader } from "@/components/admin/page-header";
+import { FormSection, PageHeader } from "@/components/admin/page-header";
 import { AiSettingsForm } from "@/components/admin/settings/groups/ai-form";
 import { BrandingSettingsForm } from "@/components/admin/settings/groups/branding-form";
 import { ContactSettingsForm } from "@/components/admin/settings/groups/contact-form";
 import { GeneralSettingsForm } from "@/components/admin/settings/groups/general-form";
+import { LeadsSettingsForm } from "@/components/admin/settings/groups/leads-form";
 import { LegalSettingsForm } from "@/components/admin/settings/groups/legal-form";
+import { LeadStagesEditor } from "@/components/admin/settings/lead-stages-editor";
 import { MarketSettingsForm } from "@/components/admin/settings/groups/market-form";
 import { NotificationsSettingsForm } from "@/components/admin/settings/groups/notifications-form";
 import { SecuritySettingsForm } from "@/components/admin/settings/groups/security-form";
@@ -12,6 +14,7 @@ import { SeoSettingsForm } from "@/components/admin/settings/groups/seo-form";
 import { ViewingsSettingsForm } from "@/components/admin/settings/groups/viewings-form";
 import { resolveMapStyle } from "@/components/maps/map-style";
 import { getDb } from "@/db/client";
+import { listLeadStages } from "@/features/lead-stages/queries";
 import { loadSettings } from "@/features/settings/queries";
 import { requireAdminPage } from "@/lib/auth/guards";
 import { env } from "@/lib/env";
@@ -23,6 +26,7 @@ const titles = {
   branding: ["Branding", "Colours, fonts and corners of the public site, with a live preview."],
   market: ["Market", "Currency, units, rentals and calculator defaults for your market."],
   contact: ["Contact", "How visitors reach you, and where new lead alerts go."],
+  leads: ["Leads and CRM", "The pipeline, assignment, response alerts and lead rules."],
   viewings: ["Viewings", "When viewings can be booked, video tools and reminders."],
   seo: ["SEO", "Title patterns, defaults and what search engines see."],
   ai: ["AI", "How the website and admin assistants behave."],
@@ -104,6 +108,20 @@ export default async function SettingsGroupPage(props: PageProps<"/admin/setting
             mapStyleUrl={resolveMapStyle(integrations.googleMaps).styleUrl}
             mapCenter={market.mapCenter}
           />
+        );
+      }
+      case "leads": {
+        const [value, stages] = await Promise.all([loadSettings("leads", db), listLeadStages(db)]);
+        return (
+          <div className="flex flex-col gap-6">
+            <FormSection
+              title="Pipeline stages"
+              description="The columns of the leads board, in order. New leads start in the first open stage. Changes here save straight away."
+            >
+              <LeadStagesEditor stages={stages} readOnly={readOnly} />
+            </FormSection>
+            <LeadsSettingsForm initial={value} readOnly={readOnly} />
+          </div>
         );
       }
       case "viewings": {

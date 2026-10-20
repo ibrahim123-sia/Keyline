@@ -81,11 +81,12 @@ Done-when checklist:
 - Agent profiles (Setup): team list with drag (and keyboard) reordering and a show/hide switch; editor with photo picker, title, bio, languages (suggestions, any language allowed), contact numbers in international format (normalised), email, reply-time text, areas covered (searchable location checklist), working hours (agency viewing hours by default, or per-day ranges with overlap checks), Google Calendar status (connecting arrives with viewings), SEO block and share image; slug 301s; safe delete (suggests hiding instead); shared usage registry for "used by" across features. Integration + e2e.
 - Settings (first nine tabs): General (agency, logos and icons via the media picker, time zone (checked against the IANA list), date format, first day of week, upload limit, maintenance mode), Market (base and visitor currencies with display rates and "last updated", units, permit field, rent options, ownership/furnishing lists, country and phone format, default map view with the pin picker, mortgage and ROI defaults), Contact (details, office pin, socials, lead alert recipients), Viewings (booking rules, agency hours, holidays, video tool, reminders), SEO, AI, Notifications (event × channel grid for admins and agents), Legal and privacy, Security. One form wrapper for all tabs: unsaved-changes bar with Discard, leave-page warning, server errors on the exact field (nested paths), "sign in again" prompt when a sensitive tab (Security, Integrations) needs a recent sign-in. Integration + e2e.
 - Branding settings: every colour token grouped by role, live contrast report (14 text/background pairs, warns below 4.5:1 or 3:1 for icons), heading and body fonts with samples, corner style, "Reset to Desert Modern", and a live preview (heading, buttons, property card, dark section) drawn with the draft tokens; saving restyles the public site. e2e.
+- Leads and CRM settings: pipeline stage editor (drag to reorder, name/colour/kind, delete that moves leads to another stage, ready-made default pipeline for a fresh install, always keeps an open, a won and a lost stage once complete) and the lead rules form (types, lost reasons, response alert, assignment rule, duplicate matching, follow-up, when sign-ups and newsletter subscribers become leads, automatic first reply, portal inboxes). Integration + e2e.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
 
-- Phase 2, item 6: Settings: Leads and CRM (with pipeline stages), Integrations (encrypted keys, test buttons, last error).
+- Phase 2, item 6: Settings -> Integrations (encrypted keys shown masked, test buttons, last error, webhook URLs).
 
 ## Next
 
@@ -129,6 +130,7 @@ Done-when checklist:
 33. **Links must be http(s).** `z.url()` also accepts `javascript:` and `data:` URLs, which run script when clicked; websites and canonical URLs use a shared `httpUrl()` schema instead.
 34. **Shared validators live in `lib/schemas.ts`**: http(s) links, international phone numbers (normalised to +E.164) and working hours (up to four ranges a day, no overlaps, end after start), used by agents, contact settings and viewing hours alike.
 35. **Saving Security or Integrations settings needs a recent sign-in** (`reauthMinutes`, default 15); the form explains it and offers to sign in again, keeping the edits on screen.
+36. **Default pipeline** for a fresh install: New, Contacted, Viewing, Offer (open), Won, Lost, all editable. A pipeline that has an open, a won and a lost stage keeps them: edits or deletes that would remove the last one are refused.
 
 ## Data model changes (vs `05-data-model.md`)
 
