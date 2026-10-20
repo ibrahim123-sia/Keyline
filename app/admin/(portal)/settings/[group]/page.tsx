@@ -4,6 +4,7 @@ import { AiSettingsForm } from "@/components/admin/settings/groups/ai-form";
 import { BrandingSettingsForm } from "@/components/admin/settings/groups/branding-form";
 import { ContactSettingsForm } from "@/components/admin/settings/groups/contact-form";
 import { GeneralSettingsForm } from "@/components/admin/settings/groups/general-form";
+import { IntegrationsSettingsForm } from "@/components/admin/settings/groups/integrations-form";
 import { LeadsSettingsForm } from "@/components/admin/settings/groups/leads-form";
 import { LegalSettingsForm } from "@/components/admin/settings/groups/legal-form";
 import { LeadStagesEditor } from "@/components/admin/settings/lead-stages-editor";
@@ -16,6 +17,7 @@ import { resolveMapStyle } from "@/components/maps/map-style";
 import { getDb } from "@/db/client";
 import { listLeadStages } from "@/features/lead-stages/queries";
 import { loadSettings } from "@/features/settings/queries";
+import { listSecretStatus } from "@/features/settings/secrets";
 import { requireAdminPage } from "@/lib/auth/guards";
 import { env } from "@/lib/env";
 
@@ -29,6 +31,10 @@ const titles = {
   leads: ["Leads and CRM", "The pipeline, assignment, response alerts and lead rules."],
   viewings: ["Viewings", "When viewings can be booked, video tools and reminders."],
   seo: ["SEO", "Title patterns, defaults and what search engines see."],
+  integrations: [
+    "Integrations",
+    "Connections to maps, WhatsApp, email, calendars, analytics, ads and AI.",
+  ],
   ai: ["AI", "How the website and admin assistants behave."],
   notifications: ["Notifications", "Which events send email or WhatsApp alerts."],
   legal: ["Legal and privacy", "Policy pages, the cookie banner and data retention."],
@@ -139,6 +145,20 @@ export default async function SettingsGroupPage(props: PageProps<"/admin/setting
       }
       case "seo":
         return <SeoSettingsForm initial={await loadSettings("seo", db)} readOnly={readOnly} />;
+      case "integrations": {
+        const [value, keys] = await Promise.all([
+          loadSettings("integrations", db),
+          listSecretStatus(db),
+        ]);
+        return (
+          <IntegrationsSettingsForm
+            initial={value}
+            readOnly={readOnly}
+            keys={keys.map((k) => ({ ...k, lastTestedAt: k.lastTestedAt?.toISOString() ?? null }))}
+            appUrl={env().APP_URL.replace(/\/$/, "")}
+          />
+        );
+      }
       case "ai":
         return <AiSettingsForm initial={await loadSettings("ai", db)} readOnly={readOnly} />;
       case "notifications":

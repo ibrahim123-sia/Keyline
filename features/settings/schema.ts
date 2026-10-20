@@ -403,10 +403,12 @@ export const integrationsSchema = z.object({
     .default({ enabled: false, clientId: "" }),
   analytics: z
     .object({
-      ga4Id: z.string().max(40),
-      gtmId: z.string().max(40),
-      metaPixelId: z.string().max(40),
-      tiktokPixelId: z.string().max(40),
+      ga4Id: z.string().regex(/^$|^G-[A-Z0-9]{4,20}$/, "Looks like G-XXXXXXXXXX"),
+      gtmId: z.string().regex(/^$|^GTM-[A-Z0-9]{4,12}$/, "Looks like GTM-XXXXXXX"),
+      metaPixelId: z.string().regex(/^$|^\d{5,20}$/, "Digits only"),
+      tiktokPixelId: z
+        .string()
+        .regex(/^$|^[A-Z0-9]{10,30}$/, "Letters and digits, e.g. C1A2B3C4D5E6"),
     })
     .default({ ga4Id: "", gtmId: "", metaPixelId: "", tiktokPixelId: "" }),
   portals: z
