@@ -369,8 +369,16 @@ export const integrationsSchema = z.object({
       tileKey: z.string().max(200),
       tileStyleUrl: z.union([httpUrl(), z.literal("")]),
       importPlaces: z.boolean(),
+      /** The distances job may add places Google finds near a listing (07 §4.2). */
+      addNearbyPlaces: z.boolean().default(true),
     })
-    .default({ enabled: false, tileKey: "", tileStyleUrl: "", importPlaces: true }),
+    .default({
+      enabled: false,
+      tileKey: "",
+      tileStyleUrl: "",
+      importPlaces: true,
+      addNearbyPlaces: true,
+    }),
   whatsapp: z
     .object({
       enabled: z.boolean(),

@@ -95,6 +95,14 @@ export function IntegrationsSettingsForm({
                 set({ googleMaps: { ...value.googleMaps, importPlaces } })
               }
             />
+            <SwitchField
+              label="Add places Google finds near listings"
+              description="When a listing has fewer than three places of a type nearby, the distances job looks on Google and adds what it finds to Setup -> Places."
+              checked={value.googleMaps.addNearbyPlaces}
+              onChange={(addNearbyPlaces) =>
+                set({ googleMaps: { ...value.googleMaps, addNearbyPlaces } })
+              }
+            />
             <TextInputField
               label="Map tile key"
               description="Public key for the map background (e.g. MapTiler). Leave empty for the free default map."

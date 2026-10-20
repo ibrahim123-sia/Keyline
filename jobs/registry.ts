@@ -1,9 +1,14 @@
 import { mediaProcessJob } from "@/features/media/process";
 import { emailSendJob } from "@/features/notifications/email";
+import { poiComputeJob } from "@/features/pois/distances";
 import type { JobDefinition } from "./types";
 
 /** Every queue job by name (13-integrations-and-jobs.md §2). */
-const jobs: JobDefinition[] = [emailSendJob as JobDefinition, mediaProcessJob as JobDefinition];
+const jobs: JobDefinition[] = [
+  emailSendJob as JobDefinition,
+  mediaProcessJob as JobDefinition,
+  poiComputeJob as JobDefinition,
+];
 
 const byName = new Map(jobs.map((j) => [j.name, j]));
 
