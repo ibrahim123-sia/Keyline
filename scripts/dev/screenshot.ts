@@ -21,7 +21,8 @@ try {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-    const res = await page.goto(baseUrl + path, { waitUntil: "networkidle", timeout: 120_000 });
+    const res = await page.goto(baseUrl + path, { waitUntil: "load", timeout: 120_000 });
+    await page.waitForTimeout(1500);
     const file = join(outDir, `${path.replace(/[^a-z0-9]+/gi, "_") || "home"}-${width}.png`);
     await page.screenshot({ path: file, fullPage: true });
     console.log(

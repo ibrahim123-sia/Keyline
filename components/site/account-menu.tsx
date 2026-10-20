@@ -10,7 +10,7 @@ export async function AccountMenu() {
     return (
       <Link
         href="/sign-in"
-        className="hidden rounded-button px-3 py-2 text-[15px] font-semibold text-ink hover:bg-surface-muted sm:inline-flex"
+        className="inline-flex rounded-button px-3 py-2 text-[15px] font-semibold text-ink hover:bg-surface-muted"
       >
         {site.header.signIn}
       </Link>

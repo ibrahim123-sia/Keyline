@@ -43,7 +43,7 @@ export async function SiteHeader({ nav = [], actions }: { nav?: NavItem[]; actio
         <div className="flex items-center gap-2">
           {actions}
           {/* Reads the session cookie: streamed in, the rest of the header stays static. */}
-          <Suspense fallback={<span className="hidden h-10 w-20 sm:block" aria-hidden />}>
+          <Suspense fallback={<span className="block h-10 w-20" aria-hidden />}>
             <AccountMenu />
           </Suspense>
           <MobileMenu nav={nav} agencyName={general.agencyName} />
