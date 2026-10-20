@@ -2,6 +2,7 @@
   "name": "lintel",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Lintel: AI-powered website, CRM and lead engine for real estate agencies",
   "packageManager": "pnpm@12.14.0",
   "engines": {
@@ -48,7 +49,6 @@
     "@electric-sql/pglite": "0.5.10",
     "@electric-sql/pglite-pgvector": "0.0.11",
     "@electric-sql/pglite-postgis": "0.2.10",
-    "@electric-sql/pglite-socket": "0.2.13",
     "@playwright/test": "1.64.1",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "24.19.2",
