@@ -78,7 +78,7 @@ export const adminNav: AdminNavGroup[] = [
       { key: "facilities", href: "/admin/setup/facilities", icon: SparklesIcon, enabled: true },
       { key: "badges", href: "/admin/setup/badges", icon: TagIcon, enabled: true },
       { key: "poiTypes", href: "/admin/setup/poi-types", icon: WrenchIcon, enabled: true },
-      { key: "pois", href: "/admin/setup/pois", icon: MapPinIcon, enabled: false },
+      { key: "pois", href: "/admin/setup/pois", icon: MapPinIcon, enabled: true },
       { key: "developers", href: "/admin/setup/developers", icon: BuildingIcon, enabled: false },
       { key: "agents", href: "/admin/setup/agents", icon: UserRoundIcon, enabled: false },
     ],
