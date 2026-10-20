@@ -27,7 +27,7 @@ const serverEnvSchema = z.object({
 
   STORAGE_DRIVER: z.enum(["fs", "r2"]).default("fs"),
   STORAGE_FS_DIR: z.string().default(".data/media"),
-  JOBS_DRIVER: z.enum(["inline", "queue"]).default("inline"),
+  JOBS_DRIVER: z.enum(["inline", "queue", "manual"]).default("inline"),
 
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().default("1x00000000000000000000AA"),
   TURNSTILE_SECRET_KEY: z.string().default("1x0000000000000000000000000000000AA"),

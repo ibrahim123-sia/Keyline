@@ -18,6 +18,11 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        /** Public site "dark pill" (02 §4). */
+        dark: "rounded-full bg-ink text-surface hover:bg-ink-soft",
+        /** Public site outline on light backgrounds. */
+        "outline-site":
+          "border-ink/20 bg-transparent text-ink hover:border-ink/40 hover:bg-surface",
       },
       size: {
         default:
@@ -31,6 +36,9 @@ const buttonVariants = cva(
         "icon-sm":
           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
+        /** Public site sizes (02 §2: 14px radius, pill variants stay round). */
+        md: "h-11 gap-2 rounded-button px-5 text-[15px] font-semibold data-[variant=dark]:rounded-full",
+        xl: "h-13 gap-2 rounded-button px-7 text-base font-semibold data-[variant=dark]:rounded-full",
       },
     },
     defaultVariants: {

@@ -2,11 +2,13 @@ import { AccountNav } from "@/components/account/account-nav";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { Toaster } from "@/components/ui/sonner";
+import { requireCustomerPage } from "@/lib/auth/guards";
 
 export const instant = false;
 
 /** Customer area (12): public site theme, left menu on desktop, tabs on phone. */
-export default function AccountLayout({ children }: LayoutProps<"/account">) {
+export default async function AccountLayout({ children }: LayoutProps<"/account">) {
+  await requireCustomerPage();
   return (
     <>
       <SiteHeader />

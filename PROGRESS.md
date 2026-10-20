@@ -35,10 +35,10 @@ Spec: `lintel-spec/lintel-spec/` (README + `docs/01..16`).
 Done-when checklist (from `15-build-phases.md`):
 
 - [ ] `staging` deploys from CI and loads — _needs Cloudflare + Neon credentials (see Open questions)_
-- [ ] First admin can be created with a setup command and can sign in with 2FA
-- [ ] A customer can sign up and verify email (mocked email in dev)
-- [ ] Changing a color token in the DB changes the site after revalidation
-- [ ] `/admin` is blocked for guests and customers (tested)
+- [x] First admin can be created with a setup command and can sign in with 2FA (e2e)
+- [x] A customer can sign up and verify email (mocked email in dev) (e2e + integration)
+- [x] Changing a color token in the DB changes the site after revalidation (e2e)
+- [x] `/admin` is blocked for guests and customers (e2e + unit)
 
 ## Done
 
@@ -47,6 +47,11 @@ Done-when checklist (from `15-build-phases.md`):
 - Database layer: Drizzle schema (auth, settings, secrets, audit log, rate limits, jobs, email log, agents, media), PostGIS/pgvector column types, migrations (extensions, core, append-only audit), `pnpm db:start | db:migrate | db:reset`.
 - Settings: Zod schemas with defaults for all 12 groups (04-settings.md), lenient read (bad field falls back alone), strict admin input (unknown keys rejected), cached loader (`'use cache'` + `settings:<group>` tags), save helper with audit diff; encrypted secrets (AES-256-GCM) with masked status; audit helper (changed keys only, secrets redacted, truncated IPs).
 - Tests: Vitest unit + integration projects; integration uses an in-memory PGlite with a cached migrated snapshot (`.data/test-db-<hash>.tar.gz`). 40 tests passing.
+- Auth (Better Auth 1.7): customer sign-up with email verification (branded email, queued `email.send` job, mocked when no provider), sign-in with "remember me", password reset, optional Google sign-in (env + Security toggle), admin TOTP 2FA enrolment and challenge with backup codes, admin 12h sessions, deactivated accounts refused, login lockout (5 failures -> 15 min) + Better Auth rate limits, Turnstile on sign-up/sign-in/reset, `pnpm admin:create` setup command, permission table + `requireAdmin` / `requireAdminPage` / `requireCustomer` guards, `adminAction()` wrapper (auth -> strict Zod -> handler), read-only demo viewer flag, Edge middleware (cookie-based redirect + current path), header account menu, admin user menu + per-admin theme.
+- Background jobs: `job_runs` table, registry, `enqueue()` with dedupe keys and drivers (`queue` on Workers, `inline` via `after()`, `manual` for tests), runner with atomic claim, exponential backoff, dead-letter after max attempts, stuck-job requeue, retry.
+- Rate limiting: fixed-window counters in Postgres (forms 5/min, chat 20/min + 200/day, login lockout).
+- Health check `/api/health`; internal revalidation `/api/internal/revalidate` (shared secret).
+- E2E: Playwright with its own server (`scripts/e2e-server.ts`: in-memory DB from the migrated snapshot + Next in `.next-e2e`). 5 flows pass: guests blocked from /admin and /account; customer sign-up -> email -> verify -> /account, kept out of /admin; first admin via setup command -> 2FA enrolment -> sign-out -> sign-in with TOTP; colour token change -> revalidate -> site restyled; internal endpoint needs the secret.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress

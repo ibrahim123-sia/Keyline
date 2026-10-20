@@ -2,6 +2,7 @@ import { Suspense, type ReactNode } from "react";
 import { getPublicMedia } from "@/features/media/queries";
 import { getSettings } from "@/features/settings/queries";
 import { site } from "@/lib/i18n";
+import { AccountMenu } from "./account-menu";
 import { Logo } from "./logo";
 import { MobileMenu, type NavItem } from "./mobile-menu";
 import { StickyHeader } from "./sticky-header";
@@ -11,15 +12,7 @@ import { StickyHeader } from "./sticky-header";
  * on phone, logo + menu button opening a full-screen sheet. Sticky, white after scroll.
  * Menu items come from Admin -> Website -> Menus (Phase 5); nothing is hard-coded.
  */
-export async function SiteHeader({
-  nav = [],
-  accountSlot,
-  actions,
-}: {
-  nav?: NavItem[];
-  accountSlot?: ReactNode;
-  actions?: ReactNode;
-}) {
+export async function SiteHeader({ nav = [], actions }: { nav?: NavItem[]; actions?: ReactNode }) {
   const general = await getSettings("general");
   const logo = await getPublicMedia(general.logoLightId);
 
@@ -49,8 +42,9 @@ export async function SiteHeader({
 
         <div className="flex items-center gap-2">
           {actions}
+          {/* Reads the session cookie: streamed in, the rest of the header stays static. */}
           <Suspense fallback={<span className="hidden h-10 w-20 sm:block" aria-hidden />}>
-            {accountSlot}
+            <AccountMenu />
           </Suspense>
           <MobileMenu nav={nav} agencyName={general.agencyName} />
         </div>

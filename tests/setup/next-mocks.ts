@@ -19,3 +19,7 @@ process.env.SECRETS_ENCRYPTION_KEY ??= "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNk
 process.env.BETTER_AUTH_SECRET ??= "test-secret-test-secret-test-secret-0123";
 process.env.APP_URL ??= "http://localhost:3000";
 process.env.BETTER_AUTH_URL ??= "http://localhost:3000";
+// No network calls to Cloudflare from tests; jobs run when a test calls runDueJobs().
+process.env.TURNSTILE_SECRET_KEY = "off";
+process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = "off";
+process.env.JOBS_DRIVER = "manual";
