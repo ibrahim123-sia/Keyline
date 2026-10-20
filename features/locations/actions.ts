@@ -132,6 +132,8 @@ export const deleteLocation = adminAction(
       const parts = [
         usage.children ? `${usage.children} sub-locations` : "",
         usage.agents ? `${usage.agents} agent profiles` : "",
+        usage.listings ? `${usage.listings} listings` : "",
+        usage.projects ? `${usage.projects} projects` : "",
       ].filter(Boolean);
       throw new ActionError(
         `Still used by ${parts.join(" and ")}. Move or remove those first.`,

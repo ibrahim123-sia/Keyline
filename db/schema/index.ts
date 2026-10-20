@@ -4,3 +4,6 @@ export * from "./people";
 export * from "./media";
 export * from "./master-data";
 export * from "./seo";
+export * from "./payment-plans";
+export * from "./projects";
+export * from "./properties";

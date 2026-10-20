@@ -1,4 +1,6 @@
+import { eq } from "drizzle-orm";
 import type { DbOrTx } from "@/db/client";
+import { projects } from "@/db/schema/projects";
 import { usageRegistry, type UsageRef } from "@/lib/usage-registry";
 
 /**
@@ -6,6 +8,15 @@ import { usageRegistry, type UsageRef } from "@/lib/usage-registry";
  * "merge into…" (07 §1). Each feature registers its table here.
  */
 const registry = usageRegistry();
+
+registry.register({
+  label: "projects",
+  table: projects,
+  column: projects.developerId,
+  merge: async (db, fromId, toId) => {
+    await db.update(projects).set({ developerId: toId }).where(eq(projects.developerId, fromId));
+  },
+});
 
 export type DeveloperRef = UsageRef;
 

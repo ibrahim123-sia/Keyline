@@ -1,4 +1,5 @@
 import type { DbOrTx } from "@/db/client";
+import { properties } from "@/db/schema/properties";
 import { usageRegistry, type UsageRef } from "@/lib/usage-registry";
 
 /**
@@ -6,6 +7,8 @@ import { usageRegistry, type UsageRef } from "@/lib/usage-registry";
  * (Phase 6), posts (Phase 5). An agent in use cannot be deleted; deactivate them instead.
  */
 const registry = usageRegistry();
+
+registry.register({ label: "listings", table: properties, column: properties.agentId });
 
 export function registerAgentUsage(ref: UsageRef): void {
   registry.register(ref);

@@ -4,6 +4,8 @@ import { currentAgencyId } from "@/db/schema/_common";
 import { developers, locations } from "@/db/schema/master-data";
 import { media } from "@/db/schema/media";
 import { agents } from "@/db/schema/people";
+import { projectMedia, projectUnitTypes, projects } from "@/db/schema/projects";
+import { properties, propertyMedia } from "@/db/schema/properties";
 import { loadSettings } from "@/features/settings/queries";
 import type { SettingsOf } from "@/features/settings/schema";
 import type { SettingGroup } from "@/db/schema/system";
@@ -113,7 +115,100 @@ const settingsUses: Source = async (db, ids) => {
     .map(([id, label, href]) => ({ mediaId: id!, label, href }));
 };
 
-const sources: Source[] = [settingsUses, agentUses, developerUses, locationUses];
+const kindLabel: Record<string, string> = {
+  photo: "photo",
+  floor_plan: "floor plan",
+  video: "video",
+  brochure: "brochure",
+  document: "document",
+};
+
+const listingUses: Source = async (db, ids) => {
+  const rows = await db
+    .select({
+      mediaId: propertyMedia.mediaId,
+      kind: propertyMedia.kind,
+      id: properties.id,
+      reference: properties.reference,
+    })
+    .from(propertyMedia)
+    .innerJoin(properties, eq(properties.id, propertyMedia.propertyId))
+    .where(and(eq(properties.agencyId, currentAgencyId()), inArray(propertyMedia.mediaId, ids)));
+  return rows.map((r) => ({
+    mediaId: r.mediaId,
+    label: `Listing ${r.reference}: ${kindLabel[r.kind] ?? r.kind}`,
+    href: `/admin/properties/${r.id}`,
+  }));
+};
+
+const projectUses: Source = async (db, ids) => {
+  const gallery = await db
+    .select({
+      mediaId: projectMedia.mediaId,
+      kind: projectMedia.kind,
+      id: projects.id,
+      name: projects.name,
+    })
+    .from(projectMedia)
+    .innerJoin(projects, eq(projects.id, projectMedia.projectId))
+    .where(and(eq(projects.agencyId, currentAgencyId()), inArray(projectMedia.mediaId, ids)));
+  const files = await db
+    .select({
+      id: projects.id,
+      name: projects.name,
+      brochureId: projects.brochureId,
+      masterPlanId: projects.masterPlanId,
+    })
+    .from(projects)
+    .where(
+      and(
+        eq(projects.agencyId, currentAgencyId()),
+        or(inArray(projects.brochureId, ids), inArray(projects.masterPlanId, ids)),
+      ),
+    );
+  const plans = await db
+    .select({
+      mediaId: projectUnitTypes.floorPlanId,
+      unit: projectUnitTypes.name,
+      id: projects.id,
+      name: projects.name,
+    })
+    .from(projectUnitTypes)
+    .innerJoin(projects, eq(projects.id, projectUnitTypes.projectId))
+    .where(
+      and(eq(projects.agencyId, currentAgencyId()), inArray(projectUnitTypes.floorPlanId, ids)),
+    );
+  const href = (id: string) => `/admin/projects/${id}`;
+  return [
+    ...gallery.map((r) => ({
+      mediaId: r.mediaId,
+      label: `Project ${r.name}: ${kindLabel[r.kind] ?? r.kind}`,
+      href: href(r.id),
+    })),
+    ...files.flatMap((r) => [
+      ...(r.brochureId && ids.includes(r.brochureId)
+        ? [{ mediaId: r.brochureId, label: `Project ${r.name}: brochure`, href: href(r.id) }]
+        : []),
+      ...(r.masterPlanId && ids.includes(r.masterPlanId)
+        ? [{ mediaId: r.masterPlanId, label: `Project ${r.name}: master plan`, href: href(r.id) }]
+        : []),
+    ]),
+    ...plans.map((r) => ({
+      mediaId: r.mediaId!,
+      label: `Project ${r.name}: floor plan (${r.unit})`,
+      href: href(r.id),
+    })),
+  ];
+};
+
+const sources: Source[] = [
+  settingsUses,
+  agentUses,
+  developerUses,
+  locationUses,
+  listingUses,
+  projectUses,
+];
 
 /** id -> where it is used. Ids that are not used anywhere map to an empty list. */
 export async function mediaUsage(db: DbOrTx, ids: string[]): Promise<Map<string, MediaUse[]>> {

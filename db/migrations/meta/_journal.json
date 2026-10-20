@@ -36,6 +36,13 @@
       "when": 1792488458185,
       "tag": "0004_seo_redirects",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792508052339,
+      "tag": "0005_listings",
+      "breakpoints": true
     }
   ]
 }

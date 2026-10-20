@@ -3,6 +3,8 @@ import { cacheLife, cacheTag } from "next/cache";
 import { getDb, type DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { agents } from "@/db/schema/people";
+import { projects } from "@/db/schema/projects";
+import { properties } from "@/db/schema/properties";
 import { locations, type LocationLevel } from "@/db/schema/master-data";
 import { tags } from "@/lib/cache-tags";
 import type { GeoPolygon, LngLat } from "@/lib/geo";
@@ -55,19 +57,38 @@ export async function getLocationForAdmin(id: string, db?: DbOrTx): Promise<Loca
 export async function locationUsage(
   id: string,
   db?: DbOrTx,
-): Promise<{ children: number; agents: number; total: number }> {
+): Promise<{
+  children: number;
+  agents: number;
+  listings: number;
+  projects: number;
+  total: number;
+}> {
   const conn = db ?? (await getDb());
-  const [c] = await conn
-    .select({ n: sql<number>`count(*)::int` })
-    .from(locations)
-    .where(eq(locations.parentId, id));
-  const [a] = await conn
-    .select({ n: sql<number>`count(*)::int` })
-    .from(agents)
-    .where(sql`${id}::uuid = any(${agents.areas})`);
-  const children = c?.n ?? 0;
-  const agentCount = a?.n ?? 0;
-  return { children, agents: agentCount, total: children + agentCount };
+  const count = async (q: Promise<Array<{ n: number }>>) => (await q)[0]?.n ?? 0;
+  const n = sql<number>`count(*)::int`;
+  const children = await count(
+    conn.select({ n }).from(locations).where(eq(locations.parentId, id)),
+  );
+  const agentCount = await count(
+    conn
+      .select({ n })
+      .from(agents)
+      .where(sql`${id}::uuid = any(${agents.areas})`),
+  );
+  const listings = await count(
+    conn.select({ n }).from(properties).where(eq(properties.locationId, id)),
+  );
+  const projectCount = await count(
+    conn.select({ n }).from(projects).where(eq(projects.locationId, id)),
+  );
+  return {
+    children,
+    agents: agentCount,
+    listings,
+    projects: projectCount,
+    total: children + agentCount + listings + projectCount,
+  };
 }
 
 /** Cached tree for the public site (autocomplete, breadcrumbs, landing pages). */

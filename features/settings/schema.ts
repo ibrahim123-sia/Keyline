@@ -56,6 +56,12 @@ export const generalSchema = z.object({
   maintenanceMode: z.boolean().default(false),
   /** Media library upload limit (07 §8). */
   maxUploadMb: z.number().int().min(1).max(100).default(20),
+  /** Listing references look like PREFIX-1001 (05 §5). */
+  referencePrefix: z
+    .string()
+    .trim()
+    .regex(/^[A-Z]{1,5}$/, "Use 1 to 5 capital letters")
+    .default("LT"),
   maintenanceMessage: z
     .string()
     .max(500)

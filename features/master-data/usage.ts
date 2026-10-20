@@ -1,7 +1,9 @@
-import { count, eq, inArray } from "drizzle-orm";
+import { count, eq, inArray, sql } from "drizzle-orm";
 import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 import type { DbOrTx } from "@/db/client";
 import { pois } from "@/db/schema/master-data";
+import { projectFacilities } from "@/db/schema/projects";
+import { properties, propertyBadges, propertyFacilities } from "@/db/schema/properties";
 import type { MasterKind } from "./config";
 
 /**
@@ -17,10 +19,64 @@ export type UsageRef = {
   merge: (db: DbOrTx, fromId: string, toId: string) => Promise<void>;
 };
 
+/**
+ * Link tables have a (owner, item) primary key, so a merge copies the links that do not exist
+ * yet and drops the rest: a listing that had both items keeps one.
+ */
+function mergeLinks(
+  table: "property_facilities" | "project_facilities" | "property_badges",
+  owner: string,
+  item: string,
+) {
+  const t = sql.identifier(table);
+  const o = sql.identifier(owner);
+  const i = sql.identifier(item);
+  // Fixed column names (never user input) carried along for badge links.
+  const extra = sql.raw(table === "property_badges" ? ", is_auto, expires_at, reason" : "");
+  return async (db: DbOrTx, fromId: string, toId: string) => {
+    await db.execute(
+      sql`insert into ${t} (${o}, ${i}${extra}) select ${o}, ${toId}::uuid${extra} from ${t} where ${i} = ${fromId}::uuid on conflict do nothing`,
+    );
+    await db.execute(sql`delete from ${t} where ${i} = ${fromId}::uuid`);
+  };
+}
+
 const refs: Record<MasterKind, UsageRef[]> = {
-  "property-types": [],
-  facilities: [],
-  badges: [],
+  "property-types": [
+    {
+      label: "listings",
+      table: properties,
+      column: properties.propertyTypeId,
+      merge: async (db, fromId, toId) => {
+        await db
+          .update(properties)
+          .set({ propertyTypeId: toId })
+          .where(eq(properties.propertyTypeId, fromId));
+      },
+    },
+  ],
+  facilities: [
+    {
+      label: "listings",
+      table: propertyFacilities,
+      column: propertyFacilities.facilityId,
+      merge: mergeLinks("property_facilities", "property_id", "facility_id"),
+    },
+    {
+      label: "projects",
+      table: projectFacilities,
+      column: projectFacilities.facilityId,
+      merge: mergeLinks("project_facilities", "project_id", "facility_id"),
+    },
+  ],
+  badges: [
+    {
+      label: "listings",
+      table: propertyBadges,
+      column: propertyBadges.badgeId,
+      merge: mergeLinks("property_badges", "property_id", "badge_id"),
+    },
+  ],
   "poi-types": [
     {
       label: "places",

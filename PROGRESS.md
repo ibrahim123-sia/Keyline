@@ -10,7 +10,6 @@ Spec: `lintel-spec/lintel-spec/` (README + `docs/01..16`).
 | 1     | Foundation               | done (staging deploy waits for credentials) |
 | 2     | Settings and master data | done (staging deploy waits for credentials) |
 | 3     | Properties and projects  | in progress                                 |
-| 3     | Properties and projects  | not started                                 |
 | 4     | Public site core         | not started                                 |
 | 5     | CMS and SEO              | not started                                 |
 | 6     | Leads and CRM            | not started                                 |
@@ -107,11 +106,12 @@ Done-when checklist:
 - Admin users (Settings): list with status (active, invite sent, deactivated, two-step on/off, read-only demo) and last sign-in; invite by email (a 7-day "set your password" link through Better Auth's reset flow, then two-step setup), resend invite, deactivate (signs them out at once; never the last active admin) and reactivate, reset another admin's two-step verification; personal API tokens for MCP clients (read or read + propose, expiry, shown once, stored as SHA-256, revocable). All sensitive actions need a recent sign-in and offer "sign in again". Integration + e2e (invite email -> set password -> admin sign-in).
 - Audit log viewer (Settings): newest first, URL-driven filters (who, module, action words, date range), readable action names, details panel with every changed field before and after, links to the item, truncated IP and browser. Integration + e2e.
 - System page (Settings -> System, also in the sidebar): environment, file storage and job driver; queue tiles (waiting, running, retrying, gave up, failed and done in 24 h); integration status (off, key missing, not tested, working, failing with the last error); AI spend this month against the limit; scheduled tasks with their schedule and last run; recent jobs with filters, details (input, result, error, next try) and retry (single or bulk). Integration + e2e.
+- Phase 3 schema: payment plans and steps, projects (facilities, media, unit types), properties (reference sequence, generated price per area, yield and search vector, GiST and trigram indexes), property media, facilities, badges, nearby places, price history, daily stats; listings and projects now count as usage for agents, developers (merge moves projects), locations, property types, facilities and badges (merge keeps one link per listing), and media. Integration tests.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
 
-- Phase 3, item 1: listings schema (projects, unit types, payment plans, properties, media, facilities, badges, nearby places, price history, daily stats).
+- Phase 3, item 2: rich text editor (Tiptap 3) with server-side HTML from an allowlist.
 
 ## Next
 
@@ -160,6 +160,8 @@ Done-when checklist:
 38. **Webhook tokens Lintel generates are shown once** (to paste into Meta, TikTok, Google Ads or a portal) and masked afterwards, like every other key.
 39. **Admin invites reuse Better Auth's password reset** (same screen, rules and token check) with a 7-day token instead of the 1-hour reset token; resending an invite cancels the earlier link. Invites refuse emails that already belong to an admin or a customer, so roles never mix.
 40. **API tokens** look like `lnt_` + 40 random characters, are shown once and stored as a SHA-256 hash with an 8-character prefix for recognition; "propose" access lets MCP write tools prepare changes that an admin confirms in Lintel (10 §4).
+41. **Listing references** come from a PostgreSQL sequence (`property_reference_seq`, from 1001) with the prefix from Settings -> General, so two admins saving at once never get the same number.
+42. **Listing search vector is a generated column** over title, building, reference and `search_text` (location names, kept current on save); generated columns cannot read other tables, so the names are copied in.
 
 ## Data model changes (vs `05-data-model.md`)
 
@@ -178,6 +180,12 @@ Done-when checklist:
 | media                         | + `crops` (jsonb, fractions per preset)                                          | Crop presets 16:10, 4:3, 1:1, OG (07 §8); fractions survive resizing              |
 | seo_redirects                 | + `source`                                                                       | What created an automatic redirect (e.g. a location slug change)                  |
 | pois                          | unique (`agency_id`, `google_place_id`)                                          | "Import from Google" skips places already imported                                |
+| properties                    | + `search_text`, generated `search_vector`, `handover_text`                      | Search by location names (kept on save); "Q4 2027" when only a quarter is known   |
+| projects                      | + `handover_text`, `published_at`                                                | Quarter-only handover dates; first publish date                                   |
+| project_unit_types            | + `sort_order`                                                                   | Unit types keep the order the admin gives them                                    |
+| property_badges               | + `expires_at`, `reason`                                                         | Time-limited automatic badges ("New" for 14 days) and why they apply              |
+| payment_plans                 | + `is_template`                                                                  | The agency's own saved plan templates (07 §5)                                     |
+| settings (general)            | + `referencePrefix`                                                              | Listing references like HD-1001 (05 §5)                                           |
 
 ## Open questions
 

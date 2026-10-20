@@ -57,6 +57,14 @@ export function GeneralSettingsForm({
               error={errorFor("shortDescription")}
             />
             <TextInputField
+              label="Listing reference prefix"
+              description={`New listings get references like ${value.referencePrefix || "LT"}-1001.`}
+              maxLength={5}
+              value={value.referencePrefix}
+              onChange={(v) => set({ referencePrefix: v.toUpperCase().replace(/[^A-Z]/g, "") })}
+              error={errorFor("referencePrefix")}
+            />
+            <TextInputField
               label="Licence or registration number"
               description="Shown in the footer."
               value={value.licenceNumber}
