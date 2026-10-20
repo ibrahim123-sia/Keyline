@@ -58,7 +58,6 @@ export default async function PoisPage(props: PageProps<"/admin/setup/pois">) {
           .map((c) => ({ id: c.id, name: c.name, center: c.center! }))}
         styleUrl={resolveMapStyle(integrations.googleMaps).styleUrl}
         mapCenter={market.mapCenter}
-        mapZoom={market.mapZoom}
         googleReady={googleReady}
         readOnly={user.readOnly}
       />

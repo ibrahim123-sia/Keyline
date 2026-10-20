@@ -109,6 +109,8 @@ export function DataTable<T>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
+  // TanStack Table v8 is not React Compiler friendly; this app does not enable the compiler.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: rows,
     columns,
@@ -142,14 +144,13 @@ export function DataTable<T>({
   return (
     <div className="flex flex-col gap-3">
       {views && views.length > 0 && (
-        <div className="flex flex-wrap gap-1.5" role="list" aria-label="Saved views">
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Saved views">
           {views.map((v) => {
             const active = Object.entries(v.params).every(([k, val]) => params.get(k) === val);
             return (
               <button
                 key={v.label}
                 type="button"
-                role="listitem"
                 aria-pressed={active}
                 onClick={() =>
                   setParams(

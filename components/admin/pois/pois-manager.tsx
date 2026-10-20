@@ -50,7 +50,6 @@ export function PoisManager({
   centers,
   styleUrl,
   mapCenter,
-  mapZoom,
   googleReady,
   readOnly,
 }: {
@@ -63,7 +62,6 @@ export function PoisManager({
   centers: Array<{ id: string; name: string; center: LngLat }>;
   styleUrl: string;
   mapCenter: LngLat;
-  mapZoom: number;
   googleReady: boolean;
   readOnly?: boolean;
 }) {
