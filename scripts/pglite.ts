@@ -1,4 +1,4 @@
-import { createServer, type Server, type Socket } from "node:net";
+import { createServer, type AddressInfo, type Server, type Socket } from "node:net";
 import { PGlite } from "@electric-sql/pglite";
 import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import { unaccent } from "@electric-sql/pglite/contrib/unaccent";
@@ -43,27 +43,43 @@ type Conn = {
 
 type Batch = { conn: Conn; messages: Buffer[]; startup: boolean };
 
+export const pgliteExtensions = { postgis, vector, pg_trgm, unaccent };
+
+export async function createPglite(
+  options: { dataDir?: string; loadDataDir?: Blob } = {},
+): Promise<PGlite> {
+  return PGlite.create({
+    dataDir: options.dataDir,
+    loadDataDir: options.loadDataDir,
+    extensions: pgliteExtensions,
+  });
+}
+
 export class PgliteWireServer {
   private server: Server | null = null;
   private queue: Batch[] = [];
   private owner: Conn | null = null;
   private running = false;
   private nextId = 1;
+  private conns = new Set<Conn>();
 
   constructor(private readonly db: PGlite) {}
 
-  async listen(port: number, host: string): Promise<void> {
+  /** Starts listening; port 0 picks a free port. Returns the bound port. */
+  async listen(port: number, host = "127.0.0.1"): Promise<number> {
     await this.db.waitReady;
     this.server = createServer((socket) => this.accept(socket));
     await new Promise<void>((resolve, reject) => {
       this.server!.once("error", reject);
       this.server!.listen(port, host, () => resolve());
     });
+    return (this.server.address() as AddressInfo).port;
   }
 
   async close(): Promise<void> {
     const server = this.server;
     this.server = null;
+    for (const conn of this.conns) conn.socket.destroy();
     if (server) await new Promise<void>((resolve) => server.close(() => resolve()));
   }
 
@@ -77,6 +93,7 @@ export class PgliteWireServer {
       pending: [],
       closed: false,
     };
+    this.conns.add(conn);
     socket.on("data", (chunk) => this.onData(conn, chunk));
     socket.on("error", () => this.onClose(conn));
     socket.on("close", () => this.onClose(conn));
@@ -127,6 +144,7 @@ export class PgliteWireServer {
   private onClose(conn: Conn) {
     if (conn.closed) return;
     conn.closed = true;
+    this.conns.delete(conn);
     this.queue = this.queue.filter((b) => b.conn !== conn);
     if (this.owner === conn) {
       // The client went away inside a transaction: roll it back and free the session.
@@ -257,18 +275,17 @@ function simpleQuery(sql: string): Uint8Array {
 
 export async function startPgliteServer(options: {
   dataDir?: string;
+  loadDataDir?: Blob;
   port: number;
   host?: string;
-}): Promise<{ url: string; db: PGlite; stop: () => Promise<void> }> {
-  const db = await PGlite.create({
-    dataDir: options.dataDir,
-    extensions: { postgis, vector, pg_trgm, unaccent },
-  });
+}): Promise<{ url: string; port: number; db: PGlite; stop: () => Promise<void> }> {
+  const db = await createPglite({ dataDir: options.dataDir, loadDataDir: options.loadDataDir });
   const host = options.host ?? "127.0.0.1";
   const server = new PgliteWireServer(db);
-  await server.listen(options.port, host);
+  const port = await server.listen(options.port, host);
   return {
-    url: `postgres://postgres:postgres@${host}:${options.port}/postgres`,
+    url: `postgres://postgres:postgres@${host}:${port}/postgres`,
+    port,
     db,
     stop: async () => {
       await server.close();

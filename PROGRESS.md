@@ -45,6 +45,8 @@ Done-when checklist (from `15-build-phases.md`):
 - Read the whole spec. Checked the toolchain on this machine (Node 24, pnpm 12, no Docker/Postgres).
 - Scaffold (Next 16.4, TS strict, Tailwind v4, ESLint + Prettier).
 - Database layer: Drizzle schema (auth, settings, secrets, audit log, rate limits, jobs, email log, agents, media), PostGIS/pgvector column types, migrations (extensions, core, append-only audit), `pnpm db:start | db:migrate | db:reset`.
+- Settings: Zod schemas with defaults for all 12 groups (04-settings.md), lenient read (bad field falls back alone), strict admin input (unknown keys rejected), cached loader (`'use cache'` + `settings:<group>` tags), save helper with audit diff; encrypted secrets (AES-256-GCM) with masked status; audit helper (changed keys only, secrets redacted, truncated IPs).
+- Tests: Vitest unit + integration projects; integration uses an in-memory PGlite with a cached migrated snapshot (`.data/test-db-<hash>.tar.gz`). 40 tests passing.
 
 ## In progress
 
@@ -68,22 +70,23 @@ Done-when checklist (from `15-build-phases.md`):
 10. **Line endings.** `.gitattributes` forces LF; `core.autocrlf=false` in this clone.
 11. **Own PGlite wire bridge (`scripts/pglite.ts`) instead of `@electric-sql/pglite-socket`.** The socket server forwards an extra ReadyForQuery that PGlite's backend emits after an error in an extended-protocol message, so every later result on that connection is shifted by one (reproduced with a unique violation and with a trigger error). The bridge buffers each client batch up to Sync, skips the rest of a failed batch until Sync, forwards ReadyForQuery only for Sync/Query, and gives the session to one connection while it is inside a transaction (from the ReadyForQuery status byte). Verified: error sequences, aborted transactions, pipelining, a pool with mixed errors, crash recovery after a hard kill.
 12. **Search helpers in SQL.** `lintel_unaccent()` / `lintel_normalize()` are IMMUTABLE wrappers (unaccent itself is only STABLE) so they can be used in generated columns and trigram indexes.
+14. **Vitest uses Vite's native `resolve.tsconfigPaths`** (no extra plugin).
 13. **Audit log is append-only in the database** (trigger blocks UPDATE/DELETE/TRUNCATE), not only in app code. Test clean-up uses `session_replication_role = replica`.
 
 ## Data model changes (vs `05-data-model.md`)
 
-| Table | Change | Why |
-|---|---|---|
-| users | + `read_only` | Demo viewer account (16 §3) is a flag, not a role |
-| users | + `preferred_contact`, `marketing_consent`, `marketing_consent_at`, `invited_by` | Customer profile + consent with date (12 §2, 14 §3); admin invites (03) |
-| two_factors, auth_rate_limits | new | Better Auth two-factor plugin and login rate-limit storage |
-| api_tokens | new | Per-admin MCP tokens, hashed (10 §4) |
-| audit_log | + `confirmed_by` | AI actions record the confirming admin (10 §3) |
-| rate_limits | new | App rate limits for forms/chat/tools (14 §2) |
-| job_runs | new | Jobs page: recent runs, failures, retry (13 §2) |
-| email_log | new | Email status tracking; dev outbox when no provider |
-| agents | + SEO block, `reply_time_text`, `last_assigned_at` | Agent pages have an SEO panel (08 §6); "usually replies in…" (06 §5); round robin |
-| media | + `kind`, `status`, `processing_error` | Upload processing job state |
+| Table                         | Change                                                                           | Why                                                                               |
+| ----------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| users                         | + `read_only`                                                                    | Demo viewer account (16 §3) is a flag, not a role                                 |
+| users                         | + `preferred_contact`, `marketing_consent`, `marketing_consent_at`, `invited_by` | Customer profile + consent with date (12 §2, 14 §3); admin invites (03)           |
+| two_factors, auth_rate_limits | new                                                                              | Better Auth two-factor plugin and login rate-limit storage                        |
+| api_tokens                    | new                                                                              | Per-admin MCP tokens, hashed (10 §4)                                              |
+| audit_log                     | + `confirmed_by`                                                                 | AI actions record the confirming admin (10 §3)                                    |
+| rate_limits                   | new                                                                              | App rate limits for forms/chat/tools (14 §2)                                      |
+| job_runs                      | new                                                                              | Jobs page: recent runs, failures, retry (13 §2)                                   |
+| email_log                     | new                                                                              | Email status tracking; dev outbox when no provider                                |
+| agents                        | + SEO block, `reply_time_text`, `last_assigned_at`                               | Agent pages have an SEO panel (08 §6); "usually replies in…" (06 §5); round robin |
+| media                         | + `kind`, `status`, `processing_error`                                           | Upload processing job state                                                       |
 
 ## Open questions
 

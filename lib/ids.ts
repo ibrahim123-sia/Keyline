@@ -38,7 +38,8 @@ export function isUuid(value: unknown): value is string {
 
 /** Short random token (URL-safe), e.g. for short links, ref codes and preview links. */
 export function randomToken(length = 10): string {
-  const alphabet = "abcdefghijkmnopqrstuvwxyz23456789"; // no l, 1, 0, o: easy to read aloud
+  // 32 symbols (no l, o, 0, 1: easy to read aloud); a power of two, so `b % 32` has no bias.
+  const alphabet = "abcdefghijkmnpqrstuvwxyz23456789";
   const bytes = new Uint8Array(length);
   crypto.getRandomValues(bytes);
   let out = "";
