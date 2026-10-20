@@ -18,7 +18,7 @@ const csv = [
   "Broken row,sale,Castle,E2E Palm Bay,1000000,3,1500,",
 ].join("\r\n");
 
-test("properties import: template, columns, preview with a bad row, drafts", async ({
+test("properties import: template, columns, preview with a bad row, drafts, export", async ({
   page,
   request,
 }) => {
@@ -114,6 +114,18 @@ test("properties import: template, columns, preview with a bad row, drafts", asy
     { title: "Palm Bay villa", status: "draft", size: "260.13", price: "320000000" },
     { title: "Sea breeze flat", status: "draft", size: "102.19", price: "12000000" },
   ]);
+
+  // Export what the list shows (drafts) and read it back.
+  const exportDownload = page.waitForEvent("download");
+  await page.getByRole("link", { name: "Export CSV" }).click();
+  const exported = await exportDownload;
+  expect(exported.suggestedFilename()).toMatch(/^properties-\d{4}-\d{2}-\d{2}\.csv$/);
+  const text = (await readFile((await exported.path())!, "utf8")).replace(/^﻿/, "");
+  const lines = text.trim().split("\r\n");
+  expect(lines[0]!.startsWith("reference,status,title,purpose")).toBe(true);
+  const villa = lines.find((l) => l.includes("Palm Bay villa"))!;
+  expect(villa).toContain(",draft,Palm Bay villa,sale,ready,E2E Townhouse,E2E Palm Bay,");
+  expect(villa).toContain(",3200000,AED,");
 
   await cleanUp();
 });

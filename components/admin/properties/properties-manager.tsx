@@ -5,6 +5,7 @@ import {
   ArchiveRestoreIcon,
   BadgeCheckIcon,
   CopyIcon,
+  DownloadIcon,
   ExternalLinkIcon,
   LinkIcon,
   MoreHorizontalIcon,
@@ -135,6 +136,8 @@ export function PropertiesManager({
   readOnly?: boolean;
 }) {
   const router = useRouter();
+  const search = useSearchParams();
+  const exportHref = `/api/admin/properties/export${search.size ? `?${search}` : ""}`;
   const [confirmArchive, setConfirmArchive] = useState<{ ids: string[]; clear: () => void } | null>(
     null,
   );
@@ -367,6 +370,11 @@ export function PropertiesManager({
             />
             <UrlToggle param="missingSeo" label="Missing SEO" />
             <UrlToggle param="featured" label="Featured" />
+            <Button asChild variant="outline">
+              <a href={exportHref} download>
+                <DownloadIcon /> Export CSV
+              </a>
+            </Button>
             {!readOnly && (
               <Button asChild variant="outline">
                 <Link href="/admin/properties/import">
@@ -382,13 +390,16 @@ export function PropertiesManager({
             ? undefined
             : (ids, clear) =>
                 archived ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => bulk(ids, { type: "restore" }, "restored", clear)}
-                  >
-                    <ArchiveRestoreIcon /> Restore
-                  </Button>
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => bulk(ids, { type: "restore" }, "restored", clear)}
+                    >
+                      <ArchiveRestoreIcon /> Restore
+                    </Button>
+                    <ExportSelected ids={ids} />
+                  </>
                 ) : (
                   <>
                     <DropdownMenu>
@@ -528,6 +539,7 @@ export function PropertiesManager({
                     >
                       <ArchiveIcon /> Archive
                     </Button>
+                    <ExportSelected ids={ids} />
                   </>
                 )
         }
@@ -547,6 +559,17 @@ export function PropertiesManager({
         }}
       />
     </>
+  );
+}
+
+/** Selected rows as CSV (07 §7 "CSV export of any filtered list"). */
+function ExportSelected({ ids }: { ids: string[] }) {
+  return (
+    <Button asChild size="sm" variant="outline">
+      <a href={`/api/admin/properties/export?ids=${ids.join(",")}`} download>
+        <DownloadIcon /> Export CSV
+      </a>
+    </Button>
   );
 }
 
