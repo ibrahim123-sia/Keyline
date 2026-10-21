@@ -1,7 +1,9 @@
 import { getPublicMedia } from "@/features/media/queries";
 import { getSettings } from "@/features/settings/queries";
 import { socialKeys } from "@/features/settings/schema";
-import { format, site } from "@/lib/i18n";
+import { currentYear } from "@/features/site/time";
+import { format, pages, site } from "@/lib/i18n";
+import { CookieSettingsLink } from "./cookie-banner";
 import { Logo } from "./logo";
 
 export type FooterColumn = {
@@ -19,8 +21,9 @@ const socialLabels: Record<(typeof socialKeys)[number], string> = {
 };
 
 /**
- * Footer (02 §5, 08 §2): dark ink, logo + short text, link columns (footer menus, Phase 5),
- * social links, licence number and "Powered by Lintel" (cannot be removed).
+ * Footer (02 §5, 06 §2, 08 §2): dark ink, logo + short text, contact details, link columns
+ * (footer menus, Phase 5), social links, legal line with the licence number, cookie settings
+ * and "Powered by Lintel" (cannot be removed).
  */
 export async function SiteFooter({
   columns = [],
@@ -29,9 +32,16 @@ export async function SiteFooter({
   columns?: FooterColumn[];
   legalLinks?: Array<{ label: string; href: string }>;
 }) {
-  const [general, contact] = await Promise.all([getSettings("general"), getSettings("contact")]);
+  const [general, contact, year] = await Promise.all([
+    getSettings("general"),
+    getSettings("contact"),
+    currentYear(),
+  ]);
   const logo = await getPublicMedia(general.logoDarkId);
   const socials = socialKeys.filter((k) => contact.socials[k]);
+  const hasContact = Boolean(
+    contact.phone || contact.email || contact.address || contact.openingHours,
+  );
 
   return (
     <footer className="bg-ink text-surface/80">
@@ -42,14 +52,14 @@ export async function SiteFooter({
             <p className="text-[15px] leading-relaxed">{general.shortDescription}</p>
           )}
           {socials.length > 0 && (
-            <ul className="flex flex-wrap gap-x-4 gap-y-2" aria-label={site.footer.social}>
+            <ul className="flex flex-wrap gap-2" aria-label={site.footer.social}>
               {socials.map((k) => (
                 <li key={k}>
                   <a
                     href={contact.socials[k]}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-surface/80 underline-offset-4 hover:text-surface hover:underline"
+                    className="inline-flex rounded-full border border-surface/20 px-3 py-1 text-[13px] text-surface/85 transition-colors hover:border-surface/50 hover:text-surface"
                   >
                     {socialLabels[k]}
                   </a>
@@ -58,6 +68,50 @@ export async function SiteFooter({
             </ul>
           )}
         </div>
+        {hasContact && (
+          <section aria-labelledby="footer-contact">
+            <h2 id="footer-contact" className="mb-4 text-eyebrow text-surface">
+              {pages.footer.contact}
+            </h2>
+            <dl className="space-y-2.5 text-[15px]">
+              {contact.phone && (
+                <div>
+                  <dt className="sr-only">{pages.footer.phone}</dt>
+                  <dd>
+                    <a
+                      href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`}
+                      className="hover:text-surface"
+                    >
+                      {contact.phone}
+                    </a>
+                  </dd>
+                </div>
+              )}
+              {contact.email && (
+                <div>
+                  <dt className="sr-only">{pages.footer.email}</dt>
+                  <dd>
+                    <a href={`mailto:${contact.email}`} className="hover:text-surface">
+                      {contact.email}
+                    </a>
+                  </dd>
+                </div>
+              )}
+              {contact.address && (
+                <div>
+                  <dt className="sr-only">{pages.footer.address}</dt>
+                  <dd className="whitespace-pre-line">{contact.address}</dd>
+                </div>
+              )}
+              {contact.openingHours && (
+                <div>
+                  <dt className="sr-only">{pages.footer.hours}</dt>
+                  <dd className="whitespace-pre-line text-surface/70">{contact.openingHours}</dd>
+                </div>
+              )}
+            </dl>
+          </section>
+        )}
         {columns.map((col) => (
           <nav key={col.title} aria-label={col.title}>
             <h2 className="mb-4 text-eyebrow text-surface">{col.title}</h2>
@@ -81,7 +135,12 @@ export async function SiteFooter({
       <div className="border-t border-surface/10">
         <div className="container-site flex flex-col gap-3 py-6 text-sm md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <span>{general.legalName || general.agencyName}</span>
+            <span>
+              {format(site.footer.rights, {
+                year,
+                agency: general.legalName || general.agencyName,
+              })}
+            </span>
             {general.licenceNumber && (
               <span>{format(site.footer.licence, { number: general.licenceNumber })}</span>
             )}
@@ -90,6 +149,7 @@ export async function SiteFooter({
                 {l.label}
               </a>
             ))}
+            <CookieSettingsLink className="underline-offset-4 hover:text-surface hover:underline" />
           </div>
           <span className="text-surface/70">{site.meta.poweredBy}</span>
         </div>

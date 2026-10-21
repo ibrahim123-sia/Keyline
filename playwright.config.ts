@@ -18,6 +18,23 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : [["list"]],
   use: {
     baseURL: `http://localhost:${port}`,
+    // A cookie choice is already made, so the banner does not cover other tests' buttons;
+    // tests/e2e/site-chrome.spec.ts starts without it to test the banner itself.
+    storageState: {
+      cookies: [
+        {
+          name: "lintel_consent",
+          value: "v1.a0.m0.1760000000",
+          domain: "localhost",
+          path: "/",
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: "Lax",
+        },
+      ],
+      origins: [],
+    },
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     navigationTimeout: 90_000,

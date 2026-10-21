@@ -63,6 +63,9 @@ export const admin = {
     forbiddenTitle: "No access",
     forbiddenText: "This area is only for agency staff.",
     reauthRequired: "For your security, please sign in again to make this change.",
+    notFoundTitle: "Not found",
+    notFoundText: "This item no longer exists, or the address is wrong.",
+    backToDashboard: "Back to the dashboard",
   },
   common: {
     save: "Save",

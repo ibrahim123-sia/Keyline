@@ -158,6 +158,29 @@ export function GeneralSettingsForm({
           </FormSection>
 
           <FormSection
+            title="Website header"
+            description="The main button at the top of every page, e.g. “List your property”. Leave it empty to hide the button."
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextInputField
+                label="Button text"
+                maxLength={40}
+                value={value.headerButton.label}
+                onChange={(label) => set({ headerButton: { ...value.headerButton, label } })}
+                error={errorFor("headerButton.label")}
+              />
+              <TextInputField
+                label="Button link"
+                placeholder="/list-your-property"
+                maxLength={300}
+                value={value.headerButton.href}
+                onChange={(href) => set({ headerButton: { ...value.headerButton, href } })}
+                error={errorFor("headerButton.href")}
+              />
+            </div>
+          </FormSection>
+
+          <FormSection
             title="Maintenance mode"
             description="Visitors see a short message instead of the site. Signed-in admins can still browse it."
           >

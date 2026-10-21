@@ -134,7 +134,27 @@ export async function clearListings(): Promise<void> {
   await db().query("delete from payment_plans where not is_template");
 }
 
-/** Expires cache tags in the running app (after writing data straight to the database). */
+/**
+ * Browser state with a cookie choice already made (as in playwright.config.ts), for extra
+ * contexts a test opens itself: the cookie banner then never covers the page.
+ */
+export const decidedCookies = {
+  cookies: [
+    {
+      name: "lintel_consent",
+      value: "v1.a0.m0.1760000000",
+      domain: "localhost",
+      path: "/",
+      expires: -1,
+      httpOnly: false,
+      secure: false,
+      sameSite: "Lax" as const,
+    },
+  ],
+  origins: [],
+};
+
+/** Expires cache tags after data was written straight to the database (tags as in lib/cache-tags). */
 export async function revalidateTags(request: APIRequestContext, tags: string[]): Promise<void> {
   const res = await request.post("/api/internal/revalidate", {
     headers: { authorization: `Bearer ${INTERNAL_SECRET}` },

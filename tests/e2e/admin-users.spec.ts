@@ -1,5 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { field, latestEmail, linkFrom, signIn, signInAsAdmin, uniqueEmail } from "./helpers";
+import {
+  decidedCookies,
+  field,
+  latestEmail,
+  linkFrom,
+  signIn,
+  signInAsAdmin,
+  uniqueEmail,
+} from "./helpers";
 
 test("admin users: invite by email, set a password from the link, sign in", async ({
   page,
@@ -22,7 +30,7 @@ test("admin users: invite by email, set a password from the link, sign in", asyn
 
   // The invitee, in their own browser.
   const { html } = await latestEmail(email, "auth.admin-invite");
-  const invitee = await (await browser.newContext()).newPage();
+  const invitee = await (await browser.newContext({ storageState: decidedCookies })).newPage();
   await invitee.goto(linkFrom(html, "/reset-password/"));
   await expect(invitee).toHaveURL(/\/reset-password\?.*invite=1/);
   await expect(invitee.getByText("Choose a password for your admin account")).toBeVisible();

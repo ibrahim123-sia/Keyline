@@ -66,6 +66,23 @@ export const generalSchema = z.object({
     .string()
     .max(500)
     .default("We are updating our website. Please check back soon."),
+  /**
+   * Primary button in the site header (06 §2, e.g. "List your property"). Hidden while
+   * either part is empty.
+   */
+  headerButton: z
+    .object({
+      label: z.string().trim().max(40),
+      href: z
+        .string()
+        .trim()
+        .max(300)
+        .refine(
+          (v) => v === "" || (v.startsWith("/") && !v.startsWith("//")) || /^https?:\/\//.test(v),
+          "Use a path like /list-your-property or a full https:// address",
+        ),
+    })
+    .default({ label: "", href: "" }),
 });
 
 /* 2. Branding (design tokens, 02-design-system.md §2) --------------------- */

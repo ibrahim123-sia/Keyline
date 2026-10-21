@@ -2,7 +2,9 @@ import { Suspense, type ReactNode } from "react";
 import { getPublicMedia } from "@/features/media/queries";
 import { getSettings } from "@/features/settings/queries";
 import { site } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
 import { AccountMenu } from "./account-menu";
+import { CurrencyMenu } from "./currency-menu";
 import { Logo } from "./logo";
 import { MobileMenu, type NavItem } from "./mobile-menu";
 import { StickyHeader } from "./sticky-header";
@@ -10,11 +12,15 @@ import { StickyHeader } from "./sticky-header";
 /**
  * Public header (02 §5): logo left, main menu centre, account + primary action right;
  * on phone, logo + menu button opening a full-screen sheet. Sticky, white after scroll.
- * Menu items come from Admin -> Website -> Menus (Phase 5); nothing is hard-coded.
+ * Menu items come from Admin -> Website -> Menus (Phase 5); the primary button and the
+ * currencies come from settings. Nothing is hard-coded.
  */
 export async function SiteHeader({ nav = [], actions }: { nav?: NavItem[]; actions?: ReactNode }) {
-  const general = await getSettings("general");
+  const [general, market] = await Promise.all([getSettings("general"), getSettings("market")]);
+  const choice = market.visitorCurrencies.some((c) => c.code !== market.baseCurrency.code);
   const logo = await getPublicMedia(general.logoLightId);
+  const { label, href } = general.headerButton;
+  const button = label && href ? { label, href } : null;
 
   return (
     <StickyHeader>
@@ -42,11 +48,34 @@ export async function SiteHeader({ nav = [], actions }: { nav?: NavItem[]; actio
 
         <div className="flex items-center gap-2">
           {actions}
-          {/* Reads the session cookie: streamed in, the rest of the header stays static. */}
+          {/* Cookies (currency, session) are read in their own boundaries: the rest stays static. */}
+          {choice && (
+            <div className="hidden sm:block">
+              <Suspense fallback={<span className="block h-10 w-16" aria-hidden />}>
+                <CurrencyMenu />
+              </Suspense>
+            </div>
+          )}
           <Suspense fallback={<span className="block h-10 w-20" aria-hidden />}>
             <AccountMenu />
           </Suspense>
-          <MobileMenu nav={nav} agencyName={general.agencyName} />
+          {button && (
+            <Button asChild size="md" className="hidden lg:inline-flex">
+              <a href={button.href}>{button.label}</a>
+            </Button>
+          )}
+          <MobileMenu
+            nav={nav}
+            agencyName={general.agencyName}
+            button={button}
+            extras={
+              choice ? (
+                <Suspense fallback={null}>
+                  <CurrencyMenu variant="list" />
+                </Suspense>
+              ) : null
+            }
+          />
         </div>
       </div>
     </StickyHeader>
