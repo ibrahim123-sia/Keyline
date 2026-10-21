@@ -19,6 +19,9 @@ export type EditorMarket = {
   mapZoom: number;
   styleUrl: string;
   siteName: string;
+  /** Settings -> SEO title pattern for this kind of page, and the site title template. */
+  titlePattern?: string;
+  titleTemplate?: string;
 };
 
 export type SectionProps = {

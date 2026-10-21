@@ -16,6 +16,9 @@ import { formatFor } from "@/features/properties/format";
 import { formatMoney } from "@/lib/money";
 import { richTextToPlain } from "@/lib/rich-text";
 import type { SectionProps } from "./types";
+import { placeOf } from "@/features/seo/places";
+import { mediaVariant } from "@/lib/media-src";
+import { listingSeoTitle } from "@/features/seo/titles";
 
 const dateTime = new Intl.DateTimeFormat("en", {
   day: "numeric",
@@ -201,8 +204,27 @@ export function TrustSection({ data, set, errorFor, market }: SectionProps) {
 
 /* 13. SEO ------------------------------------------------------------------ */
 
-export function SeoSection({ data, set, errorFor, market }: SectionProps) {
+export function SeoSection({ data, set, errorFor, market, options, media }: SectionProps) {
   const plain = richTextToPlain(data.description).replace(/\s+/g, " ");
+  const place = placeOf(options.locations, data.locationId);
+  const pageTitle = market.titlePattern
+    ? listingSeoTitle(market.titlePattern, {
+        title: data.title || "Listing",
+        beds: data.beds,
+        purpose: data.purpose,
+        typeName: options.types.find((t) => t.id === data.propertyTypeId)?.name ?? null,
+        area: place.area,
+        city: place.city,
+        price: data.priceOnRequest ? null : data.price,
+        currency: data.currency,
+        decimals: market.currencies[data.currency]?.decimals ?? 2,
+        reference: "",
+        agency: market.siteName,
+      })
+    : data.title || "Listing";
+  const photos = data.media.filter((m) => m.kind === "photo");
+  const cover = photos.find((m) => m.isCover) ?? photos[0];
+  const coverUrl = cover ? media[cover.mediaId]?.url : null;
   return (
     <FormSection id="seo" title="SEO">
       <SeoFields
@@ -216,10 +238,17 @@ export function SeoSection({ data, set, errorFor, market }: SectionProps) {
         }}
         onChange={(patch) => set(patch)}
         urlPrefix="/property/"
-        fallbackTitle={`${data.title || "Listing"} | ${market.siteName}`}
+        fallbackTitle={(market.titleTemplate ?? `%s | ${market.siteName}`).replace("%s", pageTitle)}
         fallbackDescription={plain.slice(0, 155) || undefined}
         siteName={market.siteName}
         errorFor={errorFor}
+        shareImageUrl={coverUrl ? mediaVariant(coverUrl, 640) : null}
+        checklist={{
+          h1: data.title.trim() !== "",
+          imagesWithoutAlt: photos.filter((m) => !m.alt && !media[m.mediaId]?.alt).length,
+          words: plain.split(" ").filter(Boolean).length,
+          minWords: 100,
+        }}
       />
     </FormSection>
   );

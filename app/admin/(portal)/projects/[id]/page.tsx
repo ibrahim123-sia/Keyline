@@ -5,6 +5,7 @@ import { resolveMapStyle } from "@/components/maps/map-style";
 import { getDb } from "@/db/client";
 import { currencyFormats } from "@/features/properties/format";
 import { loadProjectEditorData } from "@/features/projects/editor-data";
+import { siteTitleTemplate } from "@/features/seo/titles";
 import { loadSettings } from "@/features/settings/queries";
 import { requireAdminPage } from "@/lib/auth/guards";
 
@@ -21,6 +22,7 @@ export default async function ProjectEditorPage(props: PageProps<"/admin/project
   const market = await loadSettings("market", db);
   const integrations = await loadSettings("integrations", db);
   const general = await loadSettings("general", db);
+  const seo = await loadSettings("seo", db);
   const style = resolveMapStyle(integrations.googleMaps);
 
   return (
@@ -49,6 +51,8 @@ export default async function ProjectEditorPage(props: PageProps<"/admin/project
           mapZoom: market.mapZoom,
           styleUrl: style.styleUrl,
           siteName: general.agencyName,
+          titlePattern: seo.projectTitlePattern,
+          titleTemplate: siteTitleTemplate(seo.titlePattern, general.agencyName),
         }}
       />
     </>

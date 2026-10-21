@@ -5,6 +5,7 @@ import { resolveMapStyle } from "@/components/maps/map-style";
 import { getDb } from "@/db/client";
 import { loadEditorData } from "@/features/properties/editor-data";
 import { currencyFormats } from "@/features/properties/format";
+import { siteTitleTemplate } from "@/features/seo/titles";
 import { loadSettings } from "@/features/settings/queries";
 import { requireAdminPage } from "@/lib/auth/guards";
 
@@ -25,6 +26,7 @@ export default async function PropertyEditorPage(props: PageProps<"/admin/proper
   const market = await loadSettings("market", db);
   const integrations = await loadSettings("integrations", db);
   const general = await loadSettings("general", db);
+  const seo = await loadSettings("seo", db);
   const style = resolveMapStyle(integrations.googleMaps);
   const now = new Date().toISOString();
 
@@ -67,6 +69,8 @@ export default async function PropertyEditorPage(props: PageProps<"/admin/proper
           mapZoom: market.mapZoom,
           styleUrl: style.styleUrl,
           siteName: general.agencyName,
+          titlePattern: seo.listingTitlePattern,
+          titleTemplate: siteTitleTemplate(seo.titlePattern, general.agencyName),
         }}
       />
     </>
