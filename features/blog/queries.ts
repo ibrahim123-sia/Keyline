@@ -273,14 +273,22 @@ export type TagRow = { id: string; name: string; slug: string; posts: number };
 
 export async function listTags(db: DbOrTx): Promise<TagRow[]> {
   const rows = await db
-    .select({
-      id: postTags.id,
-      name: postTags.name,
-      slug: postTags.slug,
-      posts: sql<number>`(select count(*)::int from ${postTagLinks} where ${postTagLinks.tagId} = ${postTags.id})`,
-    })
+    .select({ id: postTags.id, name: postTags.name, slug: postTags.slug })
     .from(postTags)
     .where(eq(postTags.agencyId, currentAgencyId()))
     .orderBy(asc(postTags.name));
-  return rows;
+  const counts = rows.length
+    ? await db
+        .select({ id: postTagLinks.tagId, n: sql<number>`count(*)::int` })
+        .from(postTagLinks)
+        .where(
+          inArray(
+            postTagLinks.tagId,
+            rows.map((r) => r.id),
+          ),
+        )
+        .groupBy(postTagLinks.tagId)
+    : [];
+  const byId = new Map(counts.map((c) => [c.id, c.n]));
+  return rows.map((r) => ({ ...r, posts: byId.get(r.id) ?? 0 }));
 }
