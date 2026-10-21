@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { LeadPage } from "@/components/admin/leads/lead-page";
+import { SendHomes, Shortlists } from "@/components/admin/leads/send-homes";
 import { PageHeader } from "@/components/admin/page-header";
 import { getDb } from "@/db/client";
 import { loadLeadPage } from "@/features/leads/page-data";
@@ -37,7 +38,18 @@ export default async function LeadDetailPage(props: PageProps<"/admin/leads/[id]
         }
         breadcrumb={[{ label: "Leads", href: "/admin/leads" }, { label: data.contact.name }]}
       />
-      <LeadPage data={data} readOnly={user.readOnly || Boolean(merged)} />
+      <LeadPage
+        data={data}
+        readOnly={user.readOnly || Boolean(merged)}
+        sendHomes={
+          <SendHomes
+            leadId={data.lead.id}
+            homes={[...data.matching, ...data.interest]}
+            hasEmail={Boolean(data.contact.email)}
+          />
+        }
+        shortlists={<Shortlists items={data.shortlists} now={data.now} />}
+      />
     </>
   );
 }

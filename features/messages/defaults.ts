@@ -161,6 +161,17 @@ export const templateDefaults = {
     },
     whatsapp: { body: "Thanks for viewing {{what}}. How was it? {{feedbackUrl}}" },
   },
+  "shortlist.sent": {
+    audience: "customer",
+    label: "Homes picked for a lead (send properties)",
+    variables: ["name", "agent", "agency", "homes", "message", "url"],
+    email: {
+      subject: "{{homes}} picked for you by {{agent}}",
+      body: "Hello {{name}},\n\n{{message}}\n\nThese fit what you are looking for. Tell me which ones you would like to see.\n\n{{agent}}, {{agency}}",
+      button: "See the homes",
+    },
+    whatsapp: { body: "Hello {{name}}, {{homes}} picked for you: {{url}}" },
+  },
 } satisfies Record<string, TemplateDefault>;
 
 export type TemplateKey = keyof typeof templateDefaults;

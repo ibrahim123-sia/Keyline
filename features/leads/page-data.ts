@@ -20,6 +20,7 @@ import { properties } from "@/db/schema/properties";
 import { attributionSentence } from "@/features/attribution/describe";
 import { currencyFormats, priceLabel } from "@/features/properties/format";
 import { loadSettings } from "@/features/settings/queries";
+import { leadShortlists } from "@/features/shortlists/store";
 import type { SettingsOf } from "@/features/settings/schema";
 import { matchCriteria } from "./match-criteria";
 import { matchingListingIds } from "./matching";
@@ -335,7 +336,10 @@ export async function loadLeadPage(db: DbOrTx, id: string, now: Date = new Date(
       ),
     );
 
+  const sent = await leadShortlists(db, lead.id);
+
   return {
+    shortlists: sent,
     /** When the page was built: times on it count from here (no clock reads in render). */
     now: now.toISOString(),
     lead: {
