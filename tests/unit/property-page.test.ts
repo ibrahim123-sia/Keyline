@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { videoEmbedUrl } from "@/components/site/property/lightbox";
+import { videoEmbedUrl } from "@/lib/video";
 import { normalizeVisitorPhone } from "@/features/inquiries/schema";
 import { monthlyPayment, yields } from "@/features/listings/finance";
 import { APPROX_RADIUS_M, publicPoint } from "@/features/listings/public-point";

@@ -1,11 +1,13 @@
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
+import { pages } from "@/db/schema/cms";
 import { developers, locations } from "@/db/schema/master-data";
 import { media } from "@/db/schema/media";
 import { agents } from "@/db/schema/people";
 import { projectMedia, projectUnitTypes, projects } from "@/db/schema/projects";
 import { properties, propertyMedia } from "@/db/schema/properties";
+import { sectionMediaIds } from "@/features/cms/sections";
 import { loadSettings } from "@/features/settings/queries";
 import type { SettingsOf } from "@/features/settings/schema";
 import type { SettingGroup } from "@/db/schema/system";
@@ -201,6 +203,33 @@ const projectUses: Source = async (db, ids) => {
   ];
 };
 
+/** Page builder pages: images in sections (live and draft) and the share image. */
+const pageUses: Source = async (db, ids) => {
+  const rows = await db
+    .select({
+      id: pages.id,
+      title: pages.title,
+      sections: pages.sections,
+      draft: pages.draftSections,
+      ogImageId: pages.ogImageId,
+      deletedAt: pages.deletedAt,
+    })
+    .from(pages)
+    .where(eq(pages.agencyId, currentAgencyId()));
+  const wanted = new Set(ids);
+  return rows.flatMap((r) => {
+    const used = new Set([
+      ...r.sections.flatMap(sectionMediaIds),
+      ...(r.draft ?? []).flatMap(sectionMediaIds),
+      ...(r.ogImageId ? [r.ogImageId] : []),
+    ]);
+    const label = `Page ${r.title}${r.deletedAt ? " (in the trash)" : ""}`;
+    return [...used]
+      .filter((id) => wanted.has(id))
+      .map((mediaId) => ({ mediaId, label, href: `/admin/website/pages/${r.id}` }));
+  });
+};
+
 const sources: Source[] = [
   settingsUses,
   agentUses,
@@ -208,6 +237,7 @@ const sources: Source[] = [
   locationUses,
   listingUses,
   projectUses,
+  pageUses,
 ];
 
 /** id -> where it is used. Ids that are not used anywhere map to an empty list. */

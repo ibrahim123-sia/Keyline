@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { jobRuns } from "@/db/schema/system";
+import { publishDuePages } from "@/features/cms/schedule";
 import { alertUnansweredLeads } from "@/features/leads/process";
 import { cleanupStaleUploads } from "@/features/media/maintenance";
 import { recountAllMediaUsage } from "@/features/media/usage";
@@ -48,6 +49,13 @@ export const cronTasks: CronTask[] = [
     schedule: "every 15 minutes",
     due: every(15),
     run: () => requeueStuckJobs(),
+  },
+  // Pages scheduled in the page builder go live on the minute (08 §1).
+  {
+    name: "pages.publish-scheduled",
+    schedule: "every minute",
+    due: () => true,
+    run: async () => publishDuePages(await getDb()),
   },
   {
     name: "media.cleanup",

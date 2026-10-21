@@ -13,17 +13,9 @@ import { searchableStatuses } from "@/features/properties/status";
 import { parseSearch } from "@/features/search/params";
 import { searchListings } from "@/features/search/query";
 import { tags } from "@/lib/cache-tags";
-import { parseSection, type Section } from "./sections";
+import { lastPublishedAt, toPublicPage, type PublicPage } from "./page-public";
 
-export type PublicPage = {
-  id: string;
-  title: string;
-  sections: Section[];
-  seoTitle: string | null;
-  seoDescription: string | null;
-  ogImageId: string | null;
-  noindex: boolean;
-};
+export type { PublicPage } from "./page-public";
 
 /** The published home page (08 §1 "set as home"), or null before one is published. */
 export async function getHomePage(): Promise<PublicPage | null> {
@@ -43,15 +35,8 @@ export async function getHomePage(): Promise<PublicPage | null> {
       ),
     );
   if (!row) return null;
-  return {
-    id: row.id,
-    title: row.title,
-    sections: row.sections.map(parseSection).filter((s): s is Section => s !== null),
-    seoTitle: row.seoTitle,
-    seoDescription: row.seoDescription,
-    ogImageId: row.ogImageId,
-    noindex: row.noindex,
-  };
+  cacheTag(tags.page(row.id));
+  return toPublicPage(row, row.sections, await lastPublishedAt(db, row.id));
 }
 
 const live = () =>

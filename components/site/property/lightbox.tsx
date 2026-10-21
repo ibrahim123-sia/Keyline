@@ -7,6 +7,7 @@ import { cn } from "cn";
 import { format } from "@/lib/i18n";
 import { property as t } from "@/lib/i18n/dictionaries/property";
 import { mediaSrcSet, mediaVariant } from "@/lib/media-src";
+import { videoEmbedUrl } from "@/lib/video";
 
 export type LightboxTab = "photos" | "plans" | "video" | "tour";
 
@@ -16,28 +17,6 @@ export type LightboxMedia = {
   videoUrl: string | null;
   tourUrl: string | null;
 };
-
-/** YouTube and Vimeo links become privacy-friendly embeds; other links open in a new tab. */
-export function videoEmbedUrl(url: string): string | null {
-  try {
-    const u = new URL(url);
-    const host = u.hostname.replace(/^www\.|^m\./, "");
-    if (host === "youtu.be") return `https://www.youtube-nocookie.com/embed/${u.pathname.slice(1)}`;
-    if (host === "youtube.com" || host === "youtube-nocookie.com") {
-      const id =
-        u.searchParams.get("v") ?? u.pathname.match(/^\/(?:shorts|embed|live)\/([\w-]+)/)?.[1];
-      return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
-    }
-    if (host === "vimeo.com") {
-      const id = u.pathname.match(/^\/(\d+)/)?.[1];
-      return id ? `https://player.vimeo.com/video/${id}` : null;
-    }
-    if (host === "player.vimeo.com") return url;
-  } catch {
-    return null;
-  }
-  return null;
-}
 
 function Slides({
   items,

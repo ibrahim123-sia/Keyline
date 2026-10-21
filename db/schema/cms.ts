@@ -21,6 +21,8 @@ export type StoredSection = {
   type: string;
   props: Record<string, unknown>;
   style?: Record<string, unknown>;
+  /** Kept on the page but not shown ("hide" in the page builder's section list). */
+  hidden?: boolean;
 };
 
 /** Pages built from sections (05 §8, 08 §1). One page is the home page. */
