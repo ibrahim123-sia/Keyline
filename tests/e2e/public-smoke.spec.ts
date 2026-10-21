@@ -57,7 +57,63 @@ test("every public route renders with the demo data", async ({ page }) => {
   expect(missing?.status()).toBe(404);
 });
 
-test("property page: Core Web Vitals in a Lighthouse mobile run", async () => {
+/** The part of a Lighthouse result the summary reads. */
+type Lhr = { audits: Record<string, { numericValue?: number; details?: unknown } | undefined> };
+type Row = Record<string, unknown>;
+
+/** The numbers behind a slow run: metrics, the LCP element and its parts, heavy requests and scripts. */
+function lighthouseSummary(lhr: Lhr): string {
+  const audit = (id: string) => lhr.audits[id];
+  const items = (id: string): Row[] => {
+    const d = audit(id)?.details as { items?: Row[] } | undefined;
+    return d?.items ?? [];
+  };
+  const ms = (n: unknown) => `${Math.round(Number(n ?? 0))}`;
+  const kb = (n: unknown) => `${Math.round(Number(n ?? 0) / 1024)}KB`;
+  const short = (u: unknown) =>
+    String(u ?? "")
+      .replace(/^https?:\/\/[^/]+/, "")
+      .slice(0, 90);
+  const m = items("metrics")[0] ?? {};
+  const lines = [
+    `simulated: FCP ${ms(m.firstContentfulPaint)} LCP ${ms(m.largestContentfulPaint)} SI ${ms(m.speedIndex)} TTI ${ms(m.interactive)} TBT ${ms(m.totalBlockingTime)}`,
+    `observed: TTFB ${ms(m.observedTimeToFirstByte ?? audit("server-response-time")?.numericValue)} FCP ${ms(m.observedFirstContentfulPaint)} LCP ${ms(m.observedLargestContentfulPaint)} load ${ms(m.observedLoad)}`,
+  ];
+  for (const part of items("lcp-breakdown-insight")) {
+    const sub = (part as { items?: Row[]; type?: string }).items;
+    if (Array.isArray(sub))
+      for (const r of sub) {
+        if (r.subpart) lines.push(`lcp ${String(r.subpart)}: ${ms(r.duration)}`);
+        const node = r.node as { snippet?: string; nodeLabel?: string } | undefined;
+        if (node?.snippet) lines.push(`lcp element: ${node.snippet.slice(0, 160)}`);
+      }
+    const node = (part as { snippet?: string }).snippet;
+    if (node) lines.push(`lcp element: ${node.slice(0, 160)}`);
+  }
+  const requests = items("network-requests");
+  const byType = new Map<string, number>();
+  for (const r of requests)
+    byType.set(
+      String(r.resourceType),
+      (byType.get(String(r.resourceType)) ?? 0) + Number(r.transferSize ?? 0),
+    );
+  lines.push(
+    `requests ${requests.length}: ${[...byType].map(([t, n]) => `${t} ${kb(n)}`).join(", ")}`,
+  );
+  for (const r of [...requests]
+    .sort((a, b) => Number(b.transferSize ?? 0) - Number(a.transferSize ?? 0))
+    .slice(0, 10))
+    lines.push(
+      `  ${kb(r.transferSize)} ${String(r.resourceType)} ${String(r.priority)} ${ms(r.networkRequestTime)}-${ms(r.networkEndTime)} ${short(r.url)}`,
+    );
+  for (const r of items("bootup-time").slice(0, 5))
+    lines.push(`  cpu ${ms(r.total)} (script ${ms(r.scripting)}) ${short(r.url)}`);
+  for (const r of items("render-blocking-insight").slice(0, 5))
+    lines.push(`  blocking ${ms(r.wastedMs)} ${short(r.url)}`);
+  return lines.join("\n");
+}
+
+test("property page: Core Web Vitals in a Lighthouse mobile run", async ({}, testInfo) => {
   test.skip(process.env.E2E_MODE !== "prod", "Lighthouse measures the production build only");
   test.setTimeout(300_000);
   const { default: lighthouse } = await import("lighthouse");
@@ -78,17 +134,23 @@ test("property page: Core Web Vitals in a Lighthouse mobile run", async () => {
       `[lighthouse] warm-up LCP ${Math.round(warm!.lhr.audits["largest-contentful-paint"]!.numericValue!)} ms`,
     );
     const result = await lighthouse(url, flags);
-    const audits = result!.lhr.audits;
+    const lhr = result!.lhr;
+    await testInfo.attach("lighthouse.json", {
+      body: JSON.stringify(lhr),
+      contentType: "application/json",
+    });
+    const audits = lhr.audits;
     const lcp = audits["largest-contentful-paint"]!.numericValue!;
     const cls = audits["cumulative-layout-shift"]!.numericValue!;
     const tbt = audits["total-blocking-time"]!.numericValue!;
-    console.log(
-      `[lighthouse] LCP ${Math.round(lcp)} ms, CLS ${cls.toFixed(3)}, TBT ${Math.round(tbt)} ms, score ${Math.round((result!.lhr.categories.performance!.score ?? 0) * 100)}`,
-    );
-    expect(lcp, "LCP").toBeLessThan(2500);
-    expect(cls, "CLS").toBeLessThan(0.1);
+    // On failure the message carries what made it slow (CI shows it in the annotations).
+    const why = lighthouseSummary(lhr);
+    const score = Math.round((lhr.categories.performance!.score ?? 0) * 100);
+    console.log(`[lighthouse] score ${score}\n${why}`);
+    expect(lcp, `LCP\n${why}`).toBeLessThan(2500);
+    expect(cls, `CLS\n${why}`).toBeLessThan(0.1);
     // Lab stand-in for INP (< 200 ms in the field).
-    expect(tbt, "TBT").toBeLessThan(200);
+    expect(tbt, `TBT\n${why}`).toBeLessThan(200);
   } finally {
     await browser.close();
   }
