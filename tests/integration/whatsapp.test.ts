@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { users } from "@/db/schema/auth";
 import {
   contacts,
   conversations,
@@ -21,7 +20,7 @@ import { runDueJobs } from "@/jobs/runner";
 import { hmacSha256Hex } from "@/lib/crypto";
 import { newId } from "@/lib/ids";
 import { testAdmin } from "../helpers/admin-context";
-import { truncate } from "../helpers/db";
+import { ensureTestAdminUser, truncate } from "../helpers/db";
 
 vi.mock("@/lib/auth/guards", () => import("../helpers/admin-guards-mock"));
 
@@ -104,10 +103,7 @@ describe("WhatsApp (13 §1)", () => {
       "audit_log",
     );
     const db = await getDb();
-    await db
-      .insert(users)
-      .values({ id: testAdmin.id, email: testAdmin.email, name: testAdmin.name, role: "admin" })
-      .onConflictDoNothing();
+    await ensureTestAdminUser();
     await setSecret(db, "whatsapp_app_secret", APP_SECRET, actor);
     await setSecret(db, "whatsapp_verify_token", "verify-me", actor);
     await patchSettings(db, "market", { phoneCountryCode: "+971" }, actor);

@@ -15,3 +15,18 @@ export async function truncate(...tables: string[]): Promise<void> {
     );
   });
 }
+
+/**
+ * The test admin as a real users row (for tables that reference users). Another file may
+ * have left a user with the same email under another id, so that one is replaced.
+ */
+export async function ensureTestAdminUser(): Promise<void> {
+  const { testAdmin } = await import("./admin-context");
+  const { users } = await import("@/db/schema/auth");
+  const { eq, or } = await import("drizzle-orm");
+  const db = await getDb();
+  await db.delete(users).where(or(eq(users.id, testAdmin.id), eq(users.email, testAdmin.email)));
+  await db
+    .insert(users)
+    .values({ id: testAdmin.id, email: testAdmin.email, name: testAdmin.name, role: "admin" });
+}
