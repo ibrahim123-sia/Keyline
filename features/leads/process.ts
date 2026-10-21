@@ -113,7 +113,7 @@ async function alreadyQueued(
   return Boolean(row);
 }
 
-async function sendTemplate(
+export async function sendTemplate(
   db: DbOrTx,
   key: TemplateKey,
   to: string[],
@@ -148,7 +148,7 @@ async function sendTemplate(
 }
 
 /** Where the agency's own lead emails go (Settings -> Contact), for the "admins" column (13 §3). */
-async function agencyInbox(db: DbOrTx): Promise<string[]> {
+export async function agencyInbox(db: DbOrTx): Promise<string[]> {
   const contact = await loadSettings("contact", db);
   return contact.leadNotifyEmails.length
     ? contact.leadNotifyEmails

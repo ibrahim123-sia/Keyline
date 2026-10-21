@@ -3,6 +3,7 @@ import { mediaFetchUrlJob } from "@/features/media/fetch-url";
 import { mediaProcessJob } from "@/features/media/process";
 import { emailSendJob } from "@/features/notifications/email";
 import { poiComputeJob, projectPoiComputeJob } from "@/features/pois/distances";
+import { viewingNotifyJob } from "@/features/viewings/notify";
 import type { JobDefinition } from "./types";
 
 /** Every queue job by name (13-integrations-and-jobs.md §2). */
@@ -14,6 +15,7 @@ const jobs: JobDefinition[] = [
   mediaFetchUrlJob as JobDefinition,
   poiComputeJob as JobDefinition,
   projectPoiComputeJob as JobDefinition,
+  viewingNotifyJob as JobDefinition,
 ];
 
 const byName = new Map(jobs.map((j) => [j.name, j]));

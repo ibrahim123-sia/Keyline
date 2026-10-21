@@ -8,6 +8,7 @@ import { recountAllMediaUsage } from "@/features/media/usage";
 import { refreshStalePois, refreshStaleProjectPois } from "@/features/pois/distances";
 import { dailyListingMaintenance } from "@/features/properties/maintenance";
 import { loadSettings } from "@/features/settings/queries";
+import { queueViewingReminders } from "@/features/viewings/notify";
 import { newId } from "@/lib/ids";
 import { purgeExpired } from "@/lib/rate-limit";
 import { requeueStuckJobs, runDueJobs } from "./runner";
@@ -43,6 +44,13 @@ export const cronTasks: CronTask[] = [
     schedule: "every minute",
     due: () => true,
     run: async () => alertUnansweredLeads(await getDb()),
+  },
+  // 13 §2: viewing reminders that are due.
+  {
+    name: "viewings.reminders",
+    schedule: "every 10 minutes",
+    due: every(10),
+    run: async () => queueViewingReminders(await getDb()),
   },
   {
     name: "jobs.requeue-stuck",
