@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, eq, or, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { users } from "@/db/schema/auth";
 import {
@@ -33,10 +33,11 @@ const actor = { type: "admin" as const, id: testAdmin.id };
 
 async function setup() {
   const db = await getDb();
+  // Another file may have left a user with this email under another id.
+  await db.delete(users).where(or(eq(users.id, testAdmin.id), eq(users.email, testAdmin.email)));
   await db
     .insert(users)
-    .values({ id: testAdmin.id, email: testAdmin.email, name: testAdmin.name, role: "admin" })
-    .onConflictDoNothing();
+    .values({ id: testAdmin.id, email: testAdmin.email, name: testAdmin.name, role: "admin" });
   await patchSettings(db, "market", { phoneCountryCode: "+971" }, actor);
   const lead = await captureLead(db, {
     source: "chat",
