@@ -1,5 +1,5 @@
 import { BadgeCheckIcon, MapPinIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import {
   ListingCard,
   handoverLabel,
@@ -8,6 +8,7 @@ import {
 import { MediaImage } from "@/components/site/media-image";
 import { PriceTag } from "@/components/site/price-tag";
 import { getPublicMedia } from "@/features/media/queries";
+import { visitorCurrency } from "@/features/site/currency";
 import {
   areaCards,
   featuredListingCards,
@@ -21,7 +22,31 @@ import { renderRichText } from "@/lib/rich-text";
 import { HeroSearchCard } from "./hero-search-card";
 import { SectionHeading, SectionShell } from "./section-shell";
 
-export type SectionContext = CardContext & { baseCurrency: { code: string; decimals: number } };
+/**
+ * What sections need from settings. The visitor's currency is read inside the sections that
+ * show prices (a cookie), each behind Suspense, so the rest of the page stays prerendered.
+ */
+export type SectionContext = Omit<CardContext, "visitorCurrency" | "rates"> & {
+  baseCurrency: { code: string; decimals: number };
+};
+
+async function withCurrency(ctx: SectionContext): Promise<CardContext> {
+  const { code, rates } = await visitorCurrency();
+  return { ...ctx, visitorCurrency: code, rates };
+}
+
+function GridSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <div className="container-site section-y" aria-hidden>
+      <div className="mb-8 h-10 w-64 animate-pulse rounded-lg bg-surface-muted" />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: count }, (_, i) => (
+          <div key={i} className="aspect-[4/5] animate-pulse rounded-[20px] bg-surface-muted" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function Buttons({ buttons }: { buttons: Array<{ label: string; href: string }> }) {
   if (buttons.length === 0) return null;
@@ -129,7 +154,7 @@ async function FeaturedListings({
   s: Extract<Section, { type: "featured_listings" }>;
   ctx: SectionContext;
 }) {
-  const cards = await featuredListingCards(s.props);
+  const [cards, cardCtx] = await Promise.all([featuredListingCards(s.props), withCurrency(ctx)]);
   if (cards.length === 0) return null;
   return (
     <SectionShell style={s.style} label={s.props.heading}>
@@ -150,7 +175,7 @@ async function FeaturedListings({
       <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {cards.map((c) => (
           <li key={c.id}>
-            <ListingCard listing={c} ctx={ctx} />
+            <ListingCard listing={c} ctx={cardCtx} />
           </li>
         ))}
       </ul>
@@ -165,7 +190,7 @@ async function ProjectsShowcase({
   s: Extract<Section, { type: "projects_showcase" }>;
   ctx: SectionContext;
 }) {
-  const items = await showcaseProjects(s.props);
+  const [items, cardCtx] = await Promise.all([showcaseProjects(s.props), withCurrency(ctx)]);
   if (items.length === 0) return null;
   const style = s.props.dark ? { ...s.style, background: "ink" as const } : s.style;
   return (
@@ -227,8 +252,8 @@ async function ProjectsShowcase({
                   <PriceTag
                     price={p.startingPrice}
                     currency={p.currency}
-                    visitorCurrency={ctx.visitorCurrency}
-                    rates={ctx.rates}
+                    visitorCurrency={cardCtx.visitorCurrency}
+                    rates={cardCtx.rates}
                     from
                     className="text-[20px] text-surface [&_span]:text-surface/80"
                   />
@@ -387,10 +412,18 @@ export async function RenderSections({
         out.push(<PromiseStrip key={s.id} s={s} />);
         break;
       case "featured_listings":
-        out.push(<FeaturedListings key={s.id} s={s} ctx={ctx} />);
+        out.push(
+          <Suspense key={s.id} fallback={<GridSkeleton count={Math.min(s.props.count, 3)} />}>
+            <FeaturedListings s={s} ctx={ctx} />
+          </Suspense>,
+        );
         break;
       case "projects_showcase":
-        out.push(<ProjectsShowcase key={s.id} s={s} ctx={ctx} />);
+        out.push(
+          <Suspense key={s.id} fallback={<GridSkeleton count={2} />}>
+            <ProjectsShowcase s={s} ctx={ctx} />
+          </Suspense>,
+        );
         break;
       case "areas_grid":
         out.push(<AreasGrid key={s.id} s={s} ctx={ctx} />);

@@ -3,7 +3,6 @@ import { RenderSections, type SectionContext } from "@/components/site/sections/
 import { getHomePage } from "@/features/cms/queries";
 import { getPublicMedia } from "@/features/media/queries";
 import { getSettings } from "@/features/settings/queries";
-import { visitorCurrency } from "@/features/site/currency";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [page, general, seo] = await Promise.all([
@@ -26,11 +25,10 @@ export async function generateMetadata(): Promise<Metadata> {
  * Until one is published, only settings content shows (never hard-coded copy).
  */
 export default async function HomePage() {
-  const [page, general, market, { code, rates }] = await Promise.all([
+  const [page, general, market] = await Promise.all([
     getHomePage(),
     getSettings("general"),
     getSettings("market"),
-    visitorCurrency(),
   ]);
   if (!page || page.sections.length === 0) {
     return (
@@ -43,8 +41,6 @@ export default async function HomePage() {
     );
   }
   const ctx: SectionContext = {
-    visitorCurrency: code,
-    rates,
     areaUnit: market.areaUnit,
     distanceUnit: market.distanceUnit,
     baseCurrency: { code: market.baseCurrency.code, decimals: market.baseCurrency.decimals },
