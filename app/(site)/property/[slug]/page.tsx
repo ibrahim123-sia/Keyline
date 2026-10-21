@@ -110,6 +110,7 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
       : null,
     phone: l.agent?.phone || contact.phone || null,
     brochureUrl: l.brochure?.url ?? null,
+    agentName: l.agent?.name.split(/\s+/)[0] ?? general.agencyName,
   };
   const similar = await similarListings(l);
   const gone = l.status === "sold" || l.status === "rented";

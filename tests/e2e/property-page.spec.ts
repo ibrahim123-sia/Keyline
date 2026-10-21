@@ -182,6 +182,70 @@ test("property page @phone: contact options stay at the bottom", async ({
   await expect(bar.getByRole("link", { name: "WhatsApp" })).toBeVisible();
   await bar.getByRole("button", { name: "Book a tour" }).click();
   const dialog = page.getByRole("dialog", { name: "Book a tour" });
-  await expect(dialog.getByRole("textbox", { name: "Preferred day and time" })).toBeVisible();
+  await expect(dialog.getByRole("group", { name: "Time" })).toBeVisible();
   await snap(page, "property-page-phone");
+});
+
+test("property page: book a tour at a real free time, then move and cancel it", async ({
+  page,
+  request,
+}, testInfo) => {
+  test.skip(testInfo.project.name === "phone", "desktop flow");
+  test.setTimeout(240_000);
+  const { slug } = await seedListing(request);
+  await db().query("delete from viewings");
+  await page.goto(`/property/${slug}`);
+  const card = page.getByRole("complementary", { name: "Ask about this home" });
+  await card.getByRole("button", { name: "Book a tour" }).click();
+  const dialog = page.getByRole("dialog", { name: "Book a tour" });
+
+  // Free times come from the agency's viewing hours; pick the first one offered.
+  const times = dialog.getByRole("group", { name: "Time" });
+  await times.getByRole("radio").first().check({ force: true });
+  await dialog.getByRole("radio", { name: "Video tour" }).check({ force: true });
+  await dialog.getByRole("textbox", { name: "Name" }).fill("Sam Visitor");
+  await dialog.getByRole("textbox", { name: "Phone" }).fill("050 123 4567");
+  await dialog
+    .getByRole("textbox", { name: "Email (for the confirmation)" })
+    .fill("sam@example.com");
+  await dialog
+    .getByRole("checkbox", { name: "I agree to be contacted about this viewing." })
+    .check();
+  await dialog.getByRole("button", { name: "Book this time" }).click();
+  await expect(dialog.getByText(/You're booked for /)).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "Add to my calendar" })).toHaveAttribute(
+    "href",
+    /^\/api\/viewings\/[A-Za-z0-9_-]{32}\/ics$/,
+  );
+  await snap(page, "viewing-booked");
+  await expect
+    .poll(async () => (await db().query("select status, type from viewings")).rows)
+    .toEqual([{ status: "confirmed", type: "video" }]);
+  await expect
+    .poll(
+      async () =>
+        (
+          await db().query(
+            `select count(*)::int as n from email_log where template = 'viewing.confirmed'`,
+          )
+        ).rows[0].n,
+    )
+    .toBe(1);
+
+  // The private link: move to another time, then cancel.
+  const manage = await dialog.getByRole("link", { name: "Change or cancel" }).getAttribute("href");
+  await page.goto(manage!);
+  await expect(page.getByRole("heading", { name: "Your viewing", level: 1 })).toBeVisible();
+  await page.getByRole("button", { name: "Move to another time" }).click();
+  // Another day, so a free time is there whatever the hour now.
+  await page.getByRole("group", { name: "Day" }).getByRole("radio").nth(1).check({ force: true });
+  await page.getByRole("group", { name: "Time" }).getByRole("radio").first().check({ force: true });
+  await page.getByRole("button", { name: "Move to another time" }).click();
+  await expect(page.getByText(/^Moved to /)).toBeVisible();
+  await page.getByRole("button", { name: "Cancel the viewing" }).click();
+  await page.getByRole("button", { name: "Yes, cancel it" }).click();
+  await expect(page.getByText("Your viewing is cancelled.")).toBeVisible();
+  await expect
+    .poll(async () => (await db().query("select status from viewings")).rows)
+    .toEqual([{ status: "cancelled" }]);
 });

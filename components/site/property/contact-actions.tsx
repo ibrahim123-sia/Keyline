@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarCheckIcon, DownloadIcon, MessageCircleIcon, PhoneIcon } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,11 @@ import { property as t } from "@/lib/i18n/dictionaries/property";
 import { TrackedContactLink } from "../tracked-contact-link";
 import { InquiryForm } from "./inquiry-form";
 
+// The booking flow loads when someone opens "Book a tour", not with the page.
+const BookingForm = dynamic(() => import("../viewings/booking-form").then((m) => m.BookingForm), {
+  ssr: false,
+});
+
 export type ContactInfo = {
   propertyId: string;
   reference: string;
@@ -22,6 +28,8 @@ export type ContactInfo = {
   whatsappHref: string | null;
   phone: string | null;
   brochureUrl: string | null;
+  /** Who meets the visitor: the agent's first name, or the agency. */
+  agentName: string;
 };
 
 const titles: Record<InquiryKind, string> = {
@@ -40,7 +48,8 @@ export function useInquiryDialog(info: ContactInfo) {
           <DialogTitle>{kind ? titles[kind] : ""}</DialogTitle>
           <DialogDescription>{info.reference}</DialogDescription>
         </DialogHeader>
-        {kind && (
+        {kind === "tour" && <BookingForm propertyId={info.propertyId} agentName={info.agentName} />}
+        {kind && kind !== "tour" && (
           <InquiryForm
             key={kind}
             propertyId={info.propertyId}
