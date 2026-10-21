@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { getDb } from "@/db/client";
+import { CRAWLER_AGENT } from "@/features/seo/crawl";
 import { recordNotFound } from "@/features/seo/not-found-log";
 
 /**
@@ -10,7 +11,8 @@ import { recordNotFound } from "@/features/seo/not-found-log";
 export async function NotFoundLogger() {
   const h = await headers();
   const path = h.get("x-lintel-path");
-  if (!path) return null;
+  // The weekly link check reports broken links itself.
+  if (!path || h.get("user-agent") === CRAWLER_AGENT) return null;
   const referrer = h.get("referer");
   after(async () => {
     try {

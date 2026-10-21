@@ -8,7 +8,9 @@ import { cleanupStaleUploads } from "@/features/media/maintenance";
 import { recountAllMediaUsage } from "@/features/media/usage";
 import { refreshStalePois, refreshStaleProjectPois } from "@/features/pois/distances";
 import { dailyListingMaintenance } from "@/features/properties/maintenance";
+import { CRAWL_JOB } from "@/features/seo/crawl-job";
 import { pruneNotFound } from "@/features/seo/not-found-log";
+import { enqueue } from "./enqueue";
 import { loadSettings } from "@/features/settings/queries";
 import { queueViewingReminders } from "@/features/viewings/notify";
 import { newId } from "@/lib/ids";
@@ -111,6 +113,15 @@ export const cronTasks: CronTask[] = [
     schedule: "daily at 03:30",
     due: at(3, 30),
     run: async () => recountAllMediaUsage(await getDb()),
+  },
+  // Weekly: the SEO report's broken-link check (a queue job: it can take a few minutes).
+  {
+    name: "seo.crawl",
+    schedule: "weekly on Monday at 04:30",
+    due: (t) => t.weekday === 1 && at(4, 30)(t),
+    run: async () => ({
+      queued: (await enqueue(CRAWL_JOB, {}, { dedupeKey: CRAWL_JOB, maxAttempts: 2 })) !== null,
+    }),
   },
   // Monthly: distances to nearby places older than 90 days are measured again (07 §4.7).
   {

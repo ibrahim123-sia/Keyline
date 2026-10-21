@@ -4,6 +4,7 @@ import { cn } from "cn";
 const tabs = [
   { key: "redirects", label: "Redirects", href: "/admin/website/seo" },
   { key: "not-found", label: "404 monitor", href: "/admin/website/seo/not-found" },
+  { key: "report", label: "SEO report", href: "/admin/website/seo/report" },
 ] as const;
 
 /** Website -> SEO sections (separate pages, so each list keeps its own filters in the URL). */
