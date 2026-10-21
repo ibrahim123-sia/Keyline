@@ -1,5 +1,6 @@
 import { ChevronRightIcon } from "lucide-react";
 import { cn } from "cn";
+import { JsonLd } from "./json-ld";
 
 export type Crumb = { label: string; href?: string };
 
@@ -50,13 +51,8 @@ export function Breadcrumb({
           );
         })}
       </ol>
-      {jsonLd && (
-        <script
-          type="application/ld+json"
-          // "<" is escaped, so nothing in the data can close the script tag.
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\u003c") }}
-        />
-      )}
+      {/* JsonLd escapes "<", so nothing in the data can close the script tag. */}
+      {jsonLd && <JsonLd data={jsonLd} />}
     </nav>
   );
 }
