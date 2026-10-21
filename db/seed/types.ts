@@ -121,4 +121,12 @@ export type SeedPreset = {
     }>;
   }>;
   listings: ListingSpec[];
+  /** Words of the home page sections. */
+  home: {
+    hero: { eyebrow: string; heading: string; subheading: string; floatingBadgeText: string };
+    promises: Array<{ title: string; text: string; icon: string }>;
+    featured: { eyebrow: string; heading: string; viewAllLabel: string };
+    projects: { eyebrow: string; heading: string; viewAllLabel: string };
+    areas: { eyebrow: string; heading: string };
+  };
 };

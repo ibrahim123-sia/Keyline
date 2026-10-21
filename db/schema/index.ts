@@ -8,3 +8,4 @@ export * from "./payment-plans";
 export * from "./projects";
 export * from "./properties";
 export * from "./saved-views";
+export * from "./cms";

@@ -2,6 +2,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { havenDune } from "@/db/seed/presets/haven-dune";
+import { getHomePage } from "@/features/cms/queries";
+import { sectionInputSchema } from "@/features/cms/sections";
 import { seedPreset, type SeedResult } from "@/db/seed/run";
 import { parseSearch } from "@/features/search/params";
 import { searchListings } from "@/features/search/query";
@@ -86,6 +88,20 @@ describe("demo seed: Haven & Dune", () => {
       "select count(distinct project_id)::int as n from project_pois",
     );
     expect(projectPlaces!.n).toBe(4);
+  });
+
+  it("publishes a home page whose sections all pass the strict section rules", async () => {
+    const page = await getHomePage();
+    expect(page?.sections.map((x) => x.type)).toEqual([
+      "hero_search",
+      "promise_strip",
+      "featured_listings",
+      "projects_showcase",
+      "areas_grid",
+    ]);
+    const [row] = await rows<{ sections: unknown[] }>("select sections from pages where is_home");
+    const schema = sectionInputSchema();
+    for (const section of row!.sections) expect(schema.safeParse(section).success).toBe(true);
   });
 
   it("sets the market up and the listings are searchable", async () => {

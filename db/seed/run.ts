@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
+import { pages } from "@/db/schema/cms";
 import {
   badges,
   developers,
@@ -78,6 +79,8 @@ const resetOrder = [
   "locations",
   "seo_redirects",
   "saved_views",
+  "page_revisions",
+  "pages",
   "media",
 ];
 
@@ -664,6 +667,72 @@ export async function seedPreset(
       return propertyId;
     });
   }
+
+  // Home page (06 §3) from sections; the page builder (Phase 5) edits it.
+  const heroImage = ofKind("villa")[0] ?? shots[0]!.id;
+  await db.insert(pages).values({
+    title: "Home",
+    slug: "home",
+    status: "published",
+    isHome: true,
+    template: "landing",
+    sections: [
+      {
+        id: "hero",
+        type: "hero_search",
+        props: {
+          ...preset.home.hero,
+          tabs: ["buy", "rent", "off_plan"],
+          defaultTab: "buy",
+          imageId: heroImage,
+          floatingBadge: true,
+        },
+        style: { background: "sand", spacing: "normal", width: "contained" },
+      },
+      {
+        id: "promise",
+        type: "promise_strip",
+        props: { items: preset.home.promises },
+        style: { background: "white", spacing: "compact" },
+      },
+      {
+        id: "featured",
+        type: "featured_listings",
+        props: {
+          ...preset.home.featured,
+          source: "featured",
+          count: 6,
+          viewAll: { label: preset.home.featured.viewAllLabel, href: "/buy" },
+        },
+        style: { background: "sand" },
+      },
+      {
+        id: "projects",
+        type: "projects_showcase",
+        props: {
+          ...preset.home.projects,
+          source: "featured",
+          count: 4,
+          dark: true,
+          viewAll: { label: preset.home.projects.viewAllLabel, href: "/projects" },
+        },
+        style: { background: "ink" },
+      },
+      {
+        id: "areas",
+        type: "areas_grid",
+        props: { ...preset.home.areas, source: "featured", count: 4 },
+        style: { background: "sand" },
+      },
+    ].map((sec) => {
+      const { viewAllLabel: _a, ...props } = sec.props as Record<string, unknown> & {
+        viewAllLabel?: string;
+      };
+      return { ...sec, props };
+    }),
+    seoTitle: `${preset.agencyName}: homes for sale and rent`,
+    seoDescription: preset.settings.seo.defaultMetaDescription ?? null,
+  });
 
   await refreshAutoBadges(db, listingIds, now);
   for (const id of listingIds) await computePropertyPois(db, id, now);

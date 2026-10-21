@@ -133,3 +133,12 @@ export async function clearListings(): Promise<void> {
   await db().query("delete from projects");
   await db().query("delete from payment_plans where not is_template");
 }
+
+/** Expires cache tags in the running app (after writing data straight to the database). */
+export async function revalidateTags(request: APIRequestContext, tags: string[]): Promise<void> {
+  const res = await request.post("/api/internal/revalidate", {
+    headers: { authorization: `Bearer ${INTERNAL_SECRET}` },
+    data: { tags },
+  });
+  if (!res.ok()) throw new Error(`revalidate failed: ${res.status()}`);
+}

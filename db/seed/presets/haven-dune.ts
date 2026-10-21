@@ -1121,4 +1121,41 @@ export const havenDune: SeedPreset = {
     ],
     ["rent", "office", "bay", null, 2, 1800, 185_000, "Office to rent in Business Bay", {}],
   ],
+  home: {
+    hero: {
+      eyebrow: "Dubai homes, checked in person",
+      heading: "Find a home you will love coming back to",
+      subheading:
+        "Apartments, villas and off-plan projects across Dubai, with real travel times to schools, beaches and the metro.",
+      floatingBadgeText: "Verified in person",
+    },
+    promises: [
+      {
+        title: "Verified in person",
+        text: "We visit every home and show when it was last checked.",
+        icon: "verified",
+      },
+      {
+        title: "Real travel times",
+        text: "Distances and drive times to schools, malls and the metro, measured for each home.",
+        icon: "pin",
+      },
+      {
+        title: "Clear payment plans",
+        text: "Off-plan plans step by step, with the amount of every payment.",
+        icon: "percent",
+      },
+    ],
+    featured: {
+      eyebrow: "Featured",
+      heading: "Homes we would move into",
+      viewAllLabel: "See all homes",
+    },
+    projects: {
+      eyebrow: "Off-plan",
+      heading: "New projects with payment plans",
+      viewAllLabel: "All projects",
+    },
+    areas: { eyebrow: "Areas", heading: "Where to live in Dubai" },
+  },
 };
