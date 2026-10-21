@@ -15,6 +15,7 @@ export const site = {
     accountMenu: "Account menu",
     submenu: "{label}: more links",
     newTab: "(opens in a new tab)",
+    announcement: "Announcement",
   },
   header: {
     signIn: "Sign in",

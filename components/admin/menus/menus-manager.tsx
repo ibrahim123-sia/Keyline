@@ -9,35 +9,33 @@ import { MenuEditor } from "./menu-editor";
 const footerColumns = ["footer_1", "footer_2", "footer_3"] as const satisfies MenuLocation[];
 
 /**
- * Website -> Menus (08 §2): header, phone menu and the three footer columns. Each tab stays
- * mounted, so unsaved changes survive switching tabs.
+ * Website -> Menus (08 §2): header, phone menu, the footer (three columns and its text) and
+ * the announcement bar. Every tab stays mounted, so unsaved changes survive switching tabs.
  */
 export function MenusManager({
   menus,
   options,
   tab,
   readOnly,
-  extraTabs = [],
+  footerSettings,
+  announcement,
 }: {
   menus: Record<MenuLocation, AdminMenu>;
   options: MenuTargetOptions;
   tab: string;
   readOnly?: boolean;
-  /** More tabs after the menus (footer settings, announcement bar). */
-  extraTabs?: Array<{ value: string; label: string; content: ReactNode }>;
+  /** Footer text form, under the columns. */
+  footerSettings: ReactNode;
+  announcement: ReactNode;
 }) {
-  const panel = "data-[state=inactive]:hidden pt-2";
+  const panel = "flex flex-col gap-4 pt-2 data-[state=inactive]:hidden";
   return (
     <Tabs defaultValue={tab}>
       <TabsList>
         <TabsTrigger value="header">Header</TabsTrigger>
         <TabsTrigger value="mobile">Phone menu</TabsTrigger>
-        <TabsTrigger value="footer">Footer columns</TabsTrigger>
-        {extraTabs.map((t) => (
-          <TabsTrigger key={t.value} value={t.value}>
-            {t.label}
-          </TabsTrigger>
-        ))}
+        <TabsTrigger value="footer">Footer</TabsTrigger>
+        <TabsTrigger value="announcement">Announcement bar</TabsTrigger>
       </TabsList>
       <TabsContent value="header" forceMount className={panel}>
         <MenuEditor
@@ -65,7 +63,7 @@ export function MenusManager({
             <MenuEditor
               key={location}
               location={location}
-              heading={`Column ${i + 1}`}
+              heading={`Footer column ${i + 1}`}
               description="A heading and a list of links. Empty columns are not shown."
               withTitle
               initial={menus[location]}
@@ -74,12 +72,11 @@ export function MenusManager({
             />
           ))}
         </div>
+        {footerSettings}
       </TabsContent>
-      {extraTabs.map((t) => (
-        <TabsContent key={t.value} value={t.value} forceMount className={panel}>
-          {t.content}
-        </TabsContent>
-      ))}
+      <TabsContent value="announcement" forceMount className={panel}>
+        {announcement}
+      </TabsContent>
     </Tabs>
   );
 }

@@ -4,6 +4,7 @@ import { getPublicMedia } from "@/features/media/queries";
 import { getSettings } from "@/features/settings/queries";
 import { socialKeys } from "@/features/settings/schema";
 import { currentYear } from "@/features/site/time";
+import { getLegalLinks } from "@/features/website/site";
 import { format, pages, site } from "@/lib/i18n";
 import { CookieSettingsLink } from "./cookie-banner";
 import { Logo } from "./logo";
@@ -22,20 +23,19 @@ const socialLabels: Record<(typeof socialKeys)[number], string> = {
 
 /**
  * Footer (02 §5, 06 §2, 08 §2): dark ink, logo + short text, contact details, link columns
- * (the three footer menus), social links, legal line with the licence number, cookie
- * settings and "Powered by Lintel" (cannot be removed).
+ * (the three footer menus), social links, legal line with the licence number and the policy
+ * pages, cookie settings and "Powered by Lintel" (cannot be removed).
  */
-export async function SiteFooter({
-  legalLinks = [],
-}: {
-  legalLinks?: Array<{ label: string; href: string }>;
-}) {
-  const [general, contact, year, menus] = await Promise.all([
+export async function SiteFooter() {
+  const [general, contact, website, year, menus, legalLinks] = await Promise.all([
     getSettings("general"),
     getSettings("contact"),
+    getSettings("website"),
     currentYear(),
     getSiteMenus(),
+    getLegalLinks(),
   ]);
+  const text = website.footer.text || general.shortDescription;
   const columns: FooterColumn[] = [menus.footer_1, menus.footer_2, menus.footer_3]
     .filter((m) => m.links.length > 0)
     .map((m) => ({ title: m.title || site.footer.links, links: m.links }));
@@ -50,9 +50,7 @@ export async function SiteFooter({
       <div className="container-site grid gap-12 py-16 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(4,minmax(0,1fr))] lg:py-20">
         <div className="max-w-sm space-y-4">
           <Logo agencyName={general.agencyName} logo={logo} inverted />
-          {general.shortDescription && (
-            <p className="text-[15px] leading-relaxed">{general.shortDescription}</p>
-          )}
+          {text && <p className="text-[15px] leading-relaxed">{text}</p>}
           {socials.length > 0 && (
             <ul className="flex flex-wrap gap-2" aria-label={site.footer.social}>
               {socials.map((k) => (
@@ -139,6 +137,7 @@ export async function SiteFooter({
             {general.licenceNumber && (
               <span>{format(site.footer.licence, { number: general.licenceNumber })}</span>
             )}
+            {website.footer.legalText && <span>{website.footer.legalText}</span>}
             {legalLinks.map((l) => (
               <a key={l.href} href={l.href} className="hover:text-surface">
                 {l.label}

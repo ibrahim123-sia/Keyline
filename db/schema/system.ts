@@ -24,6 +24,8 @@ export const settingGroups = [
   "notifications",
   "legal",
   "security",
+  /** Footer text and the announcement bar, edited at Website -> Menus (08 §2). */
+  "website",
 ] as const;
 export type SettingGroup = (typeof settingGroups)[number];
 

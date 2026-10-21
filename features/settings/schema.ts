@@ -633,6 +633,67 @@ export const securitySchema = z.object({
   reauthMinutes: z.number().int().min(1).max(240).default(15),
 });
 
+/* 13. Website: footer text and the announcement bar (08 §2) ---------------- */
+const siteLink = z
+  .string()
+  .trim()
+  .max(300)
+  .refine(
+    (v) => v === "" || (v.startsWith("/") && !v.startsWith("//")) || /^https?:\/\/\S+$/.test(v),
+    "Use a path like /off-plan or a full https:// address",
+  );
+
+export const footerSchema = z.strictObject({
+  /** Under the logo; empty uses the agency's short description (General). */
+  text: z.string().trim().max(300, "Use at most 300 characters").default(""),
+  /** An extra line next to the copyright, e.g. who regulates the agency. */
+  legalText: z.string().trim().max(300, "Use at most 300 characters").default(""),
+});
+
+/** Optional bar above the header with text, a link and a date range. */
+export const announcementSchema = z
+  .strictObject({
+    enabled: z.boolean(),
+    text: z.string().trim().max(160, "Keep it to 160 characters"),
+    linkLabel: z.string().trim().max(40, "Use at most 40 characters"),
+    href: siteLink,
+    /** Shown from / until (instants; the editor uses the agency time zone). */
+    startsAt: z.iso.datetime({ offset: true }).nullable(),
+    endsAt: z.iso.datetime({ offset: true }).nullable(),
+  })
+  .superRefine((a, ctx) => {
+    if (a.enabled && !a.text)
+      ctx.addIssue({
+        code: "custom",
+        path: ["text"],
+        message: "Write the announcement, or switch the bar off",
+      });
+    if (Boolean(a.linkLabel) !== Boolean(a.href))
+      ctx.addIssue({
+        code: "custom",
+        path: [a.linkLabel ? "href" : "linkLabel"],
+        message: "A link needs both a label and an address",
+      });
+    if (a.startsAt && a.endsAt && Date.parse(a.endsAt) <= Date.parse(a.startsAt))
+      ctx.addIssue({
+        code: "custom",
+        path: ["endsAt"],
+        message: "The end must be after the start",
+      });
+  });
+
+export const websiteSchema = z.object({
+  footer: footerSchema.default({ text: "", legalText: "" }),
+  announcement: announcementSchema.default({
+    enabled: false,
+    text: "",
+    linkLabel: "",
+    href: "",
+    startsAt: null,
+    endsAt: null,
+  }),
+});
+
 export const settingsSchemas = {
   general: generalSchema,
   branding: brandingSchema,
@@ -646,6 +707,7 @@ export const settingsSchemas = {
   notifications: notificationsSchema,
   legal: legalSchema,
   security: securitySchema,
+  website: websiteSchema,
 } satisfies Record<SettingGroup, z.ZodObject>;
 
 export type SettingsSchemas = typeof settingsSchemas;
@@ -658,6 +720,9 @@ export type MarketSettings = SettingsOf<"market">;
 export type ContactSettings = SettingsOf<"contact">;
 export type SeoSettings = SettingsOf<"seo">;
 export type SecuritySettings = SettingsOf<"security">;
+export type WebsiteSettings = SettingsOf<"website">;
+export type FooterSettings = WebsiteSettings["footer"];
+export type AnnouncementSettings = WebsiteSettings["announcement"];
 
 export function defaultsFor<G extends SettingGroup>(group: G): SettingsOf<G> {
   return settingsSchemas[group].parse({}) as SettingsOf<G>;
