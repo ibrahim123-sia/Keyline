@@ -16,6 +16,8 @@ export function NavDropdown({ link }: { link: SiteLink }) {
   const id = useId();
   const root = useRef<HTMLLIElement>(null);
   const button = useRef<HTMLButtonElement>(null);
+  // Opened by the pointer resting on it: the click that usually follows keeps it open.
+  const byHover = useRef(false);
 
   useEffect(() => {
     if (!open) return;
@@ -39,8 +41,14 @@ export function NavDropdown({ link }: { link: SiteLink }) {
     <li
       ref={root}
       className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => {
+        if (!open) byHover.current = true;
+        setOpen(true);
+      }}
+      onMouseLeave={() => {
+        byHover.current = false;
+        setOpen(false);
+      }}
       onBlur={(e) => {
         if (!root.current?.contains(e.relatedTarget as Node | null)) setOpen(false);
       }}
@@ -53,7 +61,10 @@ export function NavDropdown({ link }: { link: SiteLink }) {
           aria-expanded={open}
           aria-controls={id}
           aria-label={format(site.a11y.submenu, { label: link.label })}
-          onClick={() => setOpen((o) => !o)}
+          onClick={() => {
+            if (byHover.current) byHover.current = false;
+            else setOpen((o) => !o);
+          }}
           className="flex size-7 items-center justify-center rounded-full text-ink hover:text-accent"
         >
           <ChevronDownIcon
