@@ -1,5 +1,12 @@
 import { chromium, expect, test, type Page } from "@playwright/test";
-import { clearListings, db, publicTags, revalidateTags, seedDemo } from "./helpers";
+import {
+  clearListings,
+  db,
+  expectNotFoundPage,
+  publicTags,
+  revalidateTags,
+  seedDemo,
+} from "./helpers";
 
 /**
  * Phase 4 checklist (15): every public route renders server-side with the real demo seed, and
@@ -53,7 +60,19 @@ test("every public route renders with the demo data", async ({ page }) => {
   await expectPage(page, "/developers/northline-developments", "Northline Developments");
   await expectPage(page, "/agents", /team|agents/i);
   await expectPage(page, "/agents/layla-haddad", "Layla Haddad");
-  const missing = await page.goto("/no-such-page-here");
+  // Page builder pages from the seed (08 §1), in their templates.
+  await expectPage(page, "/about", "A small team that visits every home");
+  await expectPage(page, "/contact", "Talk to us");
+  await expectPage(page, "/sell-with-us", "Sell or let your home with people who know it");
+  await expectPage(page, "/off-plan-guide", "Buying off-plan in Dubai, step by step");
+  await expectPage(page, "/how-we-verify", "How we verify listings");
+  await expectPage(page, "/privacy-policy", "Privacy policy");
+  await expect(page.getByRole("navigation", { name: "On this page" })).toBeVisible();
+  await expectPage(page, "/terms", "Terms of use");
+  await expectPage(page, "/cookie-policy", "Cookie policy");
+  // Any single-segment address is a page-builder address: a missing one is a soft 404.
+  await expectNotFoundPage(page, "/no-such-page-here");
+  const missing = await page.goto("/no/such-page-here");
   expect(missing?.status()).toBe(404);
 });
 
