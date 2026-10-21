@@ -7,6 +7,7 @@ import { badges, facilities, locations, propertyTypes } from "@/db/schema/master
 import { agents } from "@/db/schema/people";
 import { projects } from "@/db/schema/projects";
 import { properties } from "@/db/schema/properties";
+import { guideForLocation, type LandingGuide } from "@/features/area-guides/public";
 import { loadListingCards, type ListingCardData } from "@/features/listings/cards";
 import { searchableStatuses } from "@/features/properties/status";
 import { loadSettings } from "@/features/settings/queries";
@@ -27,6 +28,8 @@ export type LandingInfo = {
     parentId: string | null;
   } | null;
   type: { slug: string; name: string } | null;
+  /** The area's published guide: its intro opens the page and its questions close it. */
+  guide: LandingGuide | null;
 };
 
 /** The location and type of an SEO landing route, or null when either slug is unknown. */
@@ -36,7 +39,7 @@ export async function landingFor(
 ): Promise<LandingInfo | null> {
   "use cache";
   cacheLife("hours");
-  cacheTag(tags.locations, tags.masterData("property-types"));
+  cacheTag(tags.locations, tags.masterData("property-types"), tags.areaGuides, tags.faqs);
   const db = await getDb();
   const agency = currentAgencyId();
   let location: LandingInfo["location"] = null;
@@ -64,7 +67,7 @@ export async function landingFor(
     if (!row) return null;
     type = row;
   }
-  return { location, type };
+  return { location, type, guide: location ? await guideForLocation(location.id) : null };
 }
 
 /* Labels for headings and chips ------------------------------------------------------- */

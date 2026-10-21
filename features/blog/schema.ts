@@ -1,18 +1,11 @@
 import { z } from "zod";
-import type { ContentStatus } from "@/db/schema/content";
+import { slugField, type ContentProblem } from "@/features/content/schema";
 import { seoInputSchema } from "@/features/seo/schema";
 import { postDocSchema, postWordCount } from "@/lib/rich-text-post";
-import { SLUG_RE } from "@/lib/slug";
 
-/** Blog ("Insights", 08 §3): what the editor sends, publish rules and labels. Client-safe. */
+/** Blog ("Insights", 08 §3): what the editor sends and the publish rules. Client-safe. */
 
-export const slugField = () =>
-  z
-    .string()
-    .trim()
-    .regex(SLUG_RE, "Lowercase letters, numbers and hyphens")
-    .max(100)
-    .or(z.literal(""));
+export { contentStatusLabels, type ContentProblem } from "@/features/content/schema";
 
 export const postInputSchema = z
   .object({
@@ -41,14 +34,6 @@ export const newPostSchema = z
   .object({ title: z.string().trim().min(1, "Give the post a title").max(160) })
   .strict();
 
-export const postPublishingSchema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("publish"), id: z.uuid() }).strict(),
-  z.object({ action: z.literal("schedule"), id: z.uuid(), publishAt: z.iso.datetime() }).strict(),
-  z.object({ action: z.literal("unpublish"), id: z.uuid() }).strict(),
-]);
-
-export type ContentProblem = { field: string; message: string };
-
 /** What a post needs before it can go on the site (and while it stays there). */
 export function postPublishProblems(p: Pick<PostInput, "title" | "body">): ContentProblem[] {
   const problems: ContentProblem[] = [];
@@ -56,12 +41,6 @@ export function postPublishProblems(p: Pick<PostInput, "title" | "body">): Conte
   if (postWordCount(p.body) === 0) problems.push({ field: "body", message: "Write the post" });
   return problems;
 }
-
-export const contentStatusLabels: Record<ContentStatus, string> = {
-  draft: "Draft",
-  scheduled: "Scheduled",
-  published: "Published",
-};
 
 export const categoryInputSchema = z
   .object({

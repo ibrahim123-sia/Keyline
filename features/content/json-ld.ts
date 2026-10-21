@@ -1,4 +1,5 @@
 import "server-only";
+import type { PublicGuide } from "@/features/area-guides/public";
 import type { PublicPost } from "@/features/blog/public";
 import { getPublicMedia } from "@/features/media/queries";
 import { getSettings } from "@/features/settings/queries";
@@ -65,5 +66,29 @@ export function faqJsonLd(faqs: Array<{ question: string; answerHtml: string }>)
       name: f.question,
       acceptedAnswer: { "@type": "Answer", text: f.answerHtml },
     })),
+  };
+}
+
+export function placeJsonLd(
+  g: PublicGuide,
+  o: { url: string; origin: string; description: string },
+): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Place",
+    name: g.location.name,
+    description: o.description || undefined,
+    url: o.url,
+    image: g.cover ? [new URL(mediaVariant(g.cover.url, 1200), o.origin).toString()] : undefined,
+    geo: g.location.center
+      ? {
+          "@type": "GeoCoordinates",
+          latitude: g.location.center.lat,
+          longitude: g.location.center.lng,
+        }
+      : undefined,
+    containedInPlace: g.location.parentName
+      ? { "@type": "Place", name: g.location.parentName }
+      : undefined,
   };
 }

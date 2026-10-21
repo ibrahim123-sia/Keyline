@@ -5,7 +5,7 @@ import { pages } from "@/db/schema/cms";
 import { developers, locations } from "@/db/schema/master-data";
 import { media } from "@/db/schema/media";
 import { agents } from "@/db/schema/people";
-import { postCategoryUses, postUses } from "@/features/content/media-usage";
+import { areaGuideUses, postCategoryUses, postUses } from "@/features/content/media-usage";
 import { projectMedia, projectUnitTypes, projects } from "@/db/schema/projects";
 import { properties, propertyMedia } from "@/db/schema/properties";
 import { sectionMediaIds } from "@/features/cms/sections";
@@ -241,6 +241,7 @@ const sources: Source[] = [
   pageUses,
   postUses,
   postCategoryUses,
+  areaGuideUses,
 ];
 
 /** id -> where it is used. Ids that are not used anywhere map to an empty list. */

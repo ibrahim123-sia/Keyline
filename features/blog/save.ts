@@ -11,20 +11,16 @@ import {
   checkListings,
   fieldError,
 } from "@/features/content/checks";
+import { assertLiveRules, publishingValues } from "@/features/content/publishing";
+import type { Publishing } from "@/features/content/schema";
 import { syncMediaUsage } from "@/features/media/usage";
 import { redirectSlugChange } from "@/features/seo/redirects";
 import { ActionError } from "@/lib/actions";
 import { auditChange, writeAudit, type AuditActor } from "@/lib/audit";
 import { slugify } from "@/lib/slug";
 import { loadPost, postMediaIds } from "./load";
-import { postPublishProblems, type ContentProblem, type PostInput } from "./schema";
+import { postPublishProblems, type PostInput } from "./schema";
 import { postSlug } from "./write";
-
-const problemsError = (message: string, code: string, problems: ContentProblem[]) => {
-  const fieldErrors: Record<string, string[]> = {};
-  for (const p of problems) (fieldErrors[p.field] ??= []).push(p.message);
-  return new ActionError(message, code, fieldErrors);
-};
 
 /** Tag names to tag ids, creating the new ones (same slug = same tag). */
 async function syncTags(db: DbOrTx, postId: string, names: string[]): Promise<void> {
@@ -102,17 +98,7 @@ export async function savePostRecord(
   await checkReferences(tx, data);
   const body = await prepareBody(tx, data.body);
 
-  if (row.status !== "draft") {
-    const problems = postPublishProblems(data);
-    if (problems.length)
-      throw problemsError(
-        row.status === "published"
-          ? "This post is published, so these must stay filled in. Fix them, or unpublish it first."
-          : "This post is scheduled, so these must stay filled in. Fix them, or unschedule it first.",
-        "LIVE_RULES",
-        problems,
-      );
-  }
+  assertLiveRules(row.status, "post", postPublishProblems(data));
 
   // A post that has never been public follows its title until the slug is set by hand.
   const followsTitle = row.publishedAt === null && row.slug === slugify(row.title);
@@ -169,18 +155,13 @@ export async function savePostRecord(
   };
 }
 
-export type PostPublishing =
-  | { action: "publish"; id: string }
-  | { action: "schedule"; id: string; publishAt: string }
-  | { action: "unpublish"; id: string };
-
 /**
  * Publish now, schedule for later (the cron publishes it, 13 §2) or take off the site. The
  * rules are checked against the saved post. AI drafts are only ever published by a person.
  */
 export async function setPostPublishingRecord(
   tx: Tx,
-  input: PostPublishing,
+  input: Publishing,
   ctx: { actor: AuditActor; userId: string },
   now = new Date(),
 ): Promise<{ updatedAt: string; status: string; publishAt: string | null }> {
@@ -188,26 +169,10 @@ export async function setPostPublishingRecord(
   if (!loaded || loaded.row.deletedAt)
     throw new ActionError("This post no longer exists.", "NOT_FOUND");
   const { row } = loaded;
-  const values: Partial<typeof posts.$inferInsert> = { updatedBy: ctx.userId };
-  if (input.action === "unpublish") {
-    values.status = "draft";
-    values.publishAt = null;
-  } else {
-    const problems = postPublishProblems(loaded.input);
-    if (problems.length)
-      throw problemsError("Not ready to publish yet.", "PUBLISH_RULES", problems);
-    if (input.action === "publish") {
-      values.status = "published";
-      values.publishAt = null;
-      values.publishedAt = row.publishedAt ?? now;
-    } else {
-      const at = new Date(input.publishAt);
-      if (at.getTime() <= now.getTime() + 60_000)
-        fieldError("publishAt", "Choose a time at least a minute from now, or publish now.");
-      values.status = "scheduled";
-      values.publishAt = at;
-    }
-  }
+  const values = {
+    ...publishingValues(input, row, postPublishProblems(loaded.input), now),
+    updatedBy: ctx.userId,
+  };
   const [after] = await tx.update(posts).set(values).where(eq(posts.id, row.id)).returning();
   await auditChange(tx, {
     actor: ctx.actor,

@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
 import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
-import { postCategories, posts } from "@/db/schema/content";
+import { areaGuideMedia, areaGuides, postCategories, posts } from "@/db/schema/content";
 import type { MediaUse } from "@/features/media/usage";
 
 /** Where website content uses library files (08 §3-5), for features/media/usage.ts. */
@@ -69,4 +69,59 @@ export const postCategoryUses: Source = async (db, ids) => {
     label: `Blog category ${r.name}: share image`,
     href: "/admin/website/blog/categories",
   }));
+};
+
+export const areaGuideUses: Source = async (db, ids) => {
+  const inBody = bodyMediaIds(areaGuides.body);
+  const rows = await db
+    .select({
+      id: areaGuides.id,
+      title: areaGuides.title,
+      coverId: areaGuides.coverId,
+      ogImageId: areaGuides.ogImageId,
+      bodyIds: inBody,
+    })
+    .from(areaGuides)
+    .where(
+      and(
+        eq(areaGuides.agencyId, currentAgencyId()),
+        or(
+          inArray(areaGuides.coverId, ids),
+          inArray(areaGuides.ogImageId, ids),
+          holdsAny(inBody, ids),
+        ),
+      ),
+    );
+  const photos = await db
+    .select({ mediaId: areaGuideMedia.mediaId, id: areaGuides.id, title: areaGuides.title })
+    .from(areaGuideMedia)
+    .innerJoin(areaGuides, eq(areaGuides.id, areaGuideMedia.guideId))
+    .where(and(eq(areaGuides.agencyId, currentAgencyId()), inArray(areaGuideMedia.mediaId, ids)));
+  const href = (id: string) => `/admin/website/area-guides/${id}`;
+  return [
+    ...rows.flatMap((r) => {
+      const uses: MediaUse[] = [];
+      if (r.coverId && ids.includes(r.coverId))
+        uses.push({ mediaId: r.coverId, label: `Area guide ${r.title}: cover`, href: href(r.id) });
+      if (r.ogImageId && ids.includes(r.ogImageId))
+        uses.push({
+          mediaId: r.ogImageId,
+          label: `Area guide ${r.title}: share image`,
+          href: href(r.id),
+        });
+      for (const id of new Set(r.bodyIds ?? []))
+        if (ids.includes(id))
+          uses.push({
+            mediaId: id,
+            label: `Area guide ${r.title}: image in the text`,
+            href: href(r.id),
+          });
+      return uses;
+    }),
+    ...photos.map((p) => ({
+      mediaId: p.mediaId,
+      label: `Area guide ${p.title}: photo`,
+      href: href(p.id),
+    })),
+  ];
 };

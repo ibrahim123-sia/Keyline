@@ -8,7 +8,7 @@ import type { SaveState } from "@/components/admin/properties/editor/editor-pane
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { ContentStatus } from "@/db/schema/content";
-import { contentStatusLabels, type ContentProblem } from "@/features/blog/schema";
+import { contentStatusLabels, type ContentProblem } from "@/features/content/schema";
 import { useHydrated } from "@/lib/use-hydrated";
 
 const timeFormat = new Intl.DateTimeFormat("en", { hour: "2-digit", minute: "2-digit" });

@@ -2,6 +2,7 @@ import { and, asc, eq, isNotNull, sql } from "drizzle-orm";
 import { cacheLife, cacheTag } from "next/cache";
 import { getDb, type DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
+import { areaGuides } from "@/db/schema/content";
 import { agents } from "@/db/schema/people";
 import { projects } from "@/db/schema/projects";
 import { properties } from "@/db/schema/properties";
@@ -53,7 +54,7 @@ export async function getLocationForAdmin(id: string, db?: DbOrTx): Promise<Loca
   return row ?? null;
 }
 
-/** What still references a location (safe delete). Listings/projects/guides are added later. */
+/** What still references a location (safe delete): children, agents, listings, projects, guides. */
 export async function locationUsage(
   id: string,
   db?: DbOrTx,
@@ -62,6 +63,7 @@ export async function locationUsage(
   agents: number;
   listings: number;
   projects: number;
+  guides: number;
   total: number;
 }> {
   const conn = db ?? (await getDb());
@@ -82,12 +84,16 @@ export async function locationUsage(
   const projectCount = await count(
     conn.select({ n }).from(projects).where(eq(projects.locationId, id)),
   );
+  const guides = await count(
+    conn.select({ n }).from(areaGuides).where(eq(areaGuides.locationId, id)),
+  );
   return {
     children,
     agents: agentCount,
     listings,
     projects: projectCount,
-    total: children + agentCount + listings + projectCount,
+    guides,
+    total: children + agentCount + listings + projectCount + guides,
   };
 }
 

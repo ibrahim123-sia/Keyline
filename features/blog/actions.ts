@@ -6,19 +6,14 @@ import { getDb } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { postCategories, postTagLinks, postTags, posts } from "@/db/schema/content";
 import { checkImages } from "@/features/content/checks";
+import { publishingSchema } from "@/features/content/schema";
 import { syncMediaUsage } from "@/features/media/usage";
 import { redirectSlugChange } from "@/features/seo/redirects";
 import { ActionError, adminAction } from "@/lib/actions";
 import { auditChange, writeAudit } from "@/lib/audit";
 import { slugify } from "@/lib/slug";
 import { deletePostRecord, savePostRecord, setPostPublishingRecord } from "./save";
-import {
-  categoryInputSchema,
-  newPostSchema,
-  postInputSchema,
-  postPublishingSchema,
-  tagNameSchema,
-} from "./schema";
+import { categoryInputSchema, newPostSchema, postInputSchema, tagNameSchema } from "./schema";
 import { categorySlug, postSlug, revalidatePost } from "./write";
 
 /** "New post" (08 §3): a draft with this title, by the admin who made it; the editor opens next. */
@@ -64,7 +59,7 @@ export const savePost = adminAction(
 
 /** Publish now, schedule or unpublish. */
 export const setPostPublishing = adminAction(
-  postPublishingSchema,
+  publishingSchema,
   { write: true },
   async (input, ctx) => {
     const db = await getDb();

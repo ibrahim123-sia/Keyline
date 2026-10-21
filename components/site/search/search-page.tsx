@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Breadcrumb, type Crumb } from "@/components/site/breadcrumb";
+import { FaqList } from "@/components/site/content/faq-list";
 import { ListingCard, type CardContext } from "@/components/site/listings/listing-card";
 import { resolveMapStyle } from "@/components/maps/map-style";
 import { getSettings } from "@/features/settings/queries";
@@ -23,6 +24,7 @@ import {
 import { parseSearch, searchHref, searchQuery, type SearchFilters } from "@/features/search/params";
 import { searchListings } from "@/features/search/query";
 import { format } from "@/lib/i18n";
+import { content as c } from "@/lib/i18n/dictionaries/content";
 import { search as t } from "@/lib/i18n/dictionaries/search";
 import { FilterBar } from "./filter-bar";
 import { SearchLayout } from "./search-layout";
@@ -131,10 +133,20 @@ async function SearchContent({
           </p>
         </div>
       </div>
-      {landing?.location?.description && (
-        <p className="mb-5 max-w-3xl text-[15px] leading-relaxed text-text">
-          {landing.location.description}
-        </p>
+      {(landing?.guide?.intro || landing?.location?.description) && (
+        <div className="mb-5 flex max-w-3xl flex-col gap-2">
+          <p className="text-[15px] leading-relaxed text-text">
+            {landing.guide?.intro || landing.location?.description}
+          </p>
+          {landing.guide && landing.location && (
+            <a
+              href={`/areas/${landing.guide.slug}`}
+              className="self-start text-[14px] font-semibold text-accent underline underline-offset-4"
+            >
+              {format(c.areas.readGuide, { area: landing.location.name })}
+            </a>
+          )}
+        </div>
       )}
 
       <FilterBar
@@ -205,6 +217,15 @@ async function SearchContent({
           </section>
         )}
       </SearchLayout>
+      {landing?.guide && landing.location && (
+        <div className="mt-12">
+          <FaqList
+            id="area-faqs"
+            title={format(c.areas.faqs, { area: landing.location.name })}
+            faqs={landing.guide.faqs}
+          />
+        </div>
+      )}
     </>
   );
 }
