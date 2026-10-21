@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import { getSiteMenus } from "@/features/menus/site";
 import { getPublicMedia } from "@/features/media/queries";
 import { getSettings } from "@/features/settings/queries";
 import { site } from "@/lib/i18n";
@@ -6,17 +7,25 @@ import { Button } from "@/components/ui/button";
 import { AccountMenu } from "./account-menu";
 import { CurrencyMenu } from "./currency-menu";
 import { Logo } from "./logo";
-import { MobileMenu, type NavItem } from "./mobile-menu";
+import { MobileMenu } from "./mobile-menu";
+import { MenuLink } from "./menu-link";
+import { NavDropdown } from "./nav-dropdown";
 import { StickyHeader } from "./sticky-header";
 
 /**
  * Public header (02 §5): logo left, main menu centre, account + primary action right;
  * on phone, logo + menu button opening a full-screen sheet. Sticky, white after scroll.
- * Menu items come from Admin -> Website -> Menus (Phase 5); the primary button and the
- * currencies come from settings. Nothing is hard-coded.
+ * The links come from Admin -> Website -> Menus (header, and the phone menu when it has
+ * links); the primary button and the currencies come from settings. Nothing is hard-coded.
  */
-export async function SiteHeader({ nav = [], actions }: { nav?: NavItem[]; actions?: ReactNode }) {
-  const [general, market] = await Promise.all([getSettings("general"), getSettings("market")]);
+export async function SiteHeader({ actions }: { actions?: ReactNode }) {
+  const [general, market, menus] = await Promise.all([
+    getSettings("general"),
+    getSettings("market"),
+    getSiteMenus(),
+  ]);
+  const nav = menus.header.links;
+  const phoneNav = menus.mobile.links.length > 0 ? menus.mobile.links : nav;
   const choice = market.visitorCurrencies.some((c) => c.code !== market.baseCurrency.code);
   const logo = await getPublicMedia(general.logoLightId);
   const { label, href } = general.headerButton;
@@ -30,18 +39,15 @@ export async function SiteHeader({ nav = [], actions }: { nav?: NavItem[]; actio
         {nav.length > 0 && (
           <nav aria-label={site.a11y.mainNavigation} className="hidden lg:block">
             <ul className="flex items-center gap-7">
-              {nav.map((item) => (
-                <li key={item.href}>
-                  <a
-                    href={item.href}
-                    target={item.newTab ? "_blank" : undefined}
-                    rel={item.newTab ? "noopener noreferrer" : undefined}
-                    className="text-[15px] font-medium text-ink transition-colors duration-150 hover:text-accent"
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
+              {nav.map((item, i) =>
+                item.children.length > 0 ? (
+                  <NavDropdown key={`${i}-${item.href}`} link={item} />
+                ) : (
+                  <li key={`${i}-${item.href}`}>
+                    <MenuLink link={item} />
+                  </li>
+                ),
+              )}
             </ul>
           </nav>
         )}
@@ -65,7 +71,7 @@ export async function SiteHeader({ nav = [], actions }: { nav?: NavItem[]; actio
             </Button>
           )}
           <MobileMenu
-            nav={nav}
+            nav={phoneNav}
             agencyName={general.agencyName}
             button={button}
             extras={

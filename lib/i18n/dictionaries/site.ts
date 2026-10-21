@@ -13,6 +13,8 @@ export const site = {
     mainNavigation: "Main navigation",
     footerNavigation: "Footer navigation",
     accountMenu: "Account menu",
+    submenu: "{label}: more links",
+    newTab: "(opens in a new tab)",
   },
   header: {
     signIn: "Sign in",
@@ -28,6 +30,8 @@ export const site = {
     licence: "Licence no. {number}",
     rights: "© {year} {agency}. All rights reserved.",
     social: "Follow us",
+    links: "Links",
+    legal: "Legal",
   },
   maintenance: {
     title: "We'll be right back",

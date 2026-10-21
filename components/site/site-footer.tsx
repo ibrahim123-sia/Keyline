@@ -1,3 +1,5 @@
+import { getSiteMenus } from "@/features/menus/site";
+import type { SiteLink } from "@/features/menus/schema";
 import { getPublicMedia } from "@/features/media/queries";
 import { getSettings } from "@/features/settings/queries";
 import { socialKeys } from "@/features/settings/schema";
@@ -5,11 +7,9 @@ import { currentYear } from "@/features/site/time";
 import { format, pages, site } from "@/lib/i18n";
 import { CookieSettingsLink } from "./cookie-banner";
 import { Logo } from "./logo";
+import { MenuLink } from "./menu-link";
 
-export type FooterColumn = {
-  title: string;
-  links: Array<{ label: string; href: string; newTab?: boolean }>;
-};
+type FooterColumn = { title: string; links: SiteLink[] };
 
 const socialLabels: Record<(typeof socialKeys)[number], string> = {
   instagram: "Instagram",
@@ -22,21 +22,23 @@ const socialLabels: Record<(typeof socialKeys)[number], string> = {
 
 /**
  * Footer (02 §5, 06 §2, 08 §2): dark ink, logo + short text, contact details, link columns
- * (footer menus, Phase 5), social links, legal line with the licence number, cookie settings
- * and "Powered by Lintel" (cannot be removed).
+ * (the three footer menus), social links, legal line with the licence number, cookie
+ * settings and "Powered by Lintel" (cannot be removed).
  */
 export async function SiteFooter({
-  columns = [],
   legalLinks = [],
 }: {
-  columns?: FooterColumn[];
   legalLinks?: Array<{ label: string; href: string }>;
 }) {
-  const [general, contact, year] = await Promise.all([
+  const [general, contact, year, menus] = await Promise.all([
     getSettings("general"),
     getSettings("contact"),
     currentYear(),
+    getSiteMenus(),
   ]);
+  const columns: FooterColumn[] = [menus.footer_1, menus.footer_2, menus.footer_3]
+    .filter((m) => m.links.length > 0)
+    .map((m) => ({ title: m.title || site.footer.links, links: m.links }));
   const logo = await getPublicMedia(general.logoDarkId);
   const socials = socialKeys.filter((k) => contact.socials[k]);
   const hasContact = Boolean(
@@ -45,7 +47,7 @@ export async function SiteFooter({
 
   return (
     <footer className="bg-ink text-surface/80">
-      <div className="container-site grid gap-12 py-16 md:grid-cols-[1.4fr_repeat(3,1fr)] lg:py-20">
+      <div className="container-site grid gap-12 py-16 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(4,minmax(0,1fr))] lg:py-20">
         <div className="max-w-sm space-y-4">
           <Logo agencyName={general.agencyName} logo={logo} inverted />
           {general.shortDescription && (
@@ -112,20 +114,13 @@ export async function SiteFooter({
             </dl>
           </section>
         )}
-        {columns.map((col) => (
-          <nav key={col.title} aria-label={col.title}>
+        {columns.map((col, i) => (
+          <nav key={i} aria-label={col.title}>
             <h2 className="mb-4 text-eyebrow text-surface">{col.title}</h2>
             <ul className="space-y-2.5">
-              {col.links.map((l) => (
-                <li key={l.href}>
-                  <a
-                    href={l.href}
-                    target={l.newTab ? "_blank" : undefined}
-                    rel={l.newTab ? "noopener noreferrer" : undefined}
-                    className="text-[15px] text-surface/80 hover:text-surface"
-                  >
-                    {l.label}
-                  </a>
+              {col.links.map((l, j) => (
+                <li key={`${j}-${l.href}`}>
+                  <MenuLink link={l} className="text-[15px] text-surface/80 hover:text-surface" />
                 </li>
               ))}
             </ul>

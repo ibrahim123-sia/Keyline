@@ -70,7 +70,7 @@ export const adminNav: AdminNavGroup[] = [
         enabled: true,
       },
       { key: "faqs", href: "/admin/website/faqs", icon: CircleHelpIcon, enabled: true },
-      { key: "menus", href: "/admin/website/menus", icon: MenuSquareIcon, enabled: false },
+      { key: "menus", href: "/admin/website/menus", icon: MenuSquareIcon, enabled: true },
       { key: "seo", href: "/admin/website/seo", icon: SearchIcon, enabled: false },
     ],
   },

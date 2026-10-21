@@ -32,6 +32,7 @@ export function SortableList<T extends { id: string }>({
   renderItem,
   disabled,
   label = "Reorder",
+  align = "center",
 }: {
   items: T[];
   onReorder: (items: T[]) => void;
@@ -39,6 +40,8 @@ export function SortableList<T extends { id: string }>({
   disabled?: boolean;
   /** Accessible name of each drag handle, e.g. (item) => `Move ${item.name}`. */
   label?: string | ((item: T) => string);
+  /** "start" keeps the handle at the top of tall rows (rows with nested lists). */
+  align?: "center" | "start";
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -69,6 +72,7 @@ export function SortableList<T extends { id: string }>({
               id={item.id}
               disabled={disabled}
               label={typeof label === "function" ? label(item) : label}
+              align={align}
             >
               {renderItem(item)}
             </SortableRow>
@@ -84,11 +88,13 @@ function SortableRow({
   children,
   disabled,
   label,
+  align,
 }: {
   id: string;
   children: ReactNode;
   disabled?: boolean;
   label: string;
+  align: "center" | "start";
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
@@ -99,7 +105,8 @@ function SortableRow({
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "flex items-center gap-2 px-2 py-1.5",
+        "flex gap-2 px-2 py-1.5",
+        align === "start" ? "items-start" : "items-center",
         isDragging && "relative z-10 bg-surface shadow-pin",
       )}
     >

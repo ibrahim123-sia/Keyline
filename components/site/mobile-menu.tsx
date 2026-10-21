@@ -4,13 +4,13 @@ import { MenuIcon } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import type { SiteLink } from "@/features/menus/schema";
 import { site } from "@/lib/i18n";
-
-export type NavItem = { label: string; href: string; newTab?: boolean };
+import { MenuLink } from "./menu-link";
 
 /**
- * Phone menu: a full-screen sheet with the header menu, the primary button and `extras`
- * (the currency switcher), 02 §5.
+ * Phone menu: a full-screen sheet with the phone menu (or the header menu), dropdown links
+ * listed under their parent, the primary button and `extras` (the currency switcher), 02 §5.
  */
 export function MobileMenu({
   nav,
@@ -18,7 +18,7 @@ export function MobileMenu({
   button,
   extras,
 }: {
-  nav: NavItem[];
+  nav: SiteLink[];
   agencyName: string;
   button?: { label: string; href: string } | null;
   extras?: ReactNode;
@@ -44,17 +44,26 @@ export function MobileMenu({
         {nav.length > 0 && (
           <nav aria-label={site.a11y.mainNavigation} className="px-4">
             <ul className="flex flex-col">
-              {nav.map((item) => (
-                <li key={item.href} className="border-b border-border">
-                  <a
-                    href={item.href}
-                    target={item.newTab ? "_blank" : undefined}
-                    rel={item.newTab ? "noopener noreferrer" : undefined}
+              {nav.map((item, i) => (
+                <li key={`${i}-${item.href}`} className="border-b border-border">
+                  <MenuLink
+                    link={item}
                     onClick={() => setOpen(false)}
                     className="block py-4 text-lg text-ink"
-                  >
-                    {item.label}
-                  </a>
+                  />
+                  {item.children.length > 0 && (
+                    <ul className="flex flex-col ps-4 pb-3">
+                      {item.children.map((c, j) => (
+                        <li key={`${j}-${c.href}`}>
+                          <MenuLink
+                            link={c}
+                            onClick={() => setOpen(false)}
+                            className="block py-2 text-[16px] text-text-muted hover:text-ink"
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>
