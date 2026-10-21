@@ -59,7 +59,8 @@ export function LocationSearch({
 }: {
   /** Chosen places: value (slug or p.<slug>) and name. */
   selected: Array<{ value: string; label: string }>;
-  onAdd: (value: string) => void;
+  /** The chosen place's filter value, and its name for the chip. */
+  onAdd: (value: string, label: string) => void;
   onRemove: (value: string) => void;
   className?: string;
 }) {
@@ -127,7 +128,8 @@ export function LocationSearch({
     setQ("");
     setItems([]);
     if (item.href) router.push(item.href);
-    else if (item.value && !selected.some((s) => s.value === item.value)) onAdd(item.value);
+    else if (item.value && !selected.some((s) => s.value === item.value))
+      onAdd(item.value, item.label);
   }
 
   return (

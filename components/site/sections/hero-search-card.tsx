@@ -3,6 +3,7 @@
 import { SearchIcon } from "lucide-react";
 import { useId, useState } from "react";
 import { cn } from "cn";
+import { LocationSearch } from "@/components/site/search/location-search";
 import { parseSearch, searchHref } from "@/features/search/params";
 import { sectionsText as t } from "@/lib/i18n/dictionaries/home";
 import { compactAmount } from "@/lib/currency-display";
@@ -31,6 +32,7 @@ export function HeroSearchCard({
 }) {
   const id = useId();
   const [tab, setTab] = useState<Tab>(tabs.includes(defaultTab) ? defaultTab : tabs[0]!);
+  const [places, setPlaces] = useState<Array<{ value: string; label: string }>>([]);
   const steps = tab === "rent" ? budgets.rent : budgets.sale;
   const scale = 10 ** currency.decimals;
 
@@ -46,7 +48,7 @@ export function HeroSearchCard({
         const data = new FormData(e.currentTarget);
         const filters = parseSearch(
           {
-            q: String(data.get("q") ?? ""),
+            loc: places.map((p) => p.value),
             type: String(data.get("type") ?? ""),
             max: String(data.get("max") ?? ""),
             beds: String(data.get("beds") ?? ""),
@@ -79,15 +81,18 @@ export function HeroSearchCard({
         </div>
       )}
       <div className="grid gap-2 md:grid-cols-[1.6fr_1fr_1fr_0.8fr_auto]">
-        <label className="flex flex-col gap-1 rounded-xl border border-border px-3 py-2">
+        <div className="flex min-w-0 flex-col gap-1 rounded-xl border border-border px-3 py-2">
           <span className="text-[12px] font-semibold text-text-muted">{t.search.location}</span>
-          <input
-            name="q"
-            type="search"
-            placeholder={t.search.locationPlaceholder}
-            className="bg-transparent text-[15px] text-ink outline-none placeholder:text-text-muted"
+          <LocationSearch
+            selected={places}
+            onAdd={(value, label) =>
+              setPlaces((list) =>
+                list.some((p) => p.value === value) ? list : [...list, { value, label }],
+              )
+            }
+            onRemove={(value) => setPlaces((list) => list.filter((p) => p.value !== value))}
           />
-        </label>
+        </div>
         <label className="flex flex-col gap-1 rounded-xl border border-border px-3 py-2">
           <span className="text-[12px] font-semibold text-text-muted">{t.search.type}</span>
           <select
