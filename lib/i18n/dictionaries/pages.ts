@@ -5,6 +5,7 @@
 export const pages = {
   common: {
     home: "Home",
+    newTab: "(opens in a new tab)",
   },
   currency: {
     label: "Currency",
