@@ -577,3 +577,51 @@ export const shortlists = pgTable(
     index("shortlists_lead_idx").on(t.leadId),
   ],
 );
+
+/**
+ * An agent's connected calendar (13 §1 Google Calendar: OAuth per agent profile, connected
+ * by an admin). Tokens are AES-256-GCM encrypted like integration keys.
+ */
+export const calendarConnections = pgTable(
+  "calendar_connections",
+  {
+    ...baseColumns(),
+    agentId: uuid()
+      .notNull()
+      .references(() => agents.id, { onDelete: "cascade" }),
+    provider: text({ enum: ["google"] })
+      .notNull()
+      .default("google"),
+    /** The calendar viewings are written to and busy times read from ("primary" by default). */
+    calendarId: text().notNull().default("primary"),
+    accountEmail: text(),
+    encryptedRefreshToken: text().notNull(),
+    encryptedAccessToken: text(),
+    accessTokenExpiresAt: timestamp({ withTimezone: true }),
+    scope: text(),
+    /** Push notifications (watch channel), when Google accepts them. */
+    watchChannelId: text(),
+    watchResourceId: text(),
+    watchExpiresAt: timestamp({ withTimezone: true }),
+    lastSyncAt: timestamp({ withTimezone: true }),
+    lastError: text(),
+    lastErrorAt: timestamp({ withTimezone: true }),
+  },
+  (t) => [uniqueIndex("calendar_connections_agent_unique").on(t.agentId, t.provider)],
+);
+
+/** Busy times read from a connected calendar (refreshed every 15 minutes or on push). */
+export const calendarBusy = pgTable(
+  "calendar_busy",
+  {
+    id: idColumn(),
+    agencyId: agencyColumn(),
+    agentId: uuid()
+      .notNull()
+      .references(() => agents.id, { onDelete: "cascade" }),
+    startsAt: timestamp({ withTimezone: true }).notNull(),
+    endsAt: timestamp({ withTimezone: true }).notNull(),
+    fetchedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("calendar_busy_agent_time_idx").on(t.agentId, t.startsAt)],
+);
