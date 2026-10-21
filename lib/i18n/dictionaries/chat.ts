@@ -1,0 +1,18 @@
+/** Website chat wording (09 §1 #3). */
+export const chat = {
+  open: "Chat with us",
+  close: "Close the chat",
+  intro: "Leave your details and your question; the team replies here and by email or phone.",
+  name: "Name",
+  email: "Email",
+  phone: "Phone",
+  message: "Your message",
+  start: "Start the chat",
+  send: "Send",
+  placeholder: "Write a message…",
+  you: "You",
+  team: "Team",
+  assistant: "Assistant",
+  waiting: "Thanks. Someone from the team will reply here shortly.",
+  failed: "Could not send. Please try again.",
+} as const;

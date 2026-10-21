@@ -38,6 +38,24 @@ export function AiSettingsForm({
     <SettingsForm group="ai" initial={initial} readOnly={readOnly}>
       {({ value, set, errorFor }) => (
         <>
+          <FormSection
+            title="Website chat"
+            description="A chat button on every page. Messages arrive in the inbox; until the assistant is turned on, the team answers them."
+          >
+            <SwitchField
+              label="Show the chat button"
+              checked={value.webChat.enabled}
+              onChange={(enabled) => set({ webChat: { ...value.webChat, enabled } })}
+            />
+            <SwitchField
+              label="Ask for name and email or phone before the first message"
+              checked={value.webChat.askContactFirst}
+              onChange={(askContactFirst) =>
+                set({ webChat: { ...value.webChat, askContactFirst } })
+              }
+            />
+          </FormSection>
+
           <FormSection title="Website assistant">
             <TextInputField
               label="Name"

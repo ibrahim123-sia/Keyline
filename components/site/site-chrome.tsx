@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { getSettings } from "@/features/settings/queries";
 import { site } from "@/lib/i18n";
+import { ChatLauncher } from "./chat/chat-launcher";
 import { CookieBanner } from "./cookie-banner";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
@@ -13,6 +14,7 @@ import { VisitorTracker } from "./visitor-tracker";
  */
 export async function SiteChrome({ children }: { children: ReactNode }) {
   const legal = await getSettings("legal");
+  const ai = await getSettings("ai");
   return (
     <>
       <a
@@ -28,6 +30,13 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
       <SiteFooter />
       <SiteToaster />
       <VisitorTracker />
+      {ai.webChat.enabled && (
+        <ChatLauncher
+          title={ai.assistantName}
+          greeting={ai.greeting}
+          askContactFirst={ai.webChat.askContactFirst}
+        />
+      )}
       <CookieBanner
         text={legal.cookieBanner.text}
         analyticsLabel={legal.cookieBanner.analyticsLabel}
