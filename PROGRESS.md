@@ -9,8 +9,8 @@ Spec: `lintel-spec/lintel-spec/` (README + `docs/01..16`).
 | ----- | ------------------------ | ------------------------------------------- |
 | 1     | Foundation               | done (staging deploy waits for credentials) |
 | 2     | Settings and master data | done (staging deploy waits for credentials) |
-| 3     | Properties and projects  | in progress                                 |
-| 4     | Public site core         | not started                                 |
+| 3     | Properties and projects  | done (staging deploy waits for credentials) |
+| 4     | Public site core         | in progress                                 |
 | 5     | CMS and SEO              | not started                                 |
 | 6     | Leads and CRM            | not started                                 |
 | 7     | Customer area            | not started                                 |
@@ -71,11 +71,26 @@ Done-when checklist:
 
 Done-when checklist:
 
-- [ ] A listing can be fully created and published with all fields
-- [ ] Moving the pin computes POIs and travel times (or straight-line fallback)
-- [ ] Payment plan must total 100% to publish
-- [ ] Price change writes history and adds "Price reduced"
-- [ ] CSV import creates drafts with a validation preview
+- [x] A listing can be fully created and published with all fields (e2e `property-editor.spec.ts`; every field round-trips in `property-editor.test.ts`)
+- [x] Moving the pin computes POIs and travel times (or straight-line fallback) (e2e `property-nearby.spec.ts`; Google travel times with a fake provider in `poi-distances.test.ts`)
+- [x] Payment plan must total 100% to publish (`property-editor.test.ts`, `payment-plans.test.ts`, e2e `payment-plans.spec.ts`)
+- [x] Price change writes history and adds "Price reduced" (e2e `property-nearby.spec.ts`, `property-editor.test.ts`)
+- [x] CSV import creates drafts with a validation preview (e2e `properties-import.spec.ts`, `properties-import.test.ts`)
+
+## Phase 4 — Public site core (plan)
+
+1. Base: URL filters, search query, listing cards, visitor currency, images, price tag, breadcrumb (done).
+2. Search pages (/buy, /rent, /off-plan and SEO landings): filter bar and phone sheet, list + map (price pins, clusters, hover sync, draw area, search as the map moves), autocomplete, sort, paging, no-results help.
+3. Property page with every 06 §5 block, sticky contact card and phone bar, forms with Turnstile, honeypot and rate limit, similar homes, recently viewed.
+4. Project, developer and agent pages; currency switcher; cookie banner; helpful 404.
+5. Demo seed (Haven & Dune, 16 §1) and the home page from sections.
+
+Done-when checklist (from `15-build-phases.md`):
+
+- [ ] All public routes render server-side with real seed data
+- [ ] Filters, sort and paging work and are shareable via URL
+- [ ] Phone layouts work (map toggle, filter sheet, bottom contact bar)
+- [ ] Core Web Vitals targets met on the property page in a Lighthouse mobile run
 
 ## Done
 
@@ -113,17 +128,18 @@ Done-when checklist:
 - Property editor (`/admin/properties/[id]`): section nav; basics, location (tree search, map pin with address search or pasted coordinates, exact-pin switch, private unit number), price (major units of the listing currency, rent period and payments, deposit, service charge per area unit, agency fee), specs (sizes in the market unit, stored in m²; fields the type hides are hidden), off-plan (project with handover and progress filled in, unit type, the project's plan or its own built in place), investment (gross yield worked out), description (rich text, word count against 120) and highlights, media (upload or pick photos and floor plans, drag order, cover, alt text and captions, video and tour links, brochure PDF), facilities by group, badges (manual, automatic ones read-only with their reason), trust (permit, verified, "Mark verified today"), SEO with previews, activity (views and inquiries in 30 days, price history, changes); sticky panel with status, Publish/Unpublish and other statuses, what blocks publishing (links to the section), completeness score with what is missing, save state; autosave every 10 s and Ctrl+S; a save based on an old version is refused; a live listing keeps its required fields; never-published listings' slugs follow the title, published ones get redirects; price history from the first publish and "Price reduced"; leave-without-saving guard. Integration + e2e.
 - Nearby places (07 §4): `poi.compute` job measures the agency's places within each type's radius (PostGIS), adds Google places when allowed (Settings -> Integrations "Add places Google finds near listings"), gets drive and walk times from Google Routes for the closest 3 per type, and falls back to straight-line distances with a note; admin overrides are kept; a moved pin during a run measures again; queued when the pin is dropped or moved (one waiting run per listing); monthly refresh of live listings older than 90 days; editor table with show on site, override text, order and Recalculate. Unit + integration.
 - CSV import and export (07 §7): `/admin/properties/import` (template download, upload parsed in the browser, column mapping with aliases, preview with errors and warnings per row, import as drafts in batches, result with links); photo URLs fetched by `media.fetch_url` with SSRF protection (http/https on default ports, no private, loopback, link-local or reserved addresses, checked after DNS and after each redirect, size limit while reading) and processed like uploads; "Export CSV" of the filtered list or the selected rows (market units, UTF-8 BOM, spreadsheet-formula guard, audited). Unit, integration and e2e.
+- Projects (07 §6): list with filters and "New project"; editor (basics with pin, dates, progress with "updated on", pricing, description, highlights, media, facilities, unit types table, own payment plan, nearby places, SEO, linked listings, activity) with autosave, version check, publish rules and live rules; "Create listings from unit types" drafts prefilled from the project; nearby places for projects (`project_pois`, migration 0007, `project_poi.compute`, monthly refresh). Integration + e2e.
+- Phase 4 base: search filters in the URL, the search query (all 06 §4.2 filters, base-currency prices, private approximate pins), listing cards, visitor currency, MediaImage, PriceTag, Breadcrumb. Unit + integration.
 - Daily listing upkeep (00:15 agency time): Featured until dates end the featuring; automatic badges start and end. "Import from Google" now follows its setting. The editor's Nearby table follows a measurement started by a pin move.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
 
-- Phase 3: merging the POI distances job into the editor; CSV import/export (parallel agent); then projects.
+- Phase 4 (in parallel worktrees): search pages with map and autocomplete; property page with contact card and forms; project, developer and agent pages with the currency switcher, cookie banner and 404; demo seed (Haven & Dune) and the home page.
 
 ## Next
 
-- Phase 3 items 2-9 (see the Phase 3 plan).
-- Phase 4: public site core.
+- Phase 4 checklist, then Phase 5: CMS and SEO.
 
 ## Decisions (made by me, per spec 01 §5 "small decisions")
 
