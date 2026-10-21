@@ -32,7 +32,11 @@ export const pages = pgTable(
     status: text({ enum: pageStatuses }).notNull().default("draft"),
     publishAt: timestamp({ withTimezone: true }),
     template: text({ enum: pageTemplates }).notNull().default("default"),
+    /** What the site shows. */
     sections: jsonb().$type<StoredSection[]>().notNull().default([]),
+    /** The page builder's working copy; Publish copies it to `sections` (08 §1). */
+    draftSections: jsonb().$type<StoredSection[]>(),
+    draftUpdatedAt: timestamp({ withTimezone: true }),
     isHome: boolean().notNull().default(false),
     version: integer().notNull().default(1),
     ...seoColumns(),
