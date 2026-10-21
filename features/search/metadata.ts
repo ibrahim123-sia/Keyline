@@ -1,5 +1,6 @@
 import "server-only";
 import type { Metadata } from "next";
+import { landingIndexable } from "@/features/seo/landing";
 import { getSettings } from "@/features/settings/queries";
 import { format } from "@/lib/i18n";
 import { search as t } from "@/lib/i18n/dictionaries/search";
@@ -26,9 +27,9 @@ export async function searchMetadata(
   const heading = searchHeading(f, labels);
   const { path } = searchPath(f);
   const filtered = hasExtraFilters(f);
-  const typeLanding = f.type.length === 1 && f.loc.length === 1;
-  const thin =
-    count < seo.thinPageMinListings || (typeLanding && count < seo.landingTypeMinListings);
+  // Area x type pages need their own minimum; every search page needs the thin-page one.
+  const kind = path.split("/").length > 3 ? "type" : path.split("/").length === 3 ? "area" : "hub";
+  const thin = !landingIndexable(kind, count, seo);
   const canonical = f.page > 1 && !filtered ? `${path}?page=${f.page}` : path;
   const description =
     count > 0

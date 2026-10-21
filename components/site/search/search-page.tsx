@@ -27,6 +27,7 @@ import { format } from "@/lib/i18n";
 import { content as c } from "@/lib/i18n/dictionaries/content";
 import { search as t } from "@/lib/i18n/dictionaries/search";
 import { FilterBar } from "./filter-bar";
+import { TypeLandingLinks } from "./type-landing-links";
 import { SearchLayout } from "./search-layout";
 
 export type SearchPreset = Partial<Pick<SearchFilters, "purpose" | "completion" | "loc" | "type">>;
@@ -225,6 +226,9 @@ async function SearchContent({
             faqs={landing.guide.faqs}
           />
         </div>
+      )}
+      {landing?.location && !landing.type && f.completion !== "off_plan" && (
+        <TypeLandingLinks location={landing.location} purpose={f.purpose} />
       )}
     </>
   );

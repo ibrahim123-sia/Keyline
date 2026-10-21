@@ -166,6 +166,10 @@ export const search = {
     poly: "Drawn area",
     agent: "Agent: {name}",
   },
+  landing: {
+    byType: "{area} by property type",
+    typeLink: "{type} ({count})",
+  },
   meta: {
     description:
       "{heading}: {count} with photos, prices, payment plans and real travel times to schools and shops.",
