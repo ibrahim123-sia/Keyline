@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRightIcon, BadgeCheckIcon, Building2Icon, InfoIcon } from "lucide-react";
 import { cn } from "cn";
 import { handoverLabel } from "@/components/site/listings/listing-card";
@@ -313,12 +314,13 @@ export function Investment({
         ))}
       </dl>
       <p className="text-[13px] text-text-muted">{t.investment.netNote}</p>
-      <a
+      <Link
         href="/tools/rental-returns"
+        prefetch={false}
         className="inline-flex items-center gap-1 text-[14.5px] font-semibold text-accent hover:underline"
       >
         {t.investment.simulator} <ArrowRightIcon className="size-4 rtl:rotate-180" aria-hidden />
-      </a>
+      </Link>
     </Section>
   );
 }

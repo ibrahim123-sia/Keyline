@@ -71,7 +71,7 @@ export const adminNav: AdminNavGroup[] = [
       },
       { key: "faqs", href: "/admin/website/faqs", icon: CircleHelpIcon, enabled: true },
       { key: "menus", href: "/admin/website/menus", icon: MenuSquareIcon, enabled: true },
-      { key: "seo", href: "/admin/website/seo", icon: SearchIcon, enabled: false },
+      { key: "seo", href: "/admin/website/seo", icon: SearchIcon, enabled: true },
     ],
   },
   {

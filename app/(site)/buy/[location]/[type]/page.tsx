@@ -2,13 +2,20 @@ import { notFound } from "next/navigation";
 import { SearchPage } from "@/components/site/search/search-page";
 import { searchMetadata } from "@/features/search/metadata";
 import { landingFor } from "@/features/search/page-data";
+import { redirectIfMoved } from "@/features/seo/serve";
 
 // Unknown areas or types answer with a real 404, so the slugs are checked before streaming.
 export const instant = false;
 
 export async function generateMetadata(props: PageProps<"/buy/[location]/[type]">) {
   const { location, type } = await props.params;
-  if (!(await landingFor(location, type))) notFound();
+  if (!(await landingFor(location, type))) {
+    await redirectIfMoved(`/buy/${location}/${type}`, {
+      path: `/buy/${location}`,
+      rest: `/${type}`,
+    });
+    notFound();
+  }
   return searchMetadata({ purpose: "sale", loc: [location], type: [type] }, props.searchParams);
 }
 
@@ -16,7 +23,13 @@ export async function generateMetadata(props: PageProps<"/buy/[location]/[type]"
 export default async function BuyAreaTypePage(props: PageProps<"/buy/[location]/[type]">) {
   const { location, type } = await props.params;
   const landing = await landingFor(location, type);
-  if (!landing) notFound();
+  if (!landing) {
+    await redirectIfMoved(`/buy/${location}/${type}`, {
+      path: `/buy/${location}`,
+      rest: `/${type}`,
+    });
+    notFound();
+  }
   return (
     <SearchPage
       preset={{ purpose: "sale", loc: [location], type: [type] }}

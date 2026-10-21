@@ -2,6 +2,9 @@ import { and, eq, inArray } from "drizzle-orm";
 import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { seoRedirects } from "@/db/schema/seo";
+import { normalizePath } from "./redirect-schema";
+
+export { normalizePath };
 
 /**
  * Automatic 301s when a slug changes (01 §4, 08 §6). Keeps the table free of chains
@@ -90,18 +93,6 @@ export async function redirectSlugChange(
       actorId: input.actorId,
     });
   }
-}
-
-export function normalizePath(path: string): string {
-  let p = path.trim();
-  try {
-    if (/^https?:\/\//i.test(p)) p = new URL(p).pathname;
-  } catch {
-    /* keep as typed */
-  }
-  if (!p.startsWith("/")) p = `/${p}`;
-  if (p.length > 1) p = p.replace(/\/+$/, "");
-  return p.toLowerCase();
 }
 
 export async function findRedirect(db: DbOrTx, path: string) {

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
@@ -39,6 +40,7 @@ import { format } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 import { property as t } from "@/lib/i18n/dictionaries/property";
 import { mediaVariant } from "@/lib/media-src";
+import { redirectIfMoved } from "@/features/seo/serve";
 
 /** Per request: the slug (and the visitor's currency cookie) decide what renders; data is cached. */
 export const instant = false;
@@ -54,7 +56,11 @@ function addressLine(l: PublicListing): string {
 export async function generateMetadata(props: PageProps<"/property/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
   const l = await getPublicListing(slug);
-  if (!l) return {};
+  if (!l) {
+    // Checked here too: metadata is resolved before the page streams, so bots get a real 308.
+    await redirectIfMoved(`/property/${slug}`);
+    return {};
+  }
   const [seo, market, general] = await Promise.all([
     getSettings("seo"),
     getSettings("market"),
@@ -244,13 +250,14 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
                     rates,
                   ).text,
                 })}
-                <a
+                <Link
                   href="/tools/mortgage"
+                  prefetch={false}
                   className="inline-flex items-center gap-1 font-semibold text-accent hover:underline"
                 >
                   {t.mortgage.rentLink}{" "}
                   <ArrowRightIcon className="size-4 rtl:rotate-180" aria-hidden />
-                </a>
+                </Link>
               </p>
             )}
             <Investment listing={l} ctx={ctx} roi={market.roi} />

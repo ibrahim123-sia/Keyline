@@ -23,6 +23,7 @@ import type { Rates } from "@/lib/currency-display";
 import { format, pages, site } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 import { formatArea, formatDistance, formatDuration, type AreaUnit } from "@/lib/units";
+import { redirectIfMoved } from "@/features/seo/serve";
 
 /** Per request: the slug (and the visitor's currency cookie) decide what renders; data is cached. */
 export const instant = false;
@@ -37,7 +38,10 @@ const dateFormat = new Intl.DateTimeFormat("en", {
 export async function generateMetadata(props: PageProps<"/projects/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
   const p = await getPublicProject(slug);
-  if (!p) return { title: site.errors.notFoundTitle };
+  if (!p) {
+    await redirectIfMoved(`/projects/${slug}`);
+    return { title: site.errors.notFoundTitle };
+  }
   const [seo, general] = await Promise.all([getSettings("seo"), getSettings("general")]);
   const title = projectTitle(p, seo.projectTitlePattern, general.agencyName);
   const description = projectDescription(p);
@@ -85,7 +89,10 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
 export default async function ProjectPage(props: PageProps<"/projects/[slug]">) {
   const { slug } = await props.params;
   const p = await getPublicProject(slug);
-  if (!p) notFound();
+  if (!p) {
+    await redirectIfMoved(`/projects/${slug}`);
+    notFound();
+  }
   const t = pages.projects;
   const [{ code, rates }, market, contact, integrations] = await Promise.all([
     visitorCurrency(),

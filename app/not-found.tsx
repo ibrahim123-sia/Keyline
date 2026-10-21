@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { NotFoundContent } from "@/components/site/not-found-content";
+import { NotFoundLogger } from "@/components/site/not-found-logger";
 import { SiteChrome } from "@/components/site/site-chrome";
 import { site } from "@/lib/i18n";
 
@@ -10,6 +12,9 @@ export default function NotFound() {
   return (
     <SiteChrome>
       <NotFoundContent />
+      <Suspense fallback={null}>
+        <NotFoundLogger />
+      </Suspense>
     </SiteChrome>
   );
 }

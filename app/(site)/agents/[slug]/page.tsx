@@ -10,6 +10,7 @@ import { getSettings } from "@/features/settings/queries";
 import { cardContext } from "@/features/site/card-context";
 import { siteOrigin, siteUrl } from "@/features/site/url";
 import { format, pages, site } from "@/lib/i18n";
+import { redirectIfMoved } from "@/features/seo/serve";
 
 /** Per request: the slug (and the visitor's currency cookie) decide what renders; data is cached. */
 export const instant = false;
@@ -17,7 +18,10 @@ export const instant = false;
 export async function generateMetadata(props: PageProps<"/agents/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
   const a = await getPublicAgent(slug);
-  if (!a) return { title: site.errors.notFoundTitle };
+  if (!a) {
+    await redirectIfMoved(`/agents/${slug}`);
+    return { title: site.errors.notFoundTitle };
+  }
   const title = a.seo.title || (a.title ? `${a.name}, ${a.title}` : a.name);
   const description = a.seo.description || a.bio?.slice(0, 155) || undefined;
   const og = a.seo.ogImageId ? await getPublicMedia(a.seo.ogImageId) : a.photo;
@@ -39,7 +43,10 @@ export async function generateMetadata(props: PageProps<"/agents/[slug]">): Prom
 export default async function AgentPage(props: PageProps<"/agents/[slug]">) {
   const { slug } = await props.params;
   const a = await getPublicAgent(slug);
-  if (!a) notFound();
+  if (!a) {
+    await redirectIfMoved(`/agents/${slug}`);
+    notFound();
+  }
   const t = pages.agents;
   const [ctx, contact] = await Promise.all([cardContext(), getSettings("contact")]);
   return (

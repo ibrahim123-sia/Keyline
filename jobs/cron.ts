@@ -8,6 +8,7 @@ import { cleanupStaleUploads } from "@/features/media/maintenance";
 import { recountAllMediaUsage } from "@/features/media/usage";
 import { refreshStalePois, refreshStaleProjectPois } from "@/features/pois/distances";
 import { dailyListingMaintenance } from "@/features/properties/maintenance";
+import { pruneNotFound } from "@/features/seo/not-found-log";
 import { loadSettings } from "@/features/settings/queries";
 import { queueViewingReminders } from "@/features/viewings/notify";
 import { newId } from "@/lib/ids";
@@ -99,6 +100,12 @@ export const cronTasks: CronTask[] = [
   },
   // Daily 02:00-03:30: clean-ups and repairs.
   { name: "rate-limits.purge", schedule: "daily at 02:00", due: at(2), run: () => purgeExpired() },
+  {
+    name: "seo.not-found-prune",
+    schedule: "daily at 03:15",
+    due: at(3, 15),
+    run: async () => ({ removed: await pruneNotFound(await getDb()) }),
+  },
   {
     name: "media.recount",
     schedule: "daily at 03:30",

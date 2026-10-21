@@ -10,6 +10,7 @@ import { getPublicMedia } from "@/features/media/queries";
 import { cardContext } from "@/features/site/card-context";
 import { siteOrigin } from "@/features/site/url";
 import { format, pages, site } from "@/lib/i18n";
+import { redirectIfMoved } from "@/features/seo/serve";
 
 /** Per request: the slug (and the visitor's currency cookie) decide what renders; data is cached. */
 export const instant = false;
@@ -17,7 +18,10 @@ export const instant = false;
 export async function generateMetadata(props: PageProps<"/developers/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
   const d = await getPublicDeveloper(slug);
-  if (!d) return { title: site.errors.notFoundTitle };
+  if (!d) {
+    await redirectIfMoved(`/developers/${slug}`);
+    return { title: site.errors.notFoundTitle };
+  }
   const title = d.seo.title || d.name;
   const description = d.seo.description || d.description?.slice(0, 155) || undefined;
   const og = d.seo.ogImageId ? await getPublicMedia(d.seo.ogImageId) : d.logo;
@@ -34,7 +38,10 @@ export async function generateMetadata(props: PageProps<"/developers/[slug]">): 
 export default async function DeveloperPage(props: PageProps<"/developers/[slug]">) {
   const { slug } = await props.params;
   const d = await getPublicDeveloper(slug);
-  if (!d) notFound();
+  if (!d) {
+    await redirectIfMoved(`/developers/${slug}`);
+    notFound();
+  }
   const t = pages.developers;
   const ctx = await cardContext();
   return (

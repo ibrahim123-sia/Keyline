@@ -24,12 +24,11 @@ import {
   propertyMedia,
   propertyPois,
 } from "@/db/schema/properties";
-import { seoRedirects } from "@/db/schema/seo";
 import { mediaUrl } from "@/features/media/queries";
 import { isPlanComplete, type PlanStep } from "@/features/payment-plans/schema";
 import { loadPlan } from "@/features/payment-plans/store";
 import { liveStatuses } from "@/features/properties/status";
-import { findRedirect } from "@/features/seo/redirects";
+import { servedRedirect } from "@/features/seo/serve";
 import { tags } from "@/lib/cache-tags";
 import { richTextToPlain } from "@/lib/rich-text";
 import { publicPoint, type PublicPoint } from "./public-point";
@@ -470,12 +469,5 @@ export async function getPublicListing(slug: string): Promise<PublicListing | nu
 export async function listingRedirect(
   slug: string,
 ): Promise<{ to: string; permanent: boolean } | null> {
-  const db = await getDb();
-  const row = await findRedirect(db, `/property/${slug}`);
-  if (!row) return null;
-  await db
-    .update(seoRedirects)
-    .set({ hits: sql`${seoRedirects.hits} + 1`, lastHitAt: new Date() })
-    .where(eq(seoRedirects.id, row.id));
-  return { to: row.toPath, permanent: row.type !== 302 };
+  return servedRedirect(`/property/${slug}`);
 }

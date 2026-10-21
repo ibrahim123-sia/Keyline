@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { useId, useState } from "react";
 import { monthlyPayment } from "@/features/listings/finance";
@@ -111,13 +112,14 @@ export function MortgageMini({
       </p>
       <div className="flex flex-wrap items-center justify-between gap-2 text-[13px] text-text-muted">
         <span>{t.mortgage.disclaimer}</span>
-        <a
+        <Link
           href="/tools/mortgage"
+          prefetch={false}
           className="inline-flex items-center gap-1 font-semibold text-accent hover:underline"
         >
           {t.mortgage.fullCalculator}{" "}
           <ArrowRightIcon className="size-4 rtl:rotate-180" aria-hidden />
-        </a>
+        </Link>
       </div>
     </div>
   );
