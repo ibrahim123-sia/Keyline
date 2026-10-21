@@ -58,7 +58,7 @@ export const adminNav: AdminNavGroup[] = [
   {
     label: "website",
     items: [
-      { key: "pages", href: "/admin/website/pages", icon: FileTextIcon, enabled: false },
+      { key: "pages", href: "/admin/website/pages", icon: FileTextIcon, enabled: true },
       { key: "blog", href: "/admin/website/blog", icon: NewspaperIcon, enabled: false },
       { key: "areaGuides", href: "/admin/website/area-guides", icon: MapIcon, enabled: false },
       { key: "menus", href: "/admin/website/menus", icon: MenuSquareIcon, enabled: false },
