@@ -92,6 +92,7 @@ export const visitorEventTypes = [
   "whatsapp_click",
   "call_click",
 ] as const;
+export type VisitorEventType = (typeof visitorEventTypes)[number];
 
 /** The visitor's journey (kept 180 days, then rolled up into daily_metrics). */
 export const visitorEvents = pgTable(
@@ -192,12 +193,16 @@ export type LeadSource = (typeof leadSources)[number];
 /** What a lead is looking for (05 §10), filled from forms, listings, chats and searches. */
 export type Requirements = {
   purpose?: "sale" | "rent";
+  /** Minor units of `currency`. */
   budgetMin?: number | null;
   budgetMax?: number | null;
   currency?: string;
+  /** "lead": they said it; "listing": a band around the home they asked about. */
+  budgetFrom?: "lead" | "listing";
   locationIds?: string[];
   propertyTypeIds?: string[];
   bedsMin?: number | null;
+  /** now | 1_3_months | 3_6_months | 6_12_months | later | browsing */
   timeline?: string;
   finance?: "cash" | "mortgage" | "unknown";
   moveInDate?: string | null;

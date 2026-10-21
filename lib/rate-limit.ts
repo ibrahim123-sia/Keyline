@@ -13,6 +13,8 @@ export const rateLimitRules = {
   chatMinute: { limit: 20, windowSeconds: 60 },
   chatDay: { limit: 200, windowSeconds: 86_400 },
   tool: { limit: 30, windowSeconds: 60 },
+  /** Site beacons per (truncated) IP: page views, listing views, clicks. */
+  track: { limit: 120, windowSeconds: 60 },
   login: { limit: 5, windowSeconds: 60 },
   loginFailures: { limit: 5, windowSeconds: 900 },
 } satisfies Record<string, RateLimitRule>;

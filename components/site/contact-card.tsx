@@ -1,6 +1,8 @@
 import { MailIcon, MessageCircleIcon, PhoneIcon } from "lucide-react";
 import { cn } from "cn";
 import { format, pages } from "@/lib/i18n";
+import { TrackedContactLink } from "./tracked-contact-link";
+import type { TrackEvent } from "./visitor-tracker";
 
 const digits = (phone: string) => phone.replace(/[^\d]/g, "");
 
@@ -22,6 +24,7 @@ export function ContactCard({
   email,
   className,
   id,
+  entity,
 }: {
   title?: string;
   /** What the visitor asks about, e.g. the project name. */
@@ -32,6 +35,8 @@ export function ContactCard({
   email?: string | null;
   className?: string;
   id?: string;
+  /** What the page is about, for click tracking. */
+  entity?: { type: NonNullable<TrackEvent["entityType"]>; id: string };
 }) {
   const t = pages.contactCard;
   if (!whatsapp && !phone && !email) return null;
@@ -46,22 +51,29 @@ export function ContactCard({
     >
       <h2 className="font-display text-[20px] text-ink">{heading}</h2>
       {whatsapp && (
-        <a
+        <TrackedContactLink
+          kind="whatsapp"
+          refLabel={subject}
+          entityType={entity?.type}
+          entityId={entity?.id}
           href={whatsappHref(whatsapp, format(t.whatsappMessage, { name: subject, url: pageUrl }))}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(link, "bg-primary text-primary-foreground hover:bg-primary/90")}
         >
           <MessageCircleIcon className="size-5" aria-hidden /> {t.whatsapp}
-        </a>
+        </TrackedContactLink>
       )}
       {phone && (
-        <a
+        <TrackedContactLink
+          kind="call"
+          entityType={entity?.type}
+          entityId={entity?.id}
           href={`tel:+${digits(phone)}`}
           className={cn(link, "border border-ink/20 text-ink hover:border-ink/40")}
         >
           <PhoneIcon className="size-5" aria-hidden /> {t.call}
-        </a>
+        </TrackedContactLink>
       )}
       {email && (
         <a

@@ -26,6 +26,7 @@ import { ListingMap } from "@/components/site/property/listing-map";
 import { MortgageMini } from "@/components/site/property/mortgage-mini";
 import { NearbyList } from "@/components/site/property/nearby-list";
 import { RecentlyViewed } from "@/components/site/property/recently-viewed";
+import { TrackListingView } from "@/components/site/visitor-tracker";
 import { SharePrint } from "@/components/site/property/share-print";
 import { getPublicListing, listingRedirect, type PublicListing } from "@/features/listings/public";
 import { similarListings } from "@/features/listings/similar";
@@ -243,6 +244,7 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
 
         {!gone && similarSection}
         <RecentlyViewed currentId={l.id} ctx={cardCtx} />
+        <TrackListingView propertyId={l.id} />
       </div>
       {!gone && <ContactBottomBar info={info} />}
     </>

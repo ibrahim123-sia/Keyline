@@ -561,6 +561,7 @@ export default async function ProjectPage(props: PageProps<"/projects/[slug]">) 
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <ContactCard
             id="contact"
+            entity={{ type: "project", id: p.id }}
             subject={p.name}
             pageUrl={siteUrl(`/projects/${p.slug}`)}
             whatsapp={contact.whatsapp}

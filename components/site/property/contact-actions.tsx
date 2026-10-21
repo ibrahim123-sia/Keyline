@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import type { InquiryKind } from "@/features/inquiries/schema";
 import { property as t } from "@/lib/i18n/dictionaries/property";
+import { TrackedContactLink } from "../tracked-contact-link";
 import { InquiryForm } from "./inquiry-form";
 
 export type ContactInfo = {
@@ -65,17 +66,30 @@ export function ContactActions({ info }: { info: ContactInfo }) {
       </Button>
       {info.whatsappHref && (
         <Button asChild variant="outline-site" size="md">
-          <a href={info.whatsappHref} target="_blank" rel="noopener noreferrer">
+          <TrackedContactLink
+            kind="whatsapp"
+            refLabel={info.reference}
+            entityType="property"
+            entityId={info.propertyId}
+            href={info.whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <MessageCircleIcon aria-hidden /> {t.contact.whatsapp}
-          </a>
+          </TrackedContactLink>
         </Button>
       )}
       {info.phone &&
         (showNumber ? (
           <Button asChild variant="outline-site" size="md">
-            <a href={`tel:${info.phone}`}>
+            <TrackedContactLink
+              kind="call"
+              entityType="property"
+              entityId={info.propertyId}
+              href={`tel:${info.phone}`}
+            >
               <PhoneIcon aria-hidden /> {info.phone}
-            </a>
+            </TrackedContactLink>
           </Button>
         ) : (
           <Button variant="outline-site" size="md" onClick={() => setShowNumber(true)}>
@@ -121,15 +135,28 @@ export function ContactBottomBar({ info }: { info: ContactInfo }) {
       </Button>
       {info.whatsappHref ? (
         <Button asChild variant="outline-site" size="md" className="flex-1">
-          <a href={info.whatsappHref} target="_blank" rel="noopener noreferrer">
+          <TrackedContactLink
+            kind="whatsapp"
+            refLabel={info.reference}
+            entityType="property"
+            entityId={info.propertyId}
+            href={info.whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <MessageCircleIcon aria-hidden /> {t.contact.whatsapp}
-          </a>
+          </TrackedContactLink>
         </Button>
       ) : info.phone ? (
         <Button asChild variant="outline-site" size="md" className="flex-1">
-          <a href={`tel:${info.phone}`}>
+          <TrackedContactLink
+            kind="call"
+            entityType="property"
+            entityId={info.propertyId}
+            href={`tel:${info.phone}`}
+          >
             <PhoneIcon aria-hidden /> {t.contact.call}
-          </a>
+          </TrackedContactLink>
         </Button>
       ) : null}
       {dialog}

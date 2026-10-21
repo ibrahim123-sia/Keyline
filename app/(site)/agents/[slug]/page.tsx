@@ -114,6 +114,7 @@ export default async function AgentPage(props: PageProps<"/agents/[slug]">) {
           </header>
           <aside className="flex flex-col gap-2 lg:sticky lg:top-24 lg:self-start">
             <ContactCard
+              entity={{ type: "agent", id: a.id }}
               title={format(t.contact, { name: a.name.split(/\s+/)[0]! })}
               subject={a.name}
               pageUrl={siteUrl(`/agents/${a.slug}`)}

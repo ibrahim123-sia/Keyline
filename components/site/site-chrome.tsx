@@ -5,6 +5,7 @@ import { site } from "@/lib/i18n";
 import { CookieBanner } from "./cookie-banner";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
+import { VisitorTracker } from "./visitor-tracker";
 
 /**
  * Everything around a public page: skip link, header, footer, notifications and the cookie
@@ -26,6 +27,7 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
       </main>
       <SiteFooter />
       <Toaster position="bottom-center" />
+      <VisitorTracker />
       <CookieBanner
         text={legal.cookieBanner.text}
         analyticsLabel={legal.cookieBanner.analyticsLabel}
