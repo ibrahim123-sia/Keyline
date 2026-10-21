@@ -14,6 +14,8 @@ export const admin = {
     pages: "Pages",
     blog: "Blog",
     areaGuides: "Area guides",
+    testimonials: "Testimonials",
+    faqs: "FAQs",
     menus: "Menus",
     seo: "SEO",
     media: "Media",

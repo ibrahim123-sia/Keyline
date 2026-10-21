@@ -1,7 +1,13 @@
 import { and, eq, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
 import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
-import { areaGuideMedia, areaGuides, postCategories, posts } from "@/db/schema/content";
+import {
+  areaGuideMedia,
+  areaGuides,
+  postCategories,
+  posts,
+  testimonials,
+} from "@/db/schema/content";
 import type { MediaUse } from "@/features/media/usage";
 
 /** Where website content uses library files (08 §3-5), for features/media/usage.ts. */
@@ -124,4 +130,16 @@ export const areaGuideUses: Source = async (db, ids) => {
       href: href(p.id),
     })),
   ];
+};
+
+export const testimonialUses: Source = async (db, ids) => {
+  const rows = await db
+    .select({ id: testimonials.id, name: testimonials.name, photoId: testimonials.photoId })
+    .from(testimonials)
+    .where(and(eq(testimonials.agencyId, currentAgencyId()), inArray(testimonials.photoId, ids)));
+  return rows.map((r) => ({
+    mediaId: r.photoId!,
+    label: `Testimonial from ${r.name}: photo`,
+    href: "/admin/website/testimonials",
+  }));
 };
