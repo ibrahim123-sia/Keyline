@@ -1,3 +1,4 @@
+import { whatsappNotifyJob, whatsappSendJob } from "@/features/integrations/whatsapp/jobs";
 import { leadProcessJob, leadScoreJob } from "@/features/leads/process";
 import { mediaFetchUrlJob } from "@/features/media/fetch-url";
 import { mediaProcessJob } from "@/features/media/process";
@@ -11,6 +12,8 @@ const jobs: JobDefinition[] = [
   emailSendJob as JobDefinition,
   leadProcessJob as JobDefinition,
   leadScoreJob as JobDefinition,
+  whatsappSendJob as JobDefinition,
+  whatsappNotifyJob as JobDefinition,
   mediaProcessJob as JobDefinition,
   mediaFetchUrlJob as JobDefinition,
   poiComputeJob as JobDefinition,
