@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { Badge } from "@/components/site/badge-chip";
 import { Breadcrumb, type Crumb } from "@/components/site/breadcrumb";
+import { JsonLd } from "@/components/site/json-ld";
 import { ListingCard, type CardContext } from "@/components/site/listings/listing-card";
 import { PaymentPlanView } from "@/components/payment-plan/plan-view";
 import { resolveMapStyle } from "@/components/maps/map-style";
@@ -30,6 +31,7 @@ import { TrackListingView } from "@/components/site/visitor-tracker";
 import { SharePrint } from "@/components/site/property/share-print";
 import { getPublicListing, listingRedirect, type PublicListing } from "@/features/listings/public";
 import { similarListings } from "@/features/listings/similar";
+import { listingStructuredData, listingTitle } from "@/features/seo/entity-seo";
 import { getSettings } from "@/features/settings/queries";
 import { visitorCurrency } from "@/features/site/currency";
 import { displayPrice } from "@/lib/currency-display";
@@ -53,17 +55,23 @@ export async function generateMetadata(props: PageProps<"/property/[slug]">): Pr
   const { slug } = await props.params;
   const l = await getPublicListing(slug);
   if (!l) return {};
+  const [seo, market, general] = await Promise.all([
+    getSettings("seo"),
+    getSettings("market"),
+    getSettings("general"),
+  ]);
+  const title = listingTitle(l, seo.listingTitlePattern, market, general.agencyName);
   const description = (l.seo.description || l.descriptionText).slice(0, 160) || undefined;
   const canonical = l.seo.canonicalUrl || `/property/${l.slug}`;
   const image = l.seo.ogImageUrl ? mediaVariant(l.seo.ogImageUrl, 1200) : undefined;
   return {
-    title: l.seo.title || l.title,
+    title,
     description,
     alternates: { canonical },
     robots: l.seo.noindex ? { index: false, follow: true } : undefined,
     openGraph: {
       type: "website",
-      title: l.seo.title || l.title,
+      title,
       description,
       url: canonical,
       images: image ? [{ url: image, width: 1200 }] : undefined,
@@ -145,6 +153,7 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
     <>
       <div className="container-wide flex flex-col gap-6 pt-6 pb-28 lg:pb-16">
         <Breadcrumb items={crumbs} baseUrl={appUrl()} />
+        <JsonLd data={listingStructuredData(l, market, appUrl())} />
 
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 flex-col gap-2">

@@ -8,6 +8,7 @@ import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import { SiteToaster } from "./site-toaster";
 import { VisitorTracker } from "./visitor-tracker";
+import { SiteStructuredData } from "./site-structured-data";
 
 /**
  * Everything around a public page: skip link, announcement bar, header, footer,
@@ -24,6 +25,7 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
       >
         {site.a11y.skipToContent}
       </a>
+      <SiteStructuredData />
       <AnnouncementBar />
       <SiteHeader />
       <main id="main" className="min-h-[60vh]">

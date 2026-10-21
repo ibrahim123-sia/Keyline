@@ -1,20 +1,16 @@
+import { fillPattern } from "@/features/seo/titles";
+
 /**
  * Title patterns from Settings -> SEO ("%project% by %developer% in %area%"): filled with the
  * page's values; when a value the pattern needs is missing, the fallback is used instead of a
- * title with gaps.
+ * title with gaps. Same rules as features/seo/titles.ts (studios, spacing).
  */
 export function fillTitlePattern(
   pattern: string,
   values: Record<string, string | null | undefined>,
   fallback: string,
 ): string {
-  let missing = false;
-  const filled = pattern.replace(/%(\w+)%/g, (_, key: string) => {
-    const v = values[key];
-    if (!v) missing = true;
-    return v ?? "";
-  });
-  return missing ? fallback : filled.replace(/\s+/g, " ").trim();
+  return fillPattern(pattern, values, fallback);
 }
 
 /** Plain text from stored rich-text HTML, for meta descriptions. */

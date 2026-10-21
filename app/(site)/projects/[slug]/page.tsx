@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { resolveMapStyle } from "@/components/maps/map-style";
 import { PaymentPlanView } from "@/components/payment-plan/plan-view";
 import { Breadcrumb } from "@/components/site/breadcrumb";
+import { JsonLd } from "@/components/site/json-ld";
 import { ContactCard } from "@/components/site/contact-card";
 import { ListingCard, handoverLabel } from "@/components/site/listings/listing-card";
 import { PlaceMap } from "@/components/site/maps/place-map";
@@ -14,7 +15,8 @@ import { getPublicMedia } from "@/features/media/queries";
 import { getPublicProject, type PublicProject } from "@/features/projects/public";
 import { getSettings } from "@/features/settings/queries";
 import { visitorCurrency } from "@/features/site/currency";
-import { fillTitlePattern, htmlToText } from "@/features/site/seo";
+import { projectStructuredData, projectTitle } from "@/features/seo/entity-seo";
+import { htmlToText } from "@/features/site/seo";
 import { siteOrigin, siteUrl } from "@/features/site/url";
 import { formatFor } from "@/features/properties/format";
 import type { Rates } from "@/lib/currency-display";
@@ -32,29 +34,13 @@ const dateFormat = new Intl.DateTimeFormat("en", {
   timeZone: "UTC",
 });
 
-async function projectTitle(p: PublicProject): Promise<string> {
-  if (p.seo.title) return p.seo.title;
-  const seo = await getSettings("seo");
-  return fillTitlePattern(
-    seo.projectTitlePattern,
-    {
-      project: p.name,
-      developer: p.developer?.name,
-      area: p.locationPath.at(-1)?.name,
-    },
-    p.name,
-  );
-}
-
 export async function generateMetadata(props: PageProps<"/projects/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
   const p = await getPublicProject(slug);
   if (!p) return { title: site.errors.notFoundTitle };
-  const title = await projectTitle(p);
-  const description =
-    p.seo.description ||
-    htmlToText(p.descriptionHtml) ||
-    [p.name, p.developer?.name, p.locationPath.at(-1)?.name].filter(Boolean).join(" · ");
+  const [seo, general] = await Promise.all([getSettings("seo"), getSettings("general")]);
+  const title = projectTitle(p, seo.projectTitlePattern, general.agencyName);
+  const description = projectDescription(p);
   const og = p.seo.ogImageId ? await getPublicMedia(p.seo.ogImageId) : null;
   const image = og?.url ?? p.photos[0]?.url;
   return {
@@ -69,6 +55,14 @@ export async function generateMetadata(props: PageProps<"/projects/[slug]">): Pr
       images: image ? [{ url: `${image}?w=1200&q=75`, width: 1200 }] : undefined,
     },
   };
+}
+
+function projectDescription(p: PublicProject): string {
+  return (
+    p.seo.description ||
+    htmlToText(p.descriptionHtml) ||
+    [p.name, p.developer?.name, p.locationPath.at(-1)?.name].filter(Boolean).join(" · ")
+  );
 }
 
 function sizeRange(min: number | null, max: number | null, unit: AreaUnit): string {
@@ -127,6 +121,7 @@ export default async function ProjectPage(props: PageProps<"/projects/[slug]">) 
           ]}
           baseUrl={siteOrigin()}
         />
+        <JsonLd data={projectStructuredData(p, market, siteOrigin(), projectDescription(p))} />
         <header className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full bg-surface px-3 py-1 text-[12.5px] font-semibold text-ink shadow-soft">

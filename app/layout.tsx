@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getSettings } from "@/features/settings/queries";
 import { getPublicMedia } from "@/features/media/queries";
+import { siteTitleTemplate } from "@/features/seo/titles";
 import { fontVariableClasses } from "@/lib/fonts";
 import { brandingCss } from "@/lib/tokens";
 import "./globals.css";
@@ -17,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: {
       default: agency,
       // Settings pattern like "%page% | %agency%"; Next fills %s with the page title.
-      template: seo.titlePattern.replace("%page%", "%s").replace("%agency%", agency),
+      template: siteTitleTemplate(seo.titlePattern, agency),
     },
     description: seo.defaultMetaDescription || general.shortDescription || undefined,
     applicationName: agency,
