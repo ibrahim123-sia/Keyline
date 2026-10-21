@@ -48,6 +48,7 @@ import {
   villa,
   type Picture,
 } from "./images";
+import { seedPages } from "./pages";
 import { rng } from "./rng";
 import type { ListingSpec, SeedPreset } from "./types";
 
@@ -691,7 +692,7 @@ export async function seedPreset(
     slug: "home",
     status: "published",
     isHome: true,
-    template: "landing",
+    template: "default",
     sections: [
       {
         id: "hero",
@@ -750,6 +751,15 @@ export async function seedPreset(
     seoDescription: preset.settings.seo.defaultMetaDescription ?? null,
   });
 
+  progress("Pages");
+  await seedPages(db, preset.key, {
+    images: {
+      living: ofKind("living")[0],
+      villa: ofKind("villa")[1] ?? ofKind("villa")[0],
+      tower: ofKind("tower")[0],
+    },
+  });
+
   progress("Badges and nearby places");
   await refreshAutoBadges(db, listingIds, now);
   for (const id of listingIds) await computePropertyPois(db, id, now);
@@ -772,6 +782,7 @@ export async function seedPreset(
     "media",
     "property_pois",
     "property_badges",
+    "pages",
   ])
     counts[t] = await count(t);
   return { admins, counts };

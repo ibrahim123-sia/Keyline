@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { havenDune } from "@/db/seed/presets/haven-dune";
+import { findPublicPage } from "@/features/cms/page-public";
 import { getHomePage } from "@/features/cms/queries";
 import { sectionInputSchema } from "@/features/cms/sections";
 import { seedPreset, type SeedResult } from "@/db/seed/run";
@@ -98,10 +99,50 @@ describe("demo seed: Haven & Dune", () => {
       "featured_listings",
       "projects_showcase",
       "areas_grid",
+      "testimonials",
+      "blog_posts",
+      "faq",
     ]);
     const [row] = await rows<{ sections: unknown[] }>("select sections from pages where is_home");
     const schema = sectionInputSchema();
     for (const section of row!.sections) expect(schema.safeParse(section).success).toBe(true);
+  });
+
+  it("publishes the seed pages (08 §1) and links the policies in Settings -> Legal", async () => {
+    const list = await rows<{ slug: string; template: string; status: string; revisions: number }>(
+      `select slug, template, status,
+         (select count(*)::int from page_revisions r where r.page_id = p.id) as revisions
+       from pages p where not is_home order by slug`,
+    );
+    expect(list.map((p) => [p.slug, p.template])).toEqual([
+      ["about", "default"],
+      ["contact", "default"],
+      ["cookie-policy", "legal"],
+      ["how-we-verify", "legal"],
+      ["off-plan-guide", "default"],
+      ["privacy-policy", "legal"],
+      ["sell-with-us", "default"],
+      ["terms", "legal"],
+    ]);
+    expect(list.every((p) => p.status === "published" && p.revisions === 1)).toBe(true);
+    const page = await findPublicPage("sell-with-us");
+    expect(page?.sections.map((x) => x.type)).toEqual([
+      "hero_simple",
+      "promise_strip",
+      "text_image",
+      "form",
+      "testimonials",
+      "faq",
+    ]);
+    // Images point at pictures the seed drew.
+    expect(page?.sections[0]?.props).toMatchObject({ imageId: expect.any(String) });
+    const legal = await loadSettings("legal", await getDb());
+    const ids = await rows<{ id: string; slug: string }>("select id, slug from pages");
+    const slugOf = (id: string | null) => ids.find((r) => r.id === id)?.slug;
+    expect(slugOf(legal.privacyPageId)).toBe("privacy-policy");
+    expect(slugOf(legal.termsPageId)).toBe("terms");
+    expect(slugOf(legal.cookiePageId)).toBe("cookie-policy");
+    expect(slugOf(legal.howWeVerifyPageId)).toBe("how-we-verify");
   });
 
   it("sets the market up and the listings are searchable", async () => {
