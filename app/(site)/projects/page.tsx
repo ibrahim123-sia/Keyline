@@ -13,6 +13,9 @@ import { siteOrigin } from "@/features/site/url";
 import { projectStatuses } from "@/db/schema/projects";
 import { format, pages } from "@/lib/i18n";
 
+/** Per request: the slug (and the visitor's currency cookie) decide what renders; data is cached. */
+export const instant = false;
+
 export const metadata: Metadata = {
   title: pages.projects.title,
   description: pages.projects.intro,

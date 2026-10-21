@@ -36,6 +36,9 @@ import { format } from "@/lib/i18n";
 import { property as t } from "@/lib/i18n/dictionaries/property";
 import { mediaVariant } from "@/lib/media-src";
 
+/** Per request: the slug (and the visitor's currency cookie) decide what renders; data is cached. */
+export const instant = false;
+
 const appUrl = () => (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
 /** "Garden villa · Pier Seven, 7 Quay Road, Old Harbour, Coastal City" — never the unit number. */

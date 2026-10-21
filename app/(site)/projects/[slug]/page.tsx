@@ -22,6 +22,9 @@ import { format, pages, site } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 import { formatArea, formatDistance, formatDuration, type AreaUnit } from "@/lib/units";
 
+/** Per request: the slug (and the visitor's currency cookie) decide what renders; data is cached. */
+export const instant = false;
+
 const dateFormat = new Intl.DateTimeFormat("en", {
   day: "numeric",
   month: "short",

@@ -11,6 +11,9 @@ import { cardContext } from "@/features/site/card-context";
 import { siteOrigin, siteUrl } from "@/features/site/url";
 import { format, pages, site } from "@/lib/i18n";
 
+/** Per request: the slug (and the visitor's currency cookie) decide what renders; data is cached. */
+export const instant = false;
+
 export async function generateMetadata(props: PageProps<"/agents/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
   const a = await getPublicAgent(slug);
