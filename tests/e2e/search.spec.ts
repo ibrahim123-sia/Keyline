@@ -185,7 +185,7 @@ test("search on a phone: full-screen map with a card, filter sheet with a live c
     "Lone cove flat",
   );
   await snap(page, "search-phone-map");
-  await overlay.getByRole("button", { name: "List" }).click();
+  await overlay.getByRole("button", { name: "List", exact: true }).click();
   await expect(overlay).toBeHidden();
 
   await page.getByRole("button", { name: "Filters" }).click();
