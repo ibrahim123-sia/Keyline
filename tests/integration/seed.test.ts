@@ -40,7 +40,26 @@ describe("demo seed: Haven & Dune", () => {
       developers: 3,
       projects: 4,
       properties: 40,
+      conversations: 4,
     });
+    // The demo inbox: WhatsApp, web chat and email, quick replies and one draft to approve.
+    expect(
+      await rows<{ channel: string; n: number }>(
+        "select channel, count(*)::int as n from conversations group by 1 order by 1",
+      ),
+    ).toEqual([
+      { channel: "email", n: 1 },
+      { channel: "web_chat", n: 1 },
+      { channel: "whatsapp", n: 2 },
+    ]);
+    expect(
+      await rows<{ n: number }>(
+        "select count(*)::int as n from approval_queue where status = 'pending'",
+      ),
+    ).toEqual([{ n: 1 }]);
+    expect(await rows<{ n: number }>("select count(*)::int as n from quick_replies")).toEqual([
+      { n: 4 },
+    ]);
     const mix = await rows<{ purpose: string; completion: string; n: number }>(
       "select purpose, completion, count(*)::int as n from properties group by 1, 2 order by 1, 2",
     );

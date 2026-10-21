@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { pages } from "@/db/schema/cms";
+import { seedInbox } from "./inbox";
 import {
   badges,
   developers,
@@ -57,6 +58,10 @@ const DAY = 86_400_000;
 
 /** Tables the demo data fills, children first (a reset empties them in this order). */
 const resetOrder = [
+  "approval_queue",
+  "messages",
+  "conversations",
+  "quick_replies",
   "property_daily_stats",
   "price_history",
   "property_pois",
@@ -759,6 +764,8 @@ export async function seedPreset(
       tower: ofKind("tower")[0],
     },
   });
+  progress("Inbox");
+  await seedInbox(db, { now });
 
   progress("Badges and nearby places");
   await refreshAutoBadges(db, listingIds, now);
@@ -783,6 +790,7 @@ export async function seedPreset(
     "property_pois",
     "property_badges",
     "pages",
+    "conversations",
   ])
     counts[t] = await count(t);
   return { admins, counts };
