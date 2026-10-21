@@ -45,7 +45,7 @@ export const adminNav: AdminNavGroup[] = [
       { key: "dashboard", href: "/admin", icon: LayoutDashboardIcon, enabled: true },
       { key: "inbox", href: "/admin/inbox", icon: InboxIcon, enabled: true },
       { key: "leads", href: "/admin/leads", icon: UsersIcon, enabled: true },
-      { key: "contacts", href: "/admin/contacts", icon: ContactIcon, enabled: false },
+      { key: "contacts", href: "/admin/contacts", icon: ContactIcon, enabled: true },
       { key: "viewings", href: "/admin/viewings", icon: CalendarDaysIcon, enabled: false },
       { key: "campaigns", href: "/admin/campaigns", icon: MegaphoneIcon, enabled: true },
     ],

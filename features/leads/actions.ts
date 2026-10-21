@@ -9,6 +9,7 @@ import { loadSettings } from "@/features/settings/queries";
 import { ActionError, adminAction } from "@/lib/actions";
 import { writeAudit } from "@/lib/audit";
 import { toMinor } from "@/lib/money";
+import { mergeLeads } from "@/features/contacts/merge";
 import { applyLeadAgent, applyLeadStage, applyLeadTag } from "./stage";
 
 const stageMove = {
@@ -166,5 +167,18 @@ export const bulkUpdateLeads = adminAction(
       }
     });
     return result;
+  },
+);
+
+/** Bulk "merge" (09 §4): the other leads join the one kept. */
+export const mergeLeadsAction = adminAction(
+  z.object({ keepId: z.uuid(), ids: z.array(z.uuid()).min(2).max(50) }).strict(),
+  { write: true },
+  async ({ keepId, ids }, ctx) => {
+    const db = await getDb();
+    const merged = await db.transaction((tx) =>
+      mergeLeads(tx, { keepId, otherIds: ids, actor: ctx.actor, now: new Date() }),
+    );
+    return { id: keepId, merged };
   },
 );

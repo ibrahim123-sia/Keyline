@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { bulkUpdateLeads, type LeadBulkResult } from "@/features/leads/actions";
+import { bulkUpdateLeads, mergeLeadsAction, type LeadBulkResult } from "@/features/leads/actions";
 import { builtInLeadViews, durationText, relativeTime } from "@/features/leads/filters";
 import type { LeadRow, LeadStageOption } from "@/features/leads/list";
 import type { SavedView } from "@/features/saved-views/schema";
@@ -173,6 +173,8 @@ export function LeadsManager({
     stage: LeadStageOption;
   } | null>(null);
   const [tagFor, setTagFor] = useState<{ ids: string[]; clear: () => void } | null>(null);
+  const [mergeFor, setMergeFor] = useState<{ ids: string[]; clear: () => void } | null>(null);
+  const [keepId, setKeepId] = useState<string | null>(null);
   const [tag, setTag] = useState("");
 
   async function bulk(
@@ -425,6 +427,18 @@ export function LeadsManager({
                   <DownloadIcon aria-hidden /> Export
                 </a>
               </Button>
+              {!readOnly && ids.length >= 2 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setKeepId(ids[0]!);
+                    setMergeFor({ ids, clear });
+                  }}
+                >
+                  Merge
+                </Button>
+              )}
               {bulkExtra?.(ids, clear)}
             </>
           )}
@@ -448,6 +462,59 @@ export function LeadsManager({
             : Promise.resolve(false)
         }
       />
+      <Dialog open={mergeFor !== null} onOpenChange={(o) => !o && setMergeFor(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Merge {mergeFor?.ids.length ?? 0} leads</DialogTitle>
+            <DialogDescription>
+              Keep one: the others&rsquo; timeline, tasks, viewings and interest move to it.
+            </DialogDescription>
+          </DialogHeader>
+          <fieldset className="flex flex-col gap-2 text-[13px]">
+            <legend className="sr-only">Lead to keep</legend>
+            {mergeFor?.ids.map((id) => {
+              const row = rows.find((r) => r.id === id);
+              return (
+                <label key={id} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="keep-lead"
+                    checked={keepId === id}
+                    onChange={() => setKeepId(id)}
+                  />
+                  <span>
+                    <span className="font-semibold text-ink">{row?.name ?? "Lead"}</span>{" "}
+                    <span className="text-text-muted">
+                      {row
+                        ? `${row.type} · ${sourceText(row).source} · ${relativeTime(row.createdAt, now)}`
+                        : ""}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </fieldset>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMergeFor(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!keepId}
+              onClick={async () => {
+                if (!mergeFor || !keepId) return;
+                const res = await mergeLeadsAction({ keepId, ids: mergeFor.ids });
+                if (!res.ok) return void toast.error(res.error);
+                toast.success(`${res.data.merged} merged`);
+                mergeFor.clear();
+                setMergeFor(null);
+                router.refresh();
+              }}
+            >
+              Merge into the one kept
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={tagFor !== null} onOpenChange={(o) => !o && setTagFor(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
