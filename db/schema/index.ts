@@ -10,3 +10,4 @@ export * from "./properties";
 export * from "./saved-views";
 export * from "./cms";
 export * from "./content";
+export * from "./crm";
