@@ -143,3 +143,20 @@ describe("page builder sections", () => {
     );
   });
 });
+
+describe("section links", () => {
+  it("accepts paths, anchors, full links, mailto and tel, and nothing that runs code", () => {
+    const ok = (href: string) =>
+      parseSection({ id: "c", type: "cta", props: { buttons: [{ label: "Go", href }] } }) !== null;
+    for (const href of [
+      "/contact",
+      "#valuation",
+      "https://wa.me/971500000000",
+      "tel:+97140000000",
+      "mailto:hello@agency.example",
+    ])
+      expect(ok(href), href).toBe(true);
+    for (const href of ["javascript:alert(1)", "data:text/html,x", "#Bad Anchor", "ftp://x"])
+      expect(ok(href), href).toBe(false);
+  });
+});

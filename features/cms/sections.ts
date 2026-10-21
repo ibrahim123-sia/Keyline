@@ -12,14 +12,22 @@ import { isPlayableVideoUrl } from "@/lib/video";
 const text = (max: number) => z.string().trim().max(max).default("");
 const id = z.uuid();
 
-/** Internal paths ("/buy?beds=2") or full https/http links. */
+/**
+ * Internal paths ("/buy?beds=2"), anchors on the page ("#pricing"), full http(s) links, and
+ * mailto:/tel: for "write to us" and "call us" buttons. Never javascript: or data: links.
+ */
 const href = z
   .string()
   .trim()
   .max(500)
   .refine(
-    (v) => v === "" || v.startsWith("/") || /^https?:\/\//.test(v),
-    "Use a path like /buy or a full link",
+    (v) =>
+      v === "" ||
+      v.startsWith("/") ||
+      /^#[a-z0-9-]+$/.test(v) ||
+      /^https?:\/\//.test(v) ||
+      /^(mailto|tel):[^\s"'<>]+$/i.test(v),
+    "Use a path like /buy, an anchor like #pricing or a full link",
   );
 
 const button = z.object({ label: text(40), href }).strict();
