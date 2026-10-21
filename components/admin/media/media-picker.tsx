@@ -146,6 +146,11 @@ export function MediaPicker({
   );
 }
 
+/** The library dialog on its own (mounted = open), e.g. to insert images into a post. */
+export function MediaPickerDialog(props: Parameters<typeof PickerDialog>[0]) {
+  return <PickerDialog {...props} />;
+}
+
 function PickerDialog({
   type,
   selectedId,

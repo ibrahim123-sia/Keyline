@@ -338,6 +338,116 @@
 .rich-text > :first-child {
   margin-top: 0;
 }
+/* Posts and area guides (lib/rich-text-post.ts): quotes, pictures, tables, videos, buttons. */
+.rich-text blockquote {
+  margin: 1rem 0;
+  border-inline-start: 3px solid var(--color-accent);
+  padding-block: 0.15rem;
+  padding-inline-start: 1rem;
+  font-family: var(--font-display);
+  font-size: 1.12em;
+  color: var(--color-ink);
+}
+.rich-text .rt-figure {
+  margin: 1.25rem 0;
+}
+.rich-text .rt-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-image);
+  background: var(--color-photo-placeholder);
+}
+.rich-text figcaption {
+  margin-top: 0.4rem;
+  font-size: 0.86em;
+  color: var(--color-text-muted);
+}
+.rich-text .rt-video {
+  margin: 1.25rem 0;
+}
+.rich-text .rt-video iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: var(--radius-image);
+  background: var(--color-ink);
+}
+.rich-text .rt-table {
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+.rich-text table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94em;
+}
+.rich-text th,
+.rich-text td {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.5rem 0.75rem;
+  text-align: start;
+  vertical-align: top;
+}
+.rich-text th {
+  font-weight: 600;
+  color: var(--color-ink);
+  background: var(--color-surface-soft);
+}
+.rich-text th > p,
+.rich-text td > p {
+  margin: 0;
+}
+.rich-text .rt-align-center {
+  text-align: center;
+}
+.rich-text .rt-align-right {
+  text-align: end;
+}
+.rich-text .rt-cta {
+  margin: 1.25rem 0;
+}
+.rich-text .rt-cta-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  border-radius: var(--radius-button);
+  background: var(--color-accent);
+  padding: 0.6rem 1.25rem;
+  font-weight: 600;
+  color: var(--color-on-accent);
+  text-decoration: none;
+}
+.rich-text .rt-cta-link.rt-cta-secondary {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--color-ink);
+  color: var(--color-ink);
+}
+/* Editor-only stand-ins for videos and listing cards, and the selected block. */
+.rich-text .rt-embed {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-input);
+  background: var(--color-surface-soft);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9em;
+  color: var(--color-text-muted);
+}
+.rich-text .rt-embed img {
+  width: 7.5rem;
+  border-radius: 4px;
+}
+.rich-text .ProseMirror-selectednode {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.rich-text .selectedCell {
+  background: var(--color-accent-soft);
+}
 /* Tiptap placeholder on an empty editor. */
 .rich-text p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);

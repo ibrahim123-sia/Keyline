@@ -1,6 +1,12 @@
 "use client";
 
-import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
+import {
+  EditorContent,
+  useEditor,
+  useEditorState,
+  type Editor,
+  type Extensions,
+} from "@tiptap/react";
 import {
   BoldIcon,
   Heading2Icon,
@@ -27,9 +33,10 @@ function words(editor: Editor | null): number {
 
 /**
  * Rich text field (02 §4 RichTextEditor; 07 §3.7): headings, bold, italic, lists and links
- * only, matching what the server accepts and renders (lib/rich-text.ts).
+ * only, matching what the server accepts and renders (lib/rich-text.ts). Posts pass their
+ * larger model and its extra tools (components/admin/content/post-body-editor.tsx).
  */
-export function RichTextEditor({
+export function RichTextEditor<D extends { type: "doc" } = RichDoc>({
   label,
   description,
   value,
@@ -38,23 +45,36 @@ export function RichTextEditor({
   placeholder,
   targetWords,
   disabled,
+  extensions: makeExtensions = richTextExtensions,
+  tools,
+  allowHref,
+  linkHint,
+  minHeight = "min-h-40",
 }: {
   label: string;
   description?: ReactNode;
-  value: RichDoc | null;
-  onChange: (doc: RichDoc) => void;
+  value: D | null;
+  onChange: (doc: D) => void;
   error?: string;
   placeholder?: string;
   /** Shows "120 of 120 words" style progress (e.g. the completeness score target). */
   targetWords?: number;
   disabled?: boolean;
+  /** The document model; read once, when the editor is created. */
+  extensions?: (placeholder?: string) => Extensions;
+  /** More toolbar buttons for that model. */
+  tools?: (editor: Editor | null) => ReactNode;
+  /** Links the model accepts (and the hint when one is refused). */
+  allowHref?: (href: string) => boolean;
+  linkHint?: string;
+  minHeight?: string;
 }) {
   const labelId = useId();
   const descriptionId = useId();
   // Only read when the editor is created.
-  const [extensions] = useState(() => richTextExtensions(placeholder));
+  const [extensions] = useState(() => makeExtensions(placeholder));
   const attributes = {
-    class: "rich-text min-h-40 px-3 py-2.5 text-[14px] leading-relaxed outline-none",
+    class: `rich-text ${minHeight} px-3 py-2.5 text-[14px] leading-relaxed outline-none`,
     role: "textbox",
     "aria-multiline": "true",
     "aria-labelledby": labelId,
@@ -67,7 +87,7 @@ export function RichTextEditor({
     extensions,
     content: value ?? emptyDoc(),
     editorProps: { attributes },
-    onUpdate: ({ editor: e }) => onChange(e.getJSON() as RichDoc),
+    onUpdate: ({ editor: e }) => onChange(e.getJSON() as unknown as D),
   });
 
   // Changes from outside (discard, an AI draft) replace the text. The editor's own updates
@@ -168,7 +188,19 @@ export function RichTextEditor({
           {tool("Numbered list", <ListOrderedIcon />, state?.ordered, () =>
             editor?.chain().focus().toggleOrderedList().run(),
           )}
-          <LinkButton editor={editor} active={state?.link ?? false} disabled={disabled} />
+          <LinkButton
+            editor={editor}
+            active={state?.link ?? false}
+            disabled={disabled}
+            allowHref={allowHref}
+            hint={linkHint}
+          />
+          {tools && (
+            <>
+              <span className="mx-1 h-5 w-px bg-border" aria-hidden />
+              {tools(editor)}
+            </>
+          )}
           <span className="ms-auto flex items-center gap-0.5">
             {tool(
               "Undo",
@@ -215,10 +247,14 @@ function LinkButton({
   editor,
   active,
   disabled,
+  allowHref = isSafeHref,
+  hint = "Use a full address (https://…), an email (mailto:…) or a phone number (tel:…).",
 }: {
   editor: Editor | null;
   active: boolean;
   disabled?: boolean;
+  allowHref?: (href: string) => boolean;
+  hint?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [href, setHref] = useState("");
@@ -286,10 +322,8 @@ function LinkButton({
             size="sm"
             onClick={() => {
               const url = href.trim();
-              if (!isSafeHref(url)) {
-                setProblem(
-                  "Use a full address (https://…), an email (mailto:…) or a phone number (tel:…).",
-                );
+              if (!allowHref(url)) {
+                setProblem(hint);
                 return;
               }
               editor?.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
