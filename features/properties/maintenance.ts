@@ -1,12 +1,12 @@
 import "server-only";
 import { and, eq, isNull, lt, sql } from "drizzle-orm";
-import { revalidateTag } from "next/cache";
 import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { properties } from "@/db/schema/properties";
 import { writeAudit } from "@/lib/audit";
 import { tags } from "@/lib/cache-tags";
 import { refreshAllAutoBadges } from "./badges";
+import { expireTags } from "@/lib/expire-tags";
 
 const system = { type: "system", id: null } as const;
 
@@ -40,7 +40,6 @@ export async function dailyListingMaintenance(
       after: { isFeatured: false, reason: "Featured until date passed" },
     });
   const listings = await refreshAllAutoBadges(db, now);
-  revalidateTag(tags.listings, { expire: 0 });
-  revalidateTag(tags.search, { expire: 0 });
+  expireTags(tags.listings, tags.search);
   return { unfeatured: ended.length, listings };
 }

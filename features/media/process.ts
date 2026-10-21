@@ -1,5 +1,4 @@
 import { and, eq } from "drizzle-orm";
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { currentAgencyId } from "@/db/schema/_common";
 import { media } from "@/db/schema/media";
@@ -21,6 +20,7 @@ import { getImageTransformer } from "@/lib/images/transformer";
 import { getStorage } from "@/lib/storage";
 import { publicKey, renameExtension } from "./keys";
 import { hexColorSchema } from "./schema";
+import { expireTags } from "@/lib/expire-tags";
 
 /** Larger images are refused: Cloudflare Images stops at 100 megapixels. */
 export const MAX_PIXELS = 100_000_000;
@@ -168,7 +168,7 @@ export const mediaProcessJob = defineJob({
     const old = p.replace && row.r2Key !== p.stagingKey ? [row.r2Key] : [];
     await storage.delete([p.stagingKey, ...old]);
     try {
-      revalidateTag(tags.media(row.id), { expire: 0 });
+      expireTags(tags.media(row.id));
     } catch {
       /* outside a request (scripts, tests): nothing is cached there */
     }

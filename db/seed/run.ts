@@ -172,9 +172,16 @@ function listingDescription(
 export async function seedPreset(
   db: Db,
   preset: SeedPreset,
-  options: { reset?: boolean; passwords?: Record<string, string>; now?: Date } = {},
+  options: {
+    reset?: boolean;
+    passwords?: Record<string, string>;
+    now?: Date;
+    /** Progress lines for the CLI ("Listings 12/40"). */
+    onProgress?: (step: string) => void;
+  } = {},
 ): Promise<SeedResult> {
   const now = options.now ?? new Date();
+  const progress = options.onProgress ?? (() => undefined);
   const r = rng(20261020);
   if (options.reset) {
     for (const table of resetOrder) await db.execute(sql.raw(`delete from "${table}"`));
@@ -189,6 +196,7 @@ export async function seedPreset(
   }
 
   // Settings ------------------------------------------------------------------------------
+  progress("Settings");
   const agencyLogo = await storePicture(db, await logo(preset.agencyName, preset.logoColor), {
     fileName: `${slugify(preset.agencyName)}-logo`,
     alt: `${preset.agencyName} logo`,
@@ -211,6 +219,7 @@ export async function seedPreset(
   const minor = (major: number) => Math.round(major * 10 ** decimals);
 
   // Admins --------------------------------------------------------------------------------
+  progress("Admins");
   const admins: SeedResult["admins"] = [];
   for (const a of preset.admins) {
     const password = options.passwords?.[a.email] ?? generatePassword();
@@ -224,6 +233,7 @@ export async function seedPreset(
   }
 
   // Master data ---------------------------------------------------------------------------
+  progress("Master data");
   const typeIds = new Map<string, string>();
   for (const [i, t] of preset.propertyTypes.entries()) {
     const id = newId();
@@ -305,6 +315,7 @@ export async function seedPreset(
     await db.insert(badges).values({ ...b, sortOrder: i });
 
   // Pictures ------------------------------------------------------------------------------
+  progress("Pictures");
   type Shot = { id: string; kind: "living" | "bedroom" | "kitchen" | "tower" | "villa" | "pool" };
   const shots: Shot[] = [];
   const alts: Record<Shot["kind"], string> = {
@@ -346,6 +357,7 @@ export async function seedPreset(
   const ofKind = (kind: Shot["kind"]) => shots.filter((s) => s.kind === kind).map((s) => s.id);
 
   // Agents --------------------------------------------------------------------------------
+  progress("Agents");
   const agentIds: Array<{ id: string; areas: string[] }> = [];
   for (const [i, a] of preset.agents.entries()) {
     const initials = a.name
@@ -381,6 +393,7 @@ export async function seedPreset(
     (agentIds.find((a) => a.areas.includes(area)) ?? agentIds[0]!).id;
 
   // Developers and projects ---------------------------------------------------------------
+  progress("Developers and projects");
   const devIds = new Map<string, string>();
   for (const [i, d] of preset.developers.entries()) {
     const logoId = await storePicture(db, await logo(d.name, d.color), {
@@ -490,10 +503,13 @@ export async function seedPreset(
   }
 
   // Listings ------------------------------------------------------------------------------
+  progress("Listings");
   const listingIds: string[] = [];
   for (const [index, spec] of preset.listings.entries()) {
     const id = await seedListing(db, spec, index);
     listingIds.push(id);
+    if ((index + 1) % 10 === 0 || index + 1 === preset.listings.length)
+      progress(`Listings ${index + 1}/${preset.listings.length}`);
   }
 
   async function seedListing(dbc: Db, spec: ListingSpec, index: number): Promise<string> {
@@ -734,6 +750,7 @@ export async function seedPreset(
     seoDescription: preset.settings.seo.defaultMetaDescription ?? null,
   });
 
+  progress("Badges and nearby places");
   await refreshAutoBadges(db, listingIds, now);
   for (const id of listingIds) await computePropertyPois(db, id, now);
   for (const p of projectRows.values()) await computeProjectPois(db, p.id, now);

@@ -1,6 +1,5 @@
 import "server-only";
 import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import type { Db, DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
@@ -20,6 +19,7 @@ import { defineJob } from "@/jobs/types";
 import { writeAudit } from "@/lib/audit";
 import { tags } from "@/lib/cache-tags";
 import { haversineMeters, type LngLat } from "@/lib/geo";
+import { expireTags } from "@/lib/expire-tags";
 import {
   batches,
   closestPerType,
@@ -475,7 +475,7 @@ export async function computePropertyPois(
   now = new Date(),
 ): Promise<PoiComputeResult> {
   const result = await measureSettled(db, propertyStore, propertyId, now);
-  revalidateTag(tags.listing(propertyId), { expire: 0 });
+  expireTags(tags.listing(propertyId));
   return { propertyId, ...result };
 }
 
@@ -486,7 +486,7 @@ export async function computeProjectPois(
   now = new Date(),
 ): Promise<ProjectPoiComputeResult> {
   const result = await measureSettled(db, projectStore, projectId, now);
-  revalidateTag(tags.project(projectId), { expire: 0 });
+  expireTags(tags.project(projectId));
   return { projectId, ...result };
 }
 

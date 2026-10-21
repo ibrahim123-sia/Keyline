@@ -27,9 +27,13 @@ if (!preset) {
 try {
   const db = await getDb();
   const started = Date.now();
-  const { admins, counts } = await seedPreset(db, preset, { reset: values.reset });
+  const { admins, counts } = await seedPreset(db, preset, {
+    reset: values.reset,
+    onProgress: (step) => console.log(`  ${step}…`),
+  });
   console.log(`Seeded "${preset.key}" in ${Math.round((Date.now() - started) / 1000)} s:`);
   for (const [table, n] of Object.entries(counts)) console.log(`  ${table.padEnd(16)} ${n}`);
+  console.log("\nStart (or restart) the app after seeding so it reads the new data.");
   console.log("\nDemo logins (shown once; two-step verification is off for the demo):");
   for (const a of admins)
     console.log(
