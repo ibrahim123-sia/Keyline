@@ -33,6 +33,14 @@ export const keyInfo: Record<SecretKey, { label: string; help?: string }> = {
   social_tiktok_secret: { label: "TikTok secret" },
   social_google_secret: { label: "Google Ads key" },
   portal_webhook_secret: { label: "Portal webhook secret" },
+  social_meta_app_secret: {
+    label: "Meta app secret",
+    help: "Lets Lintel check that Lead Ads webhook calls really come from Meta.",
+  },
+  social_meta_page_token: {
+    label: "Page access token",
+    help: "A long-lived page token with leads_retrieval, to read each lead's answers.",
+  },
 };
 
 /** Tokens Lintel makes up itself (the admin pastes them into the other service). */

@@ -375,8 +375,19 @@ export const secretKeys = [
   "social_tiktok_secret",
   "social_google_secret",
   "portal_webhook_secret",
+  "social_meta_app_secret",
+  "social_meta_page_token",
 ] as const;
 export type SecretKey = (typeof secretKeys)[number];
+
+const fieldNames = z.string().trim().max(200);
+const socialFieldMap = z.object({
+  name: fieldNames,
+  email: fieldNames,
+  phone: fieldNames,
+  budget: fieldNames,
+  message: fieldNames,
+});
 
 export const integrationsSchema = z.object({
   googleMaps: z
@@ -456,6 +467,35 @@ export const integrationsSchema = z.object({
   socialForms: z
     .object({ meta: z.boolean(), tiktok: z.boolean(), google: z.boolean() })
     .default({ meta: false, tiktok: false, google: false }),
+  /**
+   * Which lead form field holds each detail (09 §1 #18), per source; several names may be
+   * given, comma separated, and the first one the form has is used.
+   */
+  socialFieldMaps: z
+    .object({ meta: socialFieldMap, tiktok: socialFieldMap, google: socialFieldMap })
+    .default({
+      meta: {
+        name: "full_name, first_name",
+        email: "email",
+        phone: "phone_number, phone",
+        budget: "budget",
+        message: "message, comments",
+      },
+      tiktok: {
+        name: "name, full_name",
+        email: "email",
+        phone: "phone_number, phone",
+        budget: "budget",
+        message: "message",
+      },
+      google: {
+        name: "FULL_NAME, FIRST_NAME",
+        email: "EMAIL",
+        phone: "PHONE_NUMBER",
+        budget: "budget",
+        message: "message",
+      },
+    }),
   ai: z
     .object({
       enabled: z.boolean(),
@@ -511,6 +551,13 @@ export const aiSchema = z.object({
       "Our team is offline right now. I can still help, and an agent will reply when the office opens.",
     ),
   firstReplyEnabled: z.boolean().default(true),
+  /**
+   * The chat button on the website (09 §1 #3). Until the assistant arrives (Phase 9) the team
+   * answers from the inbox. Off by default.
+   */
+  webChat: z
+    .object({ enabled: z.boolean(), askContactFirst: z.boolean() })
+    .default({ enabled: false, askContactFirst: true }),
   adminAssistantEnabled: z.boolean().default(true),
   allowedActions: objectOf(adminAiActions, z.boolean()).default(
     Object.fromEntries(adminAiActions.map((a) => [a, true])) as Record<

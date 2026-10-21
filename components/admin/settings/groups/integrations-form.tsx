@@ -1,6 +1,7 @@
 "use client";
 
 import { CopyIcon, PlugZapIcon, PlusIcon, XIcon } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -305,6 +306,38 @@ export function IntegrationsSettingsForm({
                   <>
                     <Webhook label="Webhook address" url={`${appUrl}${webhookPaths[source]}`} />
                     {keyField(secret)}
+                    {source === "meta" && keyField("social_meta_app_secret")}
+                    {source === "meta" && keyField("social_meta_page_token")}
+                    <p className="text-[13px] text-muted-foreground">
+                      Which form field holds each detail. Give several names, comma separated; the
+                      first one the form has is used. Other answers stay on the lead.
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {(
+                        [
+                          ["name", "Name"],
+                          ["email", "Email"],
+                          ["phone", "Phone"],
+                          ["budget", "Budget"],
+                          ["message", "Message"],
+                        ] as const
+                      ).map(([field, fieldLabel]) => (
+                        <TextInputField
+                          key={field}
+                          label={`${fieldLabel} field`}
+                          value={value.socialFieldMaps[source][field]}
+                          onChange={(v) =>
+                            set({
+                              socialFieldMaps: {
+                                ...value.socialFieldMaps,
+                                [source]: { ...value.socialFieldMaps[source], [field]: v },
+                              },
+                            })
+                          }
+                          error={errorFor(`socialFieldMaps.${source}.${field}`)}
+                        />
+                      ))}
+                    </div>
                   </>
                 )}
               </div>
@@ -314,6 +347,11 @@ export function IntegrationsSettingsForm({
           <FormSection
             title="Property portals"
             description="Leads from portals by email, CSV or API."
+            actions={
+              <Button asChild variant="outline" size="sm">
+                <Link href="/admin/settings/portal-import">Import leads from a CSV</Link>
+              </Button>
+            }
           >
             {value.portals.map((portal, i) => (
               <div
