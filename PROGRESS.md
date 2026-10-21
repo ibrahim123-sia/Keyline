@@ -10,9 +10,9 @@ Spec: `lintel-spec/lintel-spec/` (README + `docs/01..16`).
 | 1     | Foundation               | done (staging deploy waits for credentials) |
 | 2     | Settings and master data | done (staging deploy waits for credentials) |
 | 3     | Properties and projects  | done (staging deploy waits for credentials) |
-| 4     | Public site core         | in progress                                 |
-| 5     | CMS and SEO              | not started                                 |
-| 6     | Leads and CRM            | not started                                 |
+| 4     | Public site core         | in progress (Lighthouse LCP check open)     |
+| 5     | CMS and SEO              | in progress                                 |
+| 6     | Leads and CRM            | in progress                                 |
 | 7     | Customer area            | not started                                 |
 | 8     | Tools                    | not started                                 |
 | 9     | AI                       | not started                                 |
@@ -92,6 +92,37 @@ Done-when checklist (from `15-build-phases.md`):
 - [ ] Phone layouts work (map toggle, filter sheet, bottom contact bar)
 - [ ] Core Web Vitals targets met on the property page in a Lighthouse mobile run
 
+## Phase 5 — CMS and SEO (plan)
+
+1. Schema for blog, area guides, testimonials, FAQs, menus and the 404 log; pages keep a draft copy of their sections (done, migration 0009).
+2. Page builder: pages admin, section editor with live preview, revisions, templates, scheduling, preview links; every section type; public /[slug] pages; seed pages.
+3. Content: blog (extended rich text, categories, tags, scheduling), area guides with live counts, testimonials, FAQs; their public pages and JSON-LD.
+4. SEO and navigation: menus, footer and announcement bar, SEO panel checklist and share previews, sitemap index, robots, JSON-LD, title patterns, redirects manager, 404 monitor, thin-page noindex, SEO report with a weekly crawl.
+
+Done-when checklist (from `15-build-phases.md`):
+
+- [ ] Admin can build a new page from sections, publish it and add it to the header menu without code
+- [ ] Changing a slug creates a 301
+- [ ] Sitemap, robots and JSON-LD validate (Google Rich Results test passes for a property page)
+
+## Phase 6 — Leads and CRM (plan)
+
+1. Schema for visitors, attribution, contacts, leads, timeline, tasks, owner requests, viewings, conversations, messages, approvals, templates, quick replies, newsletter and shortlists (done, migration 0010).
+2. Attribution: visitor id, first and last touch, the journey beacon, WhatsApp ref codes (done).
+3. Lead pipeline: capture, dedupe, enrich, assign, timeline, notifications, auto-reply, score, response timer; listing forms become leads (done).
+4. Leads admin: list and Kanban, lead page with timeline, composer, matching listings and send properties; contacts and merge; manual entry and CSV import.
+5. Channels: inbox with take-over and approvals, WhatsApp Cloud API, inbound email, portals (email parsing, CSV), social lead forms, web chat shell.
+6. Viewings: booking with real free slots on the site, reminders, reschedule and cancel links, feedback; admin calendar; Google Calendar sync.
+7. Marketing: UTM link builder with short links and QR codes, message templates editor, newsletter with double opt-in; the Phase 5 page forms become leads.
+
+Done-when checklist (from `15-build-phases.md`):
+
+- [ ] Every source in the table creates a lead with the right `source` and attribution
+- [x] First and last touch behave as specified (unit tests) — `tests/unit/attribution.test.ts` "first touch is written once; last touch changes on campaign or referral visits only"
+- [ ] Duplicate leads merge correctly
+- [x] A lead unanswered past the limit triggers an alert — `tests/integration/leads-pipeline.test.ts` "tasks, the response timer and the first response"
+- [ ] Tour booking shows real free slots and syncs to Google Calendar
+
 ## Done
 
 - Read the whole spec. Checked the toolchain on this machine (Node 24, pnpm 12, no Docker/Postgres).
@@ -133,15 +164,18 @@ Done-when checklist (from `15-build-phases.md`):
 - Demo seed `pnpm db:seed --preset=haven-dune [--reset]` (16 §1): AED with example USD/EUR/GBP rates, sq ft, km, permits, yearly rent with 1/2/4/6/12 payments; demo logins (owner, staff, read-only viewer; passwords printed once; 2FA off for the demo); 9 Dubai areas with rough boundaries; 29 real public places at approximate coordinates; 7 property types, 20 facilities, 5 badges; 5 agents; 3 fictional developers; 4 off-plan projects with plans, unit types, galleries and measured places; 40 listings (22 ready for sale, 8 off-plan units, 10 rentals; apartments, villas, townhouses, a penthouse, 2 offices, a shop, 2 plots) with 6-12 photos, floor plans, facilities, rich descriptions, verification history (recent, stale, never), price drops, automatic badges, measured nearby places and 30 days of views. Deterministic. Integration test.
 - Home page from sections (06 §3, 08 §1): `pages` and `page_revisions` (migration 0008; one home page per agency), section types validated with Zod (hero with search, simple hero, promise strip, featured listings by pick, featured, newest or saved filter, projects showcase, areas grid with live counts, text, stats, call to action) with section style (background, spacing, width, anchor, hide on phone or desktop); unknown or broken sections are skipped on the site; the hero search card is a plain GET form (works before JavaScript) whose budget steps come from real listing prices; the seed publishes the home page. Insights, testimonials, FAQs, tools, the AI teaser and the seller call to action come with their data in later phases. Unit, integration, e2e.
 - Daily listing upkeep (00:15 agency time): Featured until dates end the featuring; automatic badges start and end. "Import from Google" now follows its setting. The editor's Nearby table follows a measurement started by a pin move.
+- Phase 6 core: CRM schema (migration 0010); attribution (first-party visitor id set by the middleware only when new or when consent changes; first and last touch with the channel rules of 09 §2; `/api/track` for page views, listing views and contact clicks, journey events only with analytics consent; WhatsApp ref codes; a known lead tapping Call leaves a note); the lead pipeline (`captureLead`: normalise, find the contact by email and/or phone, join their open lead of the same type or start one, fill requirements from the listing, copy touches, assign, response timer, tasks, timeline; after commit `lead.process` notifies the agent and the agency inbox and sends the auto-reply, `lead.score` scores by the 10 §2 rubric with reasons; every-minute alert for unanswered leads); editable message templates; the listing page's question, tour and callback forms are leads. Unit + integration.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
 
-- Phase 4 (in parallel worktrees): search pages with map and autocomplete; property page with contact card and forms; project, developer and agent pages with the currency switcher, cookie banner and 404; demo seed (Haven & Dune) and the home page.
+- Phase 4: the Lighthouse Core Web Vitals check on the property page (LCP above 2.5 s in CI; the test now reports what makes it slow).
+- Phase 5 (in parallel worktrees): page builder; blog, area guides, testimonials and FAQs; menus, SEO tools and the announcement bar.
+- Phase 6 (in parallel worktrees): leads admin; inbox and channels. Viewings and marketing follow.
 
 ## Next
 
-- Phase 4 checklist, then Phase 5: CMS and SEO.
+- Merge Phase 5, close its checklist; viewings and marketing for Phase 6.
 
 ## Decisions (made by me, per spec 01 §5 "small decisions")
 
@@ -196,30 +230,47 @@ Done-when checklist (from `15-build-phases.md`):
 49. **Demo pictures are drawn, not stock photos** (16 §1 allows placeholders): sharp renders simple room, building, villa and pool scenes, floor plans marked "Illustrative plan, not to scale", initials portraits and wordmark logos. No licensed images are bundled, and nothing pretends to be a real photo.
 50. **Missing slugs are "soft 404s".** Public pages stream (Cache Components), and Next.js 16 sends a streamed page with status 200 (docs: loading -> Status codes). A missing listing, project, developer, agent or area renders the helpful 404 page with `noindex`; routes that do not exist at all return a real 404. A real 404 for slugs would need a database check in the proxy, which runs on the edge without database access here.
 51. **Core Web Vitals are measured in CI**: Lighthouse 13.5.0 (dev dependency) runs its default mobile profile (a mid-range phone on simulated 4G) against a seeded property page on the production build and fails the job above LCP 2.5 s, CLS 0.1 or TBT 200 ms (the lab stand-in for INP).
+52. **Visitor id and consent:** the first-party `vid` cookie is set by the middleware on the first site request (a year, per 09 §2); when the visitor refuses analytics cookies it becomes a session cookie with the same id, so the visit can still be attributed. It is only sent when new or when consent changes, so cached pages do not carry a cookie on every response. Journey events (page views, searches, listing views) are stored only with analytics consent; contact clicks (WhatsApp, call, form sent) always, because the lead needs them; listing view, share and brochure counters are stored without any visitor id.
+53. **Channel rules** follow 09 §2 in order, with three additions: a campaign link with an unknown medium and no referrer counts as a referral (it still carries its campaign), webmail referrers (Gmail, Outlook) count as email, and portal names match `utm_source` ignoring spaces and dashes. `fbclid` counts as paid social as the spec says, although Facebook also adds it to organic links.
+54. **Lead capture is synchronous, the rest is a job:** dedupe, assignment and the timeline happen in one transaction when the form is sent (so two quick messages from one person join one lead); notifications, the auto-reply and scoring run after commit in `lead.process` and `lead.score`, and a retried job never sends an email twice.
+55. **Assignment falls through** the rule in Settings -> Leads: listing agent -> area match (an agent covering the area or any area above it) -> round robin (the active agent given a lead longest ago, `agents.last_assigned_at`); "manual" leaves leads unassigned, and an open lead without an agent is assigned when it next gets a message.
+56. **Requirements from the asked-about listing** (purpose, area, type, beds) fill only what the lead did not say; the budget becomes a band of 15% either side of the price, marked as worked out (`budgetFrom: listing`). A budget the lead states replaces it, and only a stated budget scores.
+57. **Lead score by rules until Phase 9:** the 10 §2 rubric with points and reasons (budget +15, fits +10, timeline under 3 months +15, cash or pre-approved +10, email and phone +10 or one of them +5, viewing +15, vague -15, from a base of 30); the reasons are stored with the number. The AI scores with the same rubric once it is on.
+58. **Message templates** have built-in wording in code with `{{variables}}`; an agency's own version (`message_templates`) wins, and a template can be turned off. Emails use the branded layout.
+59. **"Admins" in the notification matrix** means the agency's lead inbox (Settings -> Contact lead alert emails, else the main email), as with the Phase 4 forms; a new lead goes to the agent and that inbox as Settings -> Notifications says.
+60. **Tour requests from the listing page** become leads with an "Arrange a tour" task until the booking flow with real free slots replaces the dialog (Phase 6 viewings).
 
 ## Data model changes (vs `05-data-model.md`)
 
-| Table                         | Change                                                                           | Why                                                                               |
-| ----------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| users                         | + `read_only`                                                                    | Demo viewer account (16 §3) is a flag, not a role                                 |
-| users                         | + `preferred_contact`, `marketing_consent`, `marketing_consent_at`, `invited_by` | Customer profile + consent with date (12 §2, 14 §3); admin invites (03)           |
-| two_factors, auth_rate_limits | new                                                                              | Better Auth two-factor plugin and login rate-limit storage                        |
-| api_tokens                    | new                                                                              | Per-admin MCP tokens, hashed (10 §4)                                              |
-| audit_log                     | + `confirmed_by`                                                                 | AI actions record the confirming admin (10 §3)                                    |
-| rate_limits                   | new                                                                              | App rate limits for forms/chat/tools (14 §2)                                      |
-| job_runs                      | new                                                                              | Jobs page: recent runs, failures, retry (13 §2)                                   |
-| email_log                     | new                                                                              | Email status tracking; dev outbox when no provider                                |
-| agents                        | + SEO block, `reply_time_text`, `last_assigned_at`                               | Agent pages have an SEO panel (08 §6); "usually replies in…" (06 §5); round robin |
-| media                         | + `kind`, `status`, `processing_error`                                           | Upload processing job state                                                       |
-| media                         | + `crops` (jsonb, fractions per preset)                                          | Crop presets 16:10, 4:3, 1:1, OG (07 §8); fractions survive resizing              |
-| seo_redirects                 | + `source`                                                                       | What created an automatic redirect (e.g. a location slug change)                  |
-| pois                          | unique (`agency_id`, `google_place_id`)                                          | "Import from Google" skips places already imported                                |
-| properties                    | + `search_text`, generated `search_vector`, `handover_text`                      | Search by location names (kept on save); "Q4 2027" when only a quarter is known   |
-| projects                      | + `handover_text`, `published_at`                                                | Quarter-only handover dates; first publish date                                   |
-| project_unit_types            | + `sort_order`                                                                   | Unit types keep the order the admin gives them                                    |
-| property_badges               | + `expires_at`, `reason`                                                         | Time-limited automatic badges ("New" for 14 days) and why they apply              |
-| payment_plans                 | + `is_template`                                                                  | The agency's own saved plan templates (07 §5)                                     |
-| settings (general)            | + `referencePrefix`                                                              | Listing references like HD-1001 (05 §5)                                           |
+| Table                                        | Change                                                                                    | Why                                                                                 |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| users                                        | + `read_only`                                                                             | Demo viewer account (16 §3) is a flag, not a role                                   |
+| users                                        | + `preferred_contact`, `marketing_consent`, `marketing_consent_at`, `invited_by`          | Customer profile + consent with date (12 §2, 14 §3); admin invites (03)             |
+| two_factors, auth_rate_limits                | new                                                                                       | Better Auth two-factor plugin and login rate-limit storage                          |
+| api_tokens                                   | new                                                                                       | Per-admin MCP tokens, hashed (10 §4)                                                |
+| audit_log                                    | + `confirmed_by`                                                                          | AI actions record the confirming admin (10 §3)                                      |
+| rate_limits                                  | new                                                                                       | App rate limits for forms/chat/tools (14 §2)                                        |
+| job_runs                                     | new                                                                                       | Jobs page: recent runs, failures, retry (13 §2)                                     |
+| email_log                                    | new                                                                                       | Email status tracking; dev outbox when no provider                                  |
+| agents                                       | + SEO block, `reply_time_text`, `last_assigned_at`                                        | Agent pages have an SEO panel (08 §6); "usually replies in…" (06 §5); round robin   |
+| media                                        | + `kind`, `status`, `processing_error`                                                    | Upload processing job state                                                         |
+| media                                        | + `crops` (jsonb, fractions per preset)                                                   | Crop presets 16:10, 4:3, 1:1, OG (07 §8); fractions survive resizing                |
+| seo_redirects                                | + `source`                                                                                | What created an automatic redirect (e.g. a location slug change)                    |
+| pois                                         | unique (`agency_id`, `google_place_id`)                                                   | "Import from Google" skips places already imported                                  |
+| properties                                   | + `search_text`, generated `search_vector`, `handover_text`                               | Search by location names (kept on save); "Q4 2027" when only a quarter is known     |
+| projects                                     | + `handover_text`, `published_at`                                                         | Quarter-only handover dates; first publish date                                     |
+| project_unit_types                           | + `sort_order`                                                                            | Unit types keep the order the admin gives them                                      |
+| property_badges                              | + `expires_at`, `reason`                                                                  | Time-limited automatic badges ("New" for 14 days) and why they apply                |
+| payment_plans                                | + `is_template`                                                                           | The agency's own saved plan templates (07 §5)                                       |
+| settings (general)                           | + `referencePrefix`                                                                       | Listing references like HD-1001 (05 §5)                                             |
+| pages                                        | + `draft_sections`, `draft_updated_at`                                                    | The page builder edits a draft; Publish copies it to the live sections (08 §1)      |
+| visitors                                     | + `visitor_key` (the cookie value, unique per agency)                                     | The row id is a uuid; the cookie value is looked up                                 |
+| leads                                        | + `ai_score_reason`, `response_due_at`, `response_alert_sent_at`, `deal_currency`, `tags` | Score reasons (10 §2), response timer (09 §3.8), deal currency, bulk tags           |
+| lead_events                                  | + types `form`, `possible_call`                                                           | A repeat inquiry on an open lead; a call-button tap by a known lead (09 §1 #8)      |
+| viewings                                     | + `visitor_time_zone`, `manage_token_hash`, two reminder times, `feedback_requested_at`   | The visitor's time zone (09 §5), links without login, 24 h and 2 h reminders        |
+| conversations                                | + `external_id`, `subject`, `unread_count`; status `needs_human`                          | WhatsApp number or email thread, unread badge, inbox statuses (09 §6)               |
+| messages                                     | + `sender_admin_id`, `error`, status `queued`                                             | Who replied; why a send failed                                                      |
+| message_templates, quick_replies, shortlists | new                                                                                       | Editable templates (13 §1), inbox snippets (09 §6), "send properties" links (09 §4) |
 
 ## Open questions
 
