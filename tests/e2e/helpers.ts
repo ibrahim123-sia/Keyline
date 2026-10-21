@@ -128,8 +128,12 @@ export async function snap(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: `${dir}/${name}.png`, fullPage: true });
 }
 
-/** Listings and projects point at master data and files with "restrict": clear them first. */
+/**
+ * Listings, projects and area guides point at master data and files with "restrict": clear
+ * them first (a guide's photos hold library files, its area holds the location).
+ */
 export async function clearListings(): Promise<void> {
+  await db().query("delete from area_guides");
   await db().query("delete from properties");
   await db().query("delete from projects");
   await db().query("delete from payment_plans where not is_template");
@@ -175,6 +179,10 @@ export const publicTags = [
   "agents",
   "page:home",
   "pages",
+  "posts",
+  "area-guides",
+  "faqs",
+  "testimonials",
   "master:property-types",
   "master:facilities",
   "master:badges",
@@ -237,6 +245,9 @@ export async function deleteLocations(slugs?: string[]): Promise<void> {
      ) select id, depth from tree`,
     slugs ? [slugs] : [],
   );
+  await db().query("delete from area_guides where location_id = any($1::uuid[])", [
+    rows.map((r) => r.id),
+  ]);
   const depths = [...new Set(rows.map((r) => r.depth))].sort((a, b) => b - a);
   for (const d of depths)
     await db().query("delete from locations where id = any($1::uuid[])", [

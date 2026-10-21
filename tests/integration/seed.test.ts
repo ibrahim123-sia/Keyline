@@ -9,6 +9,7 @@ import { seedPreset, type SeedResult } from "@/db/seed/run";
 import { parseSearch } from "@/features/search/params";
 import { searchListings } from "@/features/search/query";
 import { loadSettings } from "@/features/settings/queries";
+import { postDocSchema, postReferences, type PostDoc } from "@/lib/rich-text-post";
 import { memoryStorage, setStorage } from "@/lib/storage";
 import { truncate } from "../helpers/db";
 
@@ -180,5 +181,42 @@ describe("demo seed: Haven & Dune", () => {
       ["staff@demo.lintel", false],
       ["viewer@demo.lintel", true],
     ]);
+  });
+
+  it("writes the demo content: 6 posts, 4 area guides, 12 FAQs and 6 testimonials", async () => {
+    expect(result.counts).toMatchObject({ posts: 6, area_guides: 4, testimonials: 6 });
+    const shared = await rows<{ group: string; n: number }>(
+      'select "group", count(*)::int as n from faqs where area_guide_id is null and is_published group by 1 order by 1',
+    );
+    expect(shared.reduce((n, g) => n + g.n, 0)).toBe(12);
+
+    // Every body passed the post allowlist; listing cards point at live listings.
+    const bodies = await rows<{ body: PostDoc; reading_minutes: number; status: string }>(
+      "select body, reading_minutes, status from posts union all select body, 1, status from area_guides",
+    );
+    for (const b of bodies) {
+      expect(postDocSchema.safeParse(b.body).success).toBe(true);
+      expect(b.status).toBe("published");
+    }
+    const cards = bodies.flatMap((b) => postReferences(b.body).propertyIds);
+    expect(cards.length).toBeGreaterThanOrEqual(3);
+    const live = await rows<{ n: number }>(
+      `select count(*)::int as n from properties where id in (${cards.map((c) => `'${c}'`).join(",")}) and status = 'available'`,
+    );
+    expect(live[0]!.n).toBe(new Set(cards).size);
+
+    // Guide numbers say where they come from; each guide has its own questions.
+    const guides = await rows<{ stats: Array<{ source: string }>; faqs: number }>(
+      "select g.stats, (select count(*)::int from faqs f where f.area_guide_id = g.id) as faqs from area_guides g",
+    );
+    for (const g of guides) {
+      expect(g.stats.every((s) => s.source.length > 0)).toBe(true);
+      expect(g.faqs).toBeGreaterThan(0);
+    }
+    // Covers, photos and portraits are counted as used.
+    const [unused] = await rows<{ n: number }>(
+      "select count(*)::int as n from media where folder in ('insights', 'areas', 'testimonials') and used_count = 0",
+    );
+    expect(unused!.n).toBe(0);
   });
 });

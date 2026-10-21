@@ -50,6 +50,7 @@ import {
   type Picture,
 } from "./images";
 import { seedPages } from "./pages";
+import { seedContent } from "./content";
 import { rng } from "./rng";
 import type { ListingSpec, SeedPreset } from "./types";
 
@@ -62,6 +63,14 @@ const resetOrder = [
   "messages",
   "conversations",
   "quick_replies",
+  "faqs",
+  "area_guide_media",
+  "area_guides",
+  "post_tag_links",
+  "post_tags",
+  "posts",
+  "post_categories",
+  "testimonials",
   "property_daily_stats",
   "price_history",
   "property_pois",
@@ -766,6 +775,14 @@ export async function seedPreset(
   });
   progress("Inbox");
   await seedInbox(db, { now });
+  if (preset.content) {
+    progress("Blog, area guides, FAQs and testimonials");
+    await seedContent(db, preset.content, {
+      now,
+      store: (pic, meta) => storePicture(db, pic, meta),
+      locationKeys: new Map(preset.locations.map((l) => [l.key, l.slug])),
+    });
+  }
 
   progress("Badges and nearby places");
   await refreshAutoBadges(db, listingIds, now);
@@ -791,6 +808,10 @@ export async function seedPreset(
     "property_badges",
     "pages",
     "conversations",
+    "posts",
+    "area_guides",
+    "faqs",
+    "testimonials",
   ])
     counts[t] = await count(t);
   return { admins, counts };

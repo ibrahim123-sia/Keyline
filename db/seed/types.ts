@@ -1,4 +1,5 @@
 import type { HideableField } from "@/db/schema/master-data";
+import type { SeedContent } from "./content";
 import type { SettingsOf } from "@/features/settings/schema";
 
 type LngLatTuple = [number, number];
@@ -121,6 +122,8 @@ export type SeedPreset = {
     }>;
   }>;
   listings: ListingSpec[];
+  /** Blog posts, area guides, FAQs and testimonials (16 §1 "Content"). */
+  content?: SeedContent;
   /** Words of the home page sections. */
   home: {
     hero: { eyebrow: string; heading: string; subheading: string; floatingBadgeText: string };

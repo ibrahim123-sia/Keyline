@@ -1,4 +1,5 @@
 import type { SeedPreset } from "../types";
+import { havenDuneContent } from "./haven-dune-content";
 
 /**
  * Main demo preset (16 §1): Haven & Dune, a fictional agency with Dubai-style data. Places are
@@ -1121,6 +1122,7 @@ export const havenDune: SeedPreset = {
     ],
     ["rent", "office", "bay", null, 2, 1800, 185_000, "Office to rent in Business Bay", {}],
   ],
+  content: havenDuneContent,
   home: {
     hero: {
       eyebrow: "Dubai homes, checked in person",
