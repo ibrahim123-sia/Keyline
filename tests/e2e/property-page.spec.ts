@@ -39,6 +39,8 @@ async function seedListing(request: APIRequestContext) {
      values (gen_random_uuid(), $1, 'Layla Haddad', 'e2e-pp-agent', 'layla@agency.example', '+971501112233', '+971501112233', '{English,Arabic}') returning id`,
     [AGENCY],
   );
+  // The desktop and @phone runs share these files: replace the earlier copies.
+  await q(`delete from media where r2_key like '2026/10/e2epp%'`);
   const photos = await q(
     `insert into media (id, agency_id, r2_key, file_name, mime, status, alt) values
        (gen_random_uuid(), $1, '2026/10/e2epp00001/living.jpg', 'living.jpg', 'image/jpeg', 'ready', 'Living room'),

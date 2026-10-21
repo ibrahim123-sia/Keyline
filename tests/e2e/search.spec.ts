@@ -1,5 +1,13 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
-import { clearListings, db, INTERNAL_SECRET, setSettings, snap } from "./helpers";
+import {
+  clearListings,
+  db,
+  deleteLocations,
+  expectNotFoundPage,
+  INTERNAL_SECRET,
+  setSettings,
+  snap,
+} from "./helpers";
 
 const AGENCY = process.env.AGENCY_ID || "0192f000-0000-7000-8000-000000000001";
 
@@ -21,7 +29,7 @@ async function expire(request: APIRequestContext) {
 async function seed(request: APIRequestContext) {
   await clearListings();
   await db().query("delete from property_types where slug in ('e2e-flats', 'e2e-villas')");
-  await db().query("delete from locations where slug in ('e2e-bay', 'e2e-hills', 'e2e-city')");
+  await deleteLocations(["e2e-bay", "e2e-hills", "e2e-city"]);
   await setSettings(request, "market", {
     baseCurrency: { code: "AED", symbol: "AED", symbolPosition: "before", decimals: 2 },
     areaUnit: "sqft",
@@ -141,8 +149,8 @@ test("search: landing pages, filters in the URL, sort, paging, map and autocompl
   await expect(
     page.getByRole("heading", { level: 1, name: "E2E Flats for sale in E2E Bay" }),
   ).toBeVisible();
-  expect((await page.goto("/buy/no-such-place"))?.status()).toBe(404);
-  expect((await page.goto("/buy/e2e-bay/no-such-type"))?.status()).toBe(404);
+  await expectNotFoundPage(page, "/buy/no-such-place");
+  await expectNotFoundPage(page, "/buy/e2e-bay/no-such-type");
 
   // Autocomplete forgives a typo; picking an area goes to its landing page.
   await page.goto("/buy");

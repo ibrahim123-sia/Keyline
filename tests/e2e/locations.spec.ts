@@ -1,13 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { clearListings, db, field, signInAsAdmin, snap } from "./helpers";
+import { clearListings, db, deleteLocations, field, signInAsAdmin, snap } from "./helpers";
 
 test("locations: tree, map point, slug redirect and safe delete", async ({ page, request }) => {
   // First visit compiles the map bundles in dev mode.
   test.setTimeout(240_000);
   await db().query("delete from seo_redirects");
   await clearListings();
-  await db().query("delete from locations where parent_id is not null");
-  await db().query("delete from locations");
+  await deleteLocations();
   const mapErrors: string[] = [];
   page.on("console", (m) => {
     if (m.type() === "error" && /maplibre|worker|webgl/i.test(m.text())) mapErrors.push(m.text());

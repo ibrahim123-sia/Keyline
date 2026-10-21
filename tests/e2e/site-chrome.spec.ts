@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { clearListings, db, revalidateTags, setSettings } from "./helpers";
+import { clearListings, db, deleteLocations, revalidateTags, setSettings } from "./helpers";
 
 const AGENCY = process.env.AGENCY_ID || "0192f000-0000-7000-8000-000000000001";
 
@@ -46,7 +46,7 @@ test("cookie banner: first visit, necessary only, reopened from the footer", asy
 
 test("404: a search box and the agency's popular areas", async ({ page, request }) => {
   await clearListings();
-  await db().query("delete from locations where slug = 'e2e-popular-area'");
+  await deleteLocations(["e2e-popular-area"]);
   await db().query(
     `insert into locations (id, agency_id, level, name, slug, is_featured)
      values (gen_random_uuid(), $1, 'area', 'E2E Popular Area', 'e2e-popular-area', true)`,

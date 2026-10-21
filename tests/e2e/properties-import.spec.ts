@@ -1,13 +1,13 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
-import { db, setSettings, signInAsAdmin, snap } from "./helpers";
+import { db, deleteLocations, setSettings, signInAsAdmin, snap } from "./helpers";
 
 const AGENCY = process.env.AGENCY_ID || "0192f000-0000-7000-8000-000000000001";
 
 async function cleanUp() {
   await db().query("delete from properties where source = 'import'");
   await db().query("delete from property_types where slug = 'e2e-townhouses'");
-  await db().query("delete from locations where slug = 'e2e-palm-bay'");
+  await deleteLocations(["e2e-palm-bay"]);
 }
 
 /** A file as an agency might have it: its own headers, one column to skip, one bad row. */

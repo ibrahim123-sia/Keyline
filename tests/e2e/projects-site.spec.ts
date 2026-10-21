@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { clearListings, db, revalidateTags, setSettings } from "./helpers";
+import {
+  clearListings,
+  db,
+  deleteLocations,
+  expectNotFoundPage,
+  revalidateTags,
+  setSettings,
+} from "./helpers";
 
 const AGENCY = process.env.AGENCY_ID || "0192f000-0000-7000-8000-000000000001";
 
@@ -10,7 +17,7 @@ test("public projects: list, filter, prices in the visitor's currency, project p
   test.setTimeout(300_000);
   await clearListings();
   await db().query("delete from developers where slug in ('e2e-northline', 'e2e-calder')");
-  await db().query("delete from locations where slug in ('e2e-creek', 'e2e-hills')");
+  await deleteLocations(["e2e-creek", "e2e-hills"]);
   const q = async (sql: string, params: unknown[] = []) => (await db().query(sql, params)).rows;
   const [creek] = await q(
     `insert into locations (id, agency_id, level, name, slug) values (gen_random_uuid(), $1, 'area', 'E2E Creek', 'e2e-creek') returning id`,
@@ -129,9 +136,5 @@ test("public projects: list, filter, prices in the visitor's currency, project p
   ).toHaveAttribute("href", "/developers/e2e-northline");
 
   // Not published: the helpful 404.
-  const res = await page.goto("/projects/e2e-hidden");
-  expect(res?.status()).toBe(404);
-  await expect(
-    page.getByRole("heading", { name: "We couldn't find that page", level: 1 }),
-  ).toBeVisible();
+  await expectNotFoundPage(page, "/projects/e2e-hidden");
 });

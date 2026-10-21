@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { clearListings, db, revalidateTags } from "./helpers";
+import { clearListings, db, deleteLocations, expectNotFoundPage, revalidateTags } from "./helpers";
 
 const AGENCY = process.env.AGENCY_ID || "0192f000-0000-7000-8000-000000000001";
 
@@ -11,7 +11,7 @@ test("developer and agent pages: lists, profiles, their projects and listings", 
   await clearListings();
   await db().query("delete from developers where slug = 'e2e-saffron'");
   await db().query("delete from agents where slug in ('e2e-sara', 'e2e-former')");
-  await db().query("delete from locations where slug = 'e2e-bay'");
+  await deleteLocations(["e2e-bay"]);
   const q = async (sql: string, params: unknown[] = []) => (await db().query(sql, params)).rows;
   const [bay] = await q(
     `insert into locations (id, agency_id, level, name, slug) values (gen_random_uuid(), $1, 'area', 'E2E Bay', 'e2e-bay') returning id`,
@@ -91,6 +91,5 @@ test("developer and agent pages: lists, profiles, their projects and listings", 
   await expect(page.getByRole("link", { name: "E2E Bay Crest two bed" })).toBeVisible();
 
   // A profile that is turned off is not public.
-  const res = await page.goto("/agents/e2e-former");
-  expect(res?.status()).toBe(404);
+  await expectNotFoundPage(page, "/agents/e2e-former");
 });

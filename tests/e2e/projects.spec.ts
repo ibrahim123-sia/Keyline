@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { clearListings, db, setSettings, signInAsAdmin, snap } from "./helpers";
+import { clearListings, db, deleteLocations, setSettings, signInAsAdmin, snap } from "./helpers";
 
 const AGENCY = process.env.AGENCY_ID || "0192f000-0000-7000-8000-000000000001";
 
@@ -12,7 +12,7 @@ test("projects: new project, unit types, photo, publish, drafts from unit types"
   await clearListings();
   await db().query("delete from developers where slug = 'e2e-linden'");
   await db().query("delete from property_types where slug = 'e2e-project-apartments'");
-  await db().query("delete from locations where slug in ('e2e-creek', 'e2e-bay')");
+  await deleteLocations(["e2e-creek", "e2e-bay"]);
   await db().query(
     `insert into developers (id, agency_id, name, slug) values (gen_random_uuid(), $1, 'E2E Linden', 'e2e-linden')`,
     [AGENCY],

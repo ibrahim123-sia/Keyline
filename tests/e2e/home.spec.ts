@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { clearListings, db, revalidateTags } from "./helpers";
+import { clearListings, db, deleteLocations, revalidateTags } from "./helpers";
 
 const AGENCY = process.env.AGENCY_ID || "0192f000-0000-7000-8000-000000000001";
 
@@ -11,7 +11,7 @@ test("home page renders its sections and the hero search builds the search URL",
   await clearListings();
   await db().query("delete from pages");
   await db().query("delete from property_types where slug = 'e2e-home-villas'");
-  await db().query("delete from locations where slug = 'e2e-home-area'");
+  await deleteLocations(["e2e-home-area"]);
   const q = async (sql: string, params: unknown[] = []) => (await db().query(sql, params)).rows;
   const [type] = await q(
     `insert into property_types (id, agency_id, name, slug) values (gen_random_uuid(), $1, 'E2E Home Villa', 'e2e-home-villas') returning id`,

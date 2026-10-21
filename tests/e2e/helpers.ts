@@ -1,6 +1,7 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import { Pool } from "pg";
+import { localDataPath } from "../../scripts/paths";
 
 /** The e2e database started by scripts/e2e-server.ts. */
 export const E2E_DB_URL = `postgres://postgres:postgres@127.0.0.1:${process.env.E2E_DB_PORT ?? 5434}/postgres`;
@@ -161,4 +162,98 @@ export async function revalidateTags(request: APIRequestContext, tags: string[])
     data: { tags },
   });
   if (!res.ok()) throw new Error(`revalidate failed: ${res.status()}`);
+}
+
+/** Every cache tag family the public site uses: after writing data straight to the database. */
+export const publicTags = [
+  "settings",
+  "listings",
+  "search",
+  "locations",
+  "projects",
+  "developers",
+  "agents",
+  "page:home",
+  "pages",
+  "master:property-types",
+  "master:facilities",
+  "master:badges",
+  "master:poi-types",
+];
+
+/**
+ * Loads the Haven & Dune demo preset into the e2e database (the real `pnpm db:seed`, with the
+ * e2e server's database and file folder), then expires the app's caches.
+ */
+export async function seedDemo(request: APIRequestContext): Promise<void> {
+  const appUrl = `http://localhost:${process.env.E2E_PORT ?? 3200}`;
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(
+      process.execPath,
+      [
+        "--import",
+        "tsx",
+        "--import",
+        "./scripts/register-server-only.mjs",
+        "db/seed/index.ts",
+        "--reset",
+      ],
+      {
+        stdio: "inherit",
+        env: {
+          ...process.env,
+          DATABASE_URL: E2E_DB_URL,
+          STORAGE_DRIVER: "fs",
+          STORAGE_FS_DIR: localDataPath("e2e-media"),
+          BETTER_AUTH_SECRET:
+            process.env.BETTER_AUTH_SECRET ?? "e2e-secret-e2e-secret-e2e-secret-0123456",
+          BETTER_AUTH_URL: appUrl,
+          APP_URL: appUrl,
+          SECRETS_ENCRYPTION_KEY:
+            process.env.SECRETS_ENCRYPTION_KEY ?? "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
+          LINTEL_ENV: "development",
+          JOBS_DRIVER: "manual",
+        },
+      },
+    );
+    child.on("error", reject);
+    child.on("exit", (code) =>
+      code === 0 ? resolve() : reject(new Error(`the seed exited with ${code}`)),
+    );
+  });
+  await revalidateTags(request, publicTags);
+}
+
+/**
+ * Deletes locations and everything inside them, the deepest first: the parent link is
+ * RESTRICT, which Postgres checks row by row. No slugs: every location.
+ */
+export async function deleteLocations(slugs?: string[]): Promise<void> {
+  const { rows } = await db().query<{ id: string; depth: number }>(
+    `with recursive tree as (
+       select id, 0 as depth from locations where ${slugs ? "slug = any($1)" : "parent_id is null"}
+       union all
+       select l.id, t.depth + 1 from locations l join tree t on l.parent_id = t.id
+     ) select id, depth from tree`,
+    slugs ? [slugs] : [],
+  );
+  const depths = [...new Set(rows.map((r) => r.depth))].sort((a, b) => b - a);
+  for (const d of depths)
+    await db().query("delete from locations where id = any($1::uuid[])", [
+      rows.filter((r) => r.depth === d).map((r) => r.id),
+    ]);
+}
+
+/**
+ * The helpful 404 for a missing slug. Pages stream, so Next.js answers 200 with the not-found
+ * page and a noindex tag (a "soft 404", Next 16 docs: loading -> Status codes); routes that
+ * do not exist at all still get a real 404.
+ */
+export async function expectNotFoundPage(page: Page, path: string): Promise<void> {
+  const res = await page.goto(path);
+  expect([200, 404]).toContain(res?.status());
+  await expect(
+    page.getByRole("heading", { name: "We couldn't find that page", level: 1 }),
+  ).toBeVisible();
+  await expect(page.locator('meta[name="robots"][content*="noindex"]').first()).toBeAttached();
 }
