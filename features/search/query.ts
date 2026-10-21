@@ -5,6 +5,7 @@ import { getDb } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { properties } from "@/db/schema/properties";
 import { loadListingCards, type ListingCardData } from "@/features/listings/cards";
+import { publicPoint } from "@/features/listings/public-point";
 import { searchableStatuses } from "@/features/properties/status";
 import { loadSettings } from "@/features/settings/queries";
 import { tags } from "@/lib/cache-tags";
@@ -196,13 +197,6 @@ export async function searchListings(f: SearchFilters): Promise<SearchResult> {
   return { total, page, pages, cards };
 }
 
-/** A deterministic offset per listing so approximate pins do not stack on one grid point. */
-function jitter(id: string): [number, number] {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return [((h % 1000) / 1000 - 0.5) * 0.004, (((h >>> 10) % 1000) / 1000 - 0.5) * 0.004];
-}
-
 /**
  * Map pins for all results (up to 1,500). Listings without a public exact pin get a point
  * snapped to a ~500 m grid plus a small offset: the exact building never leaves the server.
@@ -230,15 +224,13 @@ export async function searchPins(f: SearchFilters): Promise<SearchPin[]> {
     .orderBy(...orderBy(f, market), sql`${properties.id} desc`)
     .limit(1500);
   return rows.map((r) => {
-    const approx = !r.exact;
-    const [dx, dy] = jitter(r.id);
-    const snap = (v: number) => Math.round(v / 0.005) * 0.005;
+    const shown = publicPoint(r.id, { lng: r.lng, lat: r.lat }, r.exact);
     return {
       id: r.id,
       slug: r.slug,
-      lng: approx ? Number((snap(r.lng) + dx).toFixed(5)) : r.lng,
-      lat: approx ? Number((snap(r.lat) + dy).toFixed(5)) : r.lat,
-      approx,
+      lng: shown.lng,
+      lat: shown.lat,
+      approx: shown.approx,
       price: r.priceOnRequest ? null : r.price,
       currency: r.currency ?? market.baseCurrency.code,
       pricePeriod: r.pricePeriod,
