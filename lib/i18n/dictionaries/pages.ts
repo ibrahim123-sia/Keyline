@@ -3,6 +3,9 @@
  * developer and agent pages (01 §1.5). Content written by the agency comes from the database.
  */
 export const pages = {
+  common: {
+    home: "Home",
+  },
   currency: {
     label: "Currency",
     choose: "Show prices in",
@@ -125,6 +128,18 @@ export const pages = {
   },
   map: {
     label: "Map of {name} and nearby places",
+  },
+  nearby: {
+    categories: {
+      schools: "Schools",
+      health: "Health",
+      shopping: "Shopping",
+      transport: "Transport",
+      leisure: "Leisure",
+      other: "Other",
+    },
+    drive: "drive",
+    walk: "walk",
   },
 } as const;
 
