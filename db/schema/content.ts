@@ -11,6 +11,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import type { RichDoc } from "@/lib/rich-text";
+import type { PostDoc } from "@/lib/rich-text-post";
 import { agencyColumn, baseColumns, idColumn, seoColumns, softDelete } from "./_common";
 import { locations } from "./master-data";
 import { media } from "./media";
@@ -44,14 +45,14 @@ export const postTags = pgTable(
   (t) => [uniqueIndex("post_tags_slug_unique").on(t.agencyId, t.slug)],
 );
 
-/** Blog posts ("Insights"). The body is rich text JSON with its rendered HTML. */
+/** Blog posts ("Insights"). The body is post rich text JSON (lib/rich-text-post.ts) with its HTML. */
 export const posts = pgTable(
   "posts",
   {
     ...baseColumns(),
     title: text().notNull(),
     excerpt: text(),
-    body: jsonb().$type<RichDoc>(),
+    body: jsonb().$type<PostDoc>(),
     bodyHtml: text(),
     coverId: uuid().references(() => media.id, { onDelete: "set null" }),
     /** The byline: an agent profile, or an admin user (no FK: the auth table). */
@@ -106,7 +107,7 @@ export const areaGuides = pgTable(
       .references(() => locations.id, { onDelete: "restrict" }),
     title: text().notNull(),
     intro: text(),
-    body: jsonb().$type<RichDoc>(),
+    body: jsonb().$type<PostDoc>(),
     bodyHtml: text(),
     coverId: uuid().references(() => media.id, { onDelete: "set null" }),
     highlights: text().array().notNull().default([]),

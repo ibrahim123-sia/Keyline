@@ -1,4 +1,5 @@
 import type { DbOrTx } from "@/db/client";
+import { posts } from "@/db/schema/content";
 import { properties } from "@/db/schema/properties";
 import { usageRegistry, type UsageRef } from "@/lib/usage-registry";
 
@@ -9,6 +10,7 @@ import { usageRegistry, type UsageRef } from "@/lib/usage-registry";
 const registry = usageRegistry();
 
 registry.register({ label: "listings", table: properties, column: properties.agentId });
+registry.register({ label: "posts", table: posts, column: posts.authorAgentId });
 
 export function registerAgentUsage(ref: UsageRef): void {
   registry.register(ref);

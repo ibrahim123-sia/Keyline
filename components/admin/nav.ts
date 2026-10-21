@@ -59,7 +59,7 @@ export const adminNav: AdminNavGroup[] = [
     label: "website",
     items: [
       { key: "pages", href: "/admin/website/pages", icon: FileTextIcon, enabled: true },
-      { key: "blog", href: "/admin/website/blog", icon: NewspaperIcon, enabled: false },
+      { key: "blog", href: "/admin/website/blog", icon: NewspaperIcon, enabled: true },
       { key: "areaGuides", href: "/admin/website/area-guides", icon: MapIcon, enabled: false },
       { key: "menus", href: "/admin/website/menus", icon: MenuSquareIcon, enabled: false },
       { key: "seo", href: "/admin/website/seo", icon: SearchIcon, enabled: false },

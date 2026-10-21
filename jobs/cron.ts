@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { jobRuns } from "@/db/schema/system";
 import { publishDuePages } from "@/features/cms/schedule";
+import { publishDueContent } from "@/features/content/schedule";
 import { alertUnansweredLeads } from "@/features/leads/process";
 import { cleanupStaleUploads } from "@/features/media/maintenance";
 import { recountAllMediaUsage } from "@/features/media/usage";
@@ -26,6 +27,8 @@ export type CronTask = {
   schedule: string;
   due: (t: LocalTime) => boolean;
   run: () => Promise<unknown>;
+  /** Every-minute housekeeping is not logged, or the Jobs page would drown in it. */
+  quiet?: boolean;
 };
 
 export const at =
@@ -37,13 +40,28 @@ export const every = (minutes: number) => (t: LocalTime) =>
 
 export const cronTasks: CronTask[] = [
   // Every minute: queued jobs whose time has come (retries, delayed jobs, lost messages).
-  { name: "jobs.run-due", schedule: "every minute", due: () => true, run: () => runDueJobs() },
+  {
+    name: "jobs.run-due",
+    schedule: "every minute",
+    due: () => true,
+    run: () => runDueJobs(),
+    quiet: true,
+  },
+  // Every minute: scheduled posts and area guides go on the site at their time (08 §3).
+  {
+    name: "content.publish-scheduled",
+    schedule: "every minute",
+    due: () => true,
+    run: async () => publishDueContent(await getDb()),
+    quiet: true,
+  },
   // 09 §3.8: leads nobody answered in time alert the team once.
   {
     name: "leads.response-timer",
     schedule: "every minute",
     due: () => true,
     run: async () => alertUnansweredLeads(await getDb()),
+    quiet: true,
   },
   // 13 §2: viewing reminders that are due.
   {
@@ -64,6 +82,7 @@ export const cronTasks: CronTask[] = [
     schedule: "every minute",
     due: () => true,
     run: async () => publishDuePages(await getDb()),
+    quiet: true,
   },
   {
     name: "media.cleanup",
@@ -137,8 +156,7 @@ export async function runCron(
 
   for (const task of tasks.filter((x) => x.due(t))) {
     const id = newId();
-    // Every-minute housekeeping is not logged, or the Jobs page would drown in it.
-    const logged = task.name !== "jobs.run-due";
+    const logged = !task.quiet;
     if (logged) {
       await db.insert(jobRuns).values({
         id,
