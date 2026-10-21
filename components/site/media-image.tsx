@@ -1,3 +1,4 @@
+import { preload } from "react-dom";
 import { cn } from "cn";
 import { mediaSrcSet, mediaVariant } from "@/lib/media-src";
 
@@ -30,11 +31,20 @@ export function MediaImage({
   maxWidth?: number;
   fit?: "cover" | "contain";
 }) {
+  const srcSet = mediaSrcSet(src, maxWidth);
+  // The LCP image: let the browser start it from the <head>, before the page is parsed.
+  if (priority)
+    preload(mediaVariant(src, 640), {
+      as: "image",
+      imageSrcSet: srcSet,
+      imageSizes: sizes,
+      fetchPriority: "high",
+    });
   return (
     // eslint-disable-next-line @next/next/no-img-element -- /media makes the sizes itself
     <img
       src={mediaVariant(src, 640)}
-      srcSet={mediaSrcSet(src, maxWidth)}
+      srcSet={srcSet}
       sizes={sizes}
       alt={alt}
       loading={priority ? "eager" : "lazy"}

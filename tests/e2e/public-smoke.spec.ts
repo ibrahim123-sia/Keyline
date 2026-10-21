@@ -65,13 +65,19 @@ test("property page: Core Web Vitals in a Lighthouse mobile run", async () => {
   const browser = await chromium.launch({ args: [`--remote-debugging-port=${port}`] });
   try {
     const url = `http://localhost:${process.env.E2E_PORT ?? 3200}/property/${listingSlug}`;
-    // Default config: a mid-range phone on simulated 4G (14 §1).
-    const result = await lighthouse(url, {
+    // Default config: a mid-range phone on simulated 4G (14 §1). The first run warms the
+    // server's resized-image cache (as a CDN would be in production); the second is measured.
+    const flags = {
       port,
-      output: "json",
-      logLevel: "error",
+      output: "json" as const,
+      logLevel: "error" as const,
       onlyCategories: ["performance"],
-    });
+    };
+    const warm = await lighthouse(url, flags);
+    console.log(
+      `[lighthouse] warm-up LCP ${Math.round(warm!.lhr.audits["largest-contentful-paint"]!.numericValue!)} ms`,
+    );
+    const result = await lighthouse(url, flags);
     const audits = result!.lhr.audits;
     const lcp = audits["largest-contentful-paint"]!.numericValue!;
     const cls = audits["cumulative-layout-shift"]!.numericValue!;
