@@ -29,7 +29,7 @@ export async function PageView({
   banner?: ReactNode;
 }) {
   const [market, general] = await Promise.all([getSettings("market"), getSettings("general")]);
-  const ctx = sectionContext(market);
+  const ctx = { ...sectionContext(market), pageId: page.id };
   const { toc, bySection } = pageHeadings(page.sections);
 
   if (page.template === "legal") {

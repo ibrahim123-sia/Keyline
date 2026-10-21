@@ -1,10 +1,9 @@
 import { BadgeCheckIcon, MapPinIcon } from "lucide-react";
 import { Fragment, Suspense, type ReactNode } from "react";
-import { ListingCard, type CardContext } from "@/components/site/listings/listing-card";
+import { ListingCard } from "@/components/site/listings/listing-card";
 import { MediaImage } from "@/components/site/media-image";
 import { ProjectCard } from "@/components/site/projects/project-card";
 import { getPublicMedia } from "@/features/media/queries";
-import { visitorCurrency } from "@/features/site/currency";
 import { withHeadingIds } from "@/features/cms/headings";
 import { areaCards, featuredListingCards, heroSearchOptions } from "@/features/cms/queries";
 import { sectionCatalog } from "@/features/cms/section-catalog";
@@ -14,54 +13,33 @@ import { Icon } from "@/lib/icons";
 import { sectionsText as t } from "@/lib/i18n/dictionaries/home";
 import { renderRichText } from "@/lib/rich-text";
 import { HeroSearchCard } from "./hero-search-card";
+import {
+  BlogPosts,
+  ContactBlock,
+  CustomHtml,
+  DeveloperLogos,
+  Divider,
+  Faq,
+  FormSection,
+  Gallery,
+  MapSection,
+  SearchEmbed,
+  Team,
+  Testimonials,
+  TextImage,
+  Video,
+} from "./more-sections";
+import { Carousel } from "./section-clients";
+import {
+  BlockSkeleton,
+  Buttons,
+  GridSkeleton,
+  withCurrency,
+  type SectionContext,
+} from "./section-parts";
+
+export type { SectionContext } from "./section-parts";
 import { SectionHeading, SectionShell } from "./section-shell";
-
-/**
- * What sections need from settings. The visitor's currency is read inside the sections that
- * show prices (a cookie), each behind Suspense, so the rest of the page stays prerendered.
- */
-export type SectionContext = Omit<CardContext, "visitorCurrency" | "rates"> & {
-  baseCurrency: { code: string; decimals: number };
-};
-
-async function withCurrency(ctx: SectionContext): Promise<CardContext> {
-  const { code, rates } = await visitorCurrency();
-  return { ...ctx, visitorCurrency: code, rates };
-}
-
-function GridSkeleton({ count = 3 }: { count?: number }) {
-  return (
-    <div className="container-site section-y" aria-hidden>
-      <div className="mb-8 h-10 w-64 animate-pulse rounded-lg bg-surface-muted" />
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: count }, (_, i) => (
-          <div key={i} className="aspect-[4/5] animate-pulse rounded-[20px] bg-surface-muted" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Buttons({ buttons }: { buttons: Array<{ label: string; href: string }> }) {
-  if (buttons.length === 0) return null;
-  return (
-    <div className="mt-8 flex flex-wrap gap-3">
-      {buttons.map((b, i) => (
-        <a
-          key={`${b.href}-${i}`}
-          href={b.href}
-          className={
-            i === 0
-              ? "rounded-[14px] bg-accent px-6 py-3 text-[15px] font-semibold text-on-accent hover:bg-accent/90"
-              : "rounded-[14px] border border-current px-6 py-3 text-[15px] font-semibold hover:opacity-80"
-          }
-        >
-          {b.label}
-        </a>
-      ))}
-    </div>
-  );
-}
 
 async function HeroSearch({
   s,
@@ -166,13 +144,23 @@ async function FeaturedListings({
           ) : null
         }
       />
-      <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {cards.map((c) => (
-          <li key={c.id}>
-            <ListingCard listing={c} ctx={cardCtx} />
-          </li>
-        ))}
-      </ul>
+      {s.props.layout === "carousel" ? (
+        <Carousel label={s.props.heading || t.listings.viewAll}>
+          {cards.map((c) => (
+            <li key={c.id}>
+              <ListingCard listing={c} ctx={cardCtx} />
+            </li>
+          ))}
+        </Carousel>
+      ) : (
+        <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {cards.map((c) => (
+            <li key={c.id}>
+              <ListingCard listing={c} ctx={cardCtx} />
+            </li>
+          ))}
+        </ul>
+      )}
     </SectionShell>
   );
 }
@@ -401,8 +389,74 @@ function renderSection(
       return <Stats s={s} />;
     case "cta":
       return <Cta s={s} />;
-    default:
-      return null;
+    case "search_embed":
+      return (
+        <Suspense fallback={<GridSkeleton count={Math.min(s.props.count, 3)} />}>
+          <SearchEmbed s={s} ctx={ctx} />
+        </Suspense>
+      );
+    case "text_image":
+      return <TextImage s={s} headingIds={opts.headingIds} />;
+    case "testimonials":
+      return (
+        <Suspense fallback={<GridSkeleton count={Math.min(s.props.count, 3)} />}>
+          <Testimonials s={s} />
+        </Suspense>
+      );
+    case "faq":
+      return (
+        <Suspense fallback={<BlockSkeleton />}>
+          <Faq s={s} schema={opts.faqSchema} />
+        </Suspense>
+      );
+    case "team":
+      return (
+        <Suspense fallback={<GridSkeleton count={4} />}>
+          <Team s={s} />
+        </Suspense>
+      );
+    case "developer_logos":
+      return (
+        <Suspense fallback={<BlockSkeleton height="h-20" />}>
+          <DeveloperLogos s={s} />
+        </Suspense>
+      );
+    case "blog_posts":
+      return (
+        <Suspense fallback={<GridSkeleton count={Math.min(s.props.count, 3)} />}>
+          <BlogPosts s={s} />
+        </Suspense>
+      );
+    case "contact_block":
+      return (
+        <Suspense fallback={<BlockSkeleton height="h-96" />}>
+          <ContactBlock s={s} ctx={ctx} />
+        </Suspense>
+      );
+    case "form":
+      return (
+        <Suspense fallback={<BlockSkeleton height="h-96" />}>
+          <FormSection s={s} ctx={ctx} />
+        </Suspense>
+      );
+    case "video":
+      return <Video s={s} />;
+    case "gallery":
+      return (
+        <Suspense fallback={<GridSkeleton count={3} />}>
+          <Gallery s={s} />
+        </Suspense>
+      );
+    case "map":
+      return (
+        <Suspense fallback={<BlockSkeleton height="h-80" />}>
+          <MapSection s={s} />
+        </Suspense>
+      );
+    case "divider":
+      return <Divider s={s} />;
+    case "custom_html":
+      return <CustomHtml s={s} />;
   }
 }
 

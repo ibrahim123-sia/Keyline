@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "cn";
 import type { SectionStyle } from "@/features/cms/sections";
+import { getPublicMedia } from "@/features/media/queries";
 
 const backgrounds: Record<SectionStyle["background"], string> = {
   sand: "bg-bg",
@@ -17,11 +18,11 @@ const spacing: Record<SectionStyle["spacing"], string> = {
 };
 
 /** "Section style" (08 §1): background, spacing, width, anchor id, hide on phone or desktop. */
-export function SectionShell({
+export async function SectionShell({
   style,
   children,
   label,
-  backgroundUrl,
+  backgroundUrl: given,
 }: {
   style: SectionStyle;
   children: ReactNode;
@@ -29,6 +30,10 @@ export function SectionShell({
   label?: string;
   backgroundUrl?: string | null;
 }) {
+  // "Image" background (08 §1 section style): the section's own picture, else the style's.
+  const backgroundUrl =
+    given ??
+    (style.background === "image" ? (await getPublicMedia(style.backgroundImageId))?.url : null);
   return (
     <section
       id={style.anchor || undefined}

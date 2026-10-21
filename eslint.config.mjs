@@ -19,6 +19,10 @@ const eslintConfig = defineConfig([
         "error",
         { prefer: "type-imports", fixStyle: "inline-type-imports" },
       ],
+      // A pages-router rule: with the page builder's root /[slug] route it reads every
+      // literal internal link as a page link. Site links are plain <a> by choice (server
+      // components, full navigations between public pages).
+      "@next/next/no-html-link-for-pages": "off",
     },
   },
   globalIgnores([

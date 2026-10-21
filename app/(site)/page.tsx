@@ -44,6 +44,7 @@ export default async function HomePage() {
     areaUnit: market.areaUnit,
     distanceUnit: market.distanceUnit,
     baseCurrency: { code: market.baseCurrency.code, decimals: market.baseCurrency.decimals },
+    pageId: page.id,
   };
   return <RenderSections sections={page.sections} ctx={ctx} />;
 }
