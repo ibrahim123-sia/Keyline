@@ -96,6 +96,8 @@ export function PreviewFrame({
           ref={frame}
           src={src}
           title="Page preview"
+          // Also when the frame shows something without the bridge (an expired link).
+          onLoad={() => setLoading(false)}
           className="origin-top-left border-0"
           style={{
             width,
