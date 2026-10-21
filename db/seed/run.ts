@@ -225,17 +225,15 @@ export async function seedPreset(
   for (const [i, t] of preset.propertyTypes.entries()) {
     const id = newId();
     typeIds.set(t.key, id);
-    await db
-      .insert(propertyTypes)
-      .values({
-        id,
-        name: t.name,
-        slug: t.slug,
-        category: t.category,
-        icon: t.icon,
-        fieldsHidden: t.hidden,
-        sortOrder: i,
-      });
+    await db.insert(propertyTypes).values({
+      id,
+      name: t.name,
+      slug: t.slug,
+      category: t.category,
+      icon: t.icon,
+      fieldsHidden: t.hidden,
+      sortOrder: i,
+    });
   }
   const locIds = new Map<string, string>();
   const locByKey = new Map(preset.locations.map((l) => [l.key, l]));
