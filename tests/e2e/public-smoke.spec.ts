@@ -31,6 +31,11 @@ test.beforeAll(async ({ request }) => {
 test.afterAll(async ({ request }) => {
   // Later specs expect a fresh agency: drop the demo content and settings again.
   await clearListings();
+  await db().query("delete from posts");
+  await db().query("delete from post_categories");
+  await db().query("delete from post_tags");
+  await db().query("delete from faqs");
+  await db().query("delete from testimonials");
   await db().query("delete from pages");
   await db().query("delete from settings");
   await revalidateTags(request, publicTags);
@@ -70,6 +75,15 @@ test("every public route renders with the demo data", async ({ page }) => {
   await expect(page.getByRole("navigation", { name: "On this page" })).toBeVisible();
   await expectPage(page, "/terms", "Terms of use");
   await expectPage(page, "/cookie-policy", "Cookie policy");
+  await expectPage(page, "/insights", "Insights");
+  await expectPage(page, "/insights/category/buying", "Buying");
+  await expectPage(page, "/insights/what-service-charges-pay-for", "What service charges pay for");
+  await expectPage(page, "/areas", "Area guides");
+  await expectPage(page, "/areas/dubai-marina", "Dubai Marina");
+  // The area's landing page opens with its guide and ends with the guide's questions.
+  await page.goto("/buy/dubai-marina");
+  await expect(page.getByRole("link", { name: "Read the Dubai Marina guide" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Questions about Dubai Marina" })).toBeVisible();
   // Any single-segment address is a page-builder address: a missing one is a soft 404.
   await expectNotFoundPage(page, "/no-such-page-here");
   const missing = await page.goto("/no/such-page-here");
