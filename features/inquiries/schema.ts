@@ -24,10 +24,13 @@ export const inquirySchema = z
     propertyId: z.uuid(),
     kind: z.enum(inquiryKinds),
     name: z.string().trim().min(2, "Enter your name").max(80, "Use at most 80 characters"),
-    email: z.union([z.email("Enter a valid email address").max(160), z.literal("")]),
+    email: z.union([
+      z.email("Enter a valid email address").max(160, "Enter a valid email address"),
+      z.literal(""),
+    ]),
     phone: z.string().trim().max(30, "That number is too long"),
     message: z.string().trim().max(2000, "Use at most 2,000 characters"),
-    preferredTime: z.string().trim().max(120).default(""),
+    preferredTime: z.string().trim().max(120, "Use at most 120 characters").default(""),
     similar: z.boolean().default(false),
     consent: z.literal(true, { error: "Please agree so we can contact you." }),
     /** Honeypot: hidden from people, filled in by bots. */

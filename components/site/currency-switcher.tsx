@@ -3,7 +3,7 @@
 import { ChevronDownIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { notify } from "./site-toaster";
 import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,7 +46,7 @@ export function CurrencySwitcher({
       const res = await setCurrency({ code });
       if (!res.ok) {
         setChosen(previous);
-        toast.error(res.error);
+        notify.error(res.error);
         return;
       }
       router.refresh();

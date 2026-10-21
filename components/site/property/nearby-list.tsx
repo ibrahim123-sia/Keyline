@@ -1,23 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { cn } from "cn";
 import type { PoiCategory } from "@/db/schema/master-data";
 import type { PublicListing } from "@/features/listings/public";
-import { Icon } from "@/lib/icons";
 import { format } from "@/lib/i18n";
 import { property as t } from "@/lib/i18n/dictionaries/property";
 import { formatDistance, formatDuration, type DistanceUnit } from "@/lib/units";
 
 const order: PoiCategory[] = ["schools", "health", "shopping", "transport", "leisure", "other"];
 
-/** Nearby places grouped by type with filter chips (06 §5.10). */
+/**
+ * Nearby places grouped by type with filter chips (06 §5.10). The server passes the type icons
+ * already drawn (`icons` by icon name), so the icon set stays off the page's JavaScript.
+ */
 export function NearbyList({
   places,
   distanceUnit,
+  icons,
 }: {
   places: PublicListing["nearby"];
   distanceUnit: DistanceUnit;
+  icons: Record<string, ReactNode>;
 }) {
   const [category, setCategory] = useState<PoiCategory | null>(null);
   if (places.length === 0)
@@ -56,7 +60,7 @@ export function NearbyList({
         {groups.map((g) => (
           <div key={g.name}>
             <h3 className="mb-2 flex items-center gap-2 text-[14px] font-semibold text-ink">
-              <Icon name={g.icon} className="size-4 text-accent" />
+              {icons[g.icon ?? ""]}
               {g.name}
             </h3>
             <ul className="flex flex-col divide-y divide-border">

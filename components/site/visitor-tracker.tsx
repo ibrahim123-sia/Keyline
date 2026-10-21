@@ -37,11 +37,13 @@ export function VisitorTracker() {
   useEffect(() => {
     if (pathname === lastPath) return;
     lastPath = pathname;
-    const landing = landed
-      ? undefined
-      : { search: window.location.search, referrer: document.referrer || null };
+    if (landed) return track({ type: "page_view" });
     landed = true;
-    track({ type: "page_view", landing });
+    const landing = { search: window.location.search, referrer: document.referrer || null };
+    // The landing beacon waits for the page to finish loading, off the critical path.
+    const send = () => track({ type: "page_view", landing });
+    if (document.readyState === "complete") send();
+    else window.addEventListener("load", send, { once: true });
   }, [pathname]);
   return null;
 }

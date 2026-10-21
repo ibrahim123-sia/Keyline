@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ListingCard, type CardContext } from "@/components/site/listings/listing-card";
-import type { ListingCardData } from "@/features/listings/cards";
-import { property as t } from "@/lib/i18n/dictionaries/property";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CardContext } from "@/components/site/listings/listing-card";
+import { useHydrated } from "@/lib/use-hydrated";
 
 const KEY = "lintel.recent";
 const MAX = 12;
+
+// The cards (and the listing card code) load only when the section is about to be seen.
+const RecentlyViewedCards = dynamic(
+  () => import("./recently-viewed-cards").then((m) => m.RecentlyViewedCards),
+  { ssr: false },
+);
 
 function readIds(): string[] {
   try {
@@ -22,7 +28,20 @@ function readIds(): string[] {
  * remembered first; the others are shown with their current card data.
  */
 export function RecentlyViewed({ currentId, ctx }: { currentId: string; ctx: CardContext }) {
-  const [cards, setCards] = useState<ListingCardData[]>([]);
+  const hydrated = useHydrated();
+  // Read before this visit is remembered below (render runs before effects).
+  const ids = useMemo(
+    () =>
+      hydrated
+        ? readIds()
+            .filter((id) => id !== currentId)
+            .slice(0, 6)
+        : [],
+    [hydrated, currentId],
+  );
+  const [near, setNear] = useState(false);
+  const anchor = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const others = readIds().filter((id) => id !== currentId);
     try {
@@ -30,27 +49,24 @@ export function RecentlyViewed({ currentId, ctx }: { currentId: string; ctx: Car
     } catch {
       /* private mode: nothing remembered */
     }
-    const ids = others.slice(0, 6);
-    if (ids.length === 0) return;
-    const ctl = new AbortController();
-    fetch(`/api/listings/cards?ids=${ids.join(",")}`, { signal: ctl.signal })
-      .then((r) => (r.ok ? r.json() : { cards: [] }))
-      .then((d: { cards: ListingCardData[] }) => setCards(d.cards))
-      .catch(() => {});
-    return () => ctl.abort();
   }, [currentId]);
 
-  if (cards.length === 0) return null;
-  return (
-    <section aria-labelledby="recent-title" className="flex flex-col gap-4">
-      <h2 id="recent-title" className="text-h3 text-ink">
-        {t.recent.title}
-      </h2>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {cards.map((c) => (
-          <ListingCard key={c.id} listing={c} ctx={ctx} />
-        ))}
-      </div>
-    </section>
-  );
+  useEffect(() => {
+    const el = anchor.current;
+    if (ids.length === 0 || near || !el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setNear(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ids, near]);
+
+  if (ids.length === 0) return null;
+  return <div ref={anchor}>{near && <RecentlyViewedCards ids={ids} ctx={ctx} />}</div>;
 }

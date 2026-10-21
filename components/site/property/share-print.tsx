@@ -1,7 +1,7 @@
 "use client";
 
 import { PrinterIcon, Share2Icon } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "../site-toaster";
 import { property as t } from "@/lib/i18n/dictionaries/property";
 
 /** Share (the phone's share sheet, else copy the link) and Print (06 §5.2). */
@@ -24,9 +24,9 @@ export function SharePrint({ title, url }: { title: string; url: string }) {
           }
           try {
             await navigator.clipboard.writeText(url);
-            toast.success(t.actions.copied);
+            notify.success(t.actions.copied);
           } catch {
-            toast.error(t.actions.copyFailed);
+            notify.error(t.actions.copyFailed);
           }
         }}
       >

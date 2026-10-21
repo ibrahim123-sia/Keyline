@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import { Toaster } from "@/components/ui/sonner";
 import { getSettings } from "@/features/settings/queries";
 import { site } from "@/lib/i18n";
 import { CookieBanner } from "./cookie-banner";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
+import { SiteToaster } from "./site-toaster";
 import { VisitorTracker } from "./visitor-tracker";
 
 /**
@@ -26,7 +26,7 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
         {children}
       </main>
       <SiteFooter />
-      <Toaster position="bottom-center" />
+      <SiteToaster />
       <VisitorTracker />
       <CookieBanner
         text={legal.cookieBanner.text}

@@ -34,6 +34,7 @@ import { getSettings } from "@/features/settings/queries";
 import { visitorCurrency } from "@/features/site/currency";
 import { displayPrice } from "@/lib/currency-display";
 import { format } from "@/lib/i18n";
+import { Icon } from "@/lib/icons";
 import { property as t } from "@/lib/i18n/dictionaries/property";
 import { mediaVariant } from "@/lib/media-src";
 
@@ -200,7 +201,16 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
                 {l.point?.approx && (
                   <p className="text-[13.5px] text-text-muted">{t.location.approx}</p>
                 )}
-                <NearbyList places={l.nearby} distanceUnit={market.distanceUnit} />
+                <NearbyList
+                  places={l.nearby}
+                  distanceUnit={market.distanceUnit}
+                  icons={Object.fromEntries(
+                    [...new Set(l.nearby.map((p) => p.typeIcon ?? ""))].map((name) => [
+                      name,
+                      <Icon key={name} name={name || null} className="size-4 text-accent" />,
+                    ]),
+                  )}
+                />
               </Section>
             )}
             {l.purpose === "sale" && l.price != null && !gone && (

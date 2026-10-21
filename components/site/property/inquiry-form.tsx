@@ -1,20 +1,30 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useId, useState } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
+import { useForm, type Resolver } from "react-hook-form";
 import { FormAlert } from "@/components/auth/auth-card";
 import { TextField } from "@/components/auth/text-field";
 import { Turnstile, turnstileEnabled } from "@/components/forms/turnstile";
 import { Button } from "@/components/ui/button";
 import { sendListingInquiry } from "@/features/inquiries/actions";
-import { inquirySchema, type InquiryKind } from "@/features/inquiries/schema";
+import { checkInquiry } from "@/features/inquiries/check";
+import type { InquiryInput, InquiryKind } from "@/features/inquiries/schema";
 import { format } from "@/lib/i18n";
 import { property as t } from "@/lib/i18n/dictionaries/property";
 import { useHydrated } from "@/lib/use-hydrated";
 
-type Values = z.input<typeof inquirySchema>;
+type Values = InquiryInput;
+
+/** The server schema's checks without Zod in the browser (features/inquiries/check.ts). */
+const resolver: Resolver<Values> = async (values) => {
+  const found = checkInquiry(values);
+  const keys = Object.keys(found) as Array<keyof Values>;
+  if (keys.length === 0) return { values, errors: {} };
+  return {
+    values: {},
+    errors: Object.fromEntries(keys.map((k) => [k, { type: "validate", message: found[k] }])),
+  };
+};
 
 /**
  * The listing form (06 §5 contact card, §10 forms): a question, a tour request or a callback.
@@ -37,7 +47,7 @@ export function InquiryForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [sent, setSent] = useState<string | null>(null);
   const form = useForm<Values>({
-    resolver: zodResolver(inquirySchema),
+    resolver,
     defaultValues: {
       propertyId,
       kind,
