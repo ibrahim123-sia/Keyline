@@ -1160,4 +1160,60 @@ export const havenDune: SeedPreset = {
     },
     areas: { eyebrow: "Areas", heading: "Where to live in Dubai" },
   },
+  menus: {
+    header: {
+      links: [
+        {
+          label: "Buy",
+          search: "/buy",
+          children: [
+            { label: "Dubai Marina", area: "dubai-marina" },
+            { label: "Downtown Dubai", area: "downtown-dubai" },
+            { label: "Palm Jumeirah", area: "palm-jumeirah" },
+            { label: "Dubai Hills Estate", area: "dubai-hills-estate" },
+          ],
+        },
+        { label: "Rent", search: "/rent" },
+        {
+          label: "Off-plan",
+          search: "/off-plan",
+          children: [
+            { label: "All projects", url: "/projects" },
+            { label: "The Linden Residences", project: "the-linden-residences" },
+            { label: "Palmera Grove Villas", project: "palmera-grove-villas" },
+          ],
+        },
+        { label: "Agents", url: "/agents" },
+        { label: "About", page: "about" },
+        { label: "Contact", page: "contact" },
+      ],
+    },
+    footer_1: {
+      title: "Explore",
+      links: [
+        { label: "Homes for sale", search: "/buy" },
+        { label: "Homes to rent", search: "/rent" },
+        { label: "Off-plan projects", url: "/projects" },
+        { label: "Developers", url: "/developers" },
+      ],
+    },
+    footer_2: {
+      title: "Areas",
+      links: [
+        { label: "Dubai Marina", area: "dubai-marina" },
+        { label: "Jumeirah Beach Residence", area: "jbr" },
+        { label: "Downtown Dubai", area: "downtown-dubai" },
+        { label: "Palm Jumeirah", area: "palm-jumeirah" },
+      ],
+    },
+    footer_3: {
+      title: "Company",
+      links: [
+        { label: "About us", page: "about" },
+        { label: "Our agents", url: "/agents" },
+        { label: "Sell with us", page: "sell-with-us" },
+        { label: "Contact", page: "contact" },
+      ],
+    },
+  },
 };

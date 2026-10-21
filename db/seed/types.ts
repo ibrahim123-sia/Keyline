@@ -132,4 +132,21 @@ export type SeedPreset = {
     projects: { eyebrow: string; heading: string; viewAllLabel: string };
     areas: { eyebrow: string; heading: string };
   };
+  /** Header, phone and footer menus (08 §2); links point at seeded content by slug. */
+  menus?: Partial<
+    Record<
+      "header" | "mobile" | "footer_1" | "footer_2" | "footer_3",
+      { title?: string; links: SeedMenuLink[] }
+    >
+  >;
 };
+
+/** One menu link in a preset: a search, an address, or a page, area, project or category slug. */
+export type SeedMenuLink = { label: string; newTab?: boolean; children?: SeedMenuLink[] } & (
+  | { search: string }
+  | { url: string }
+  | { page: string }
+  | { area: string }
+  | { project: string }
+  | { category: string }
+);

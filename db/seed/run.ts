@@ -52,6 +52,7 @@ import {
 import { seedPages } from "./pages";
 import { seedContent } from "./content";
 import { seedCrm } from "./crm";
+import { seedMenus } from "./menus";
 import { rng } from "./rng";
 import type { ListingSpec, SeedPreset } from "./types";
 
@@ -108,6 +109,7 @@ const resetOrder = [
   "locations",
   "seo_redirects",
   "saved_views",
+  "menus",
   "page_revisions",
   "pages",
   "media",
@@ -795,6 +797,8 @@ export async function seedPreset(
       locationKeys: new Map(preset.locations.map((l) => [l.key, l.slug])),
     });
   }
+  progress("Menus");
+  await seedMenus(db, preset);
 
   progress("Badges and nearby places");
   await refreshAutoBadges(db, listingIds, now);
@@ -837,6 +841,7 @@ export async function seedPreset(
     "contacts",
     "leads",
     "lead_events",
+    "menus",
   ])
     counts[t] = await count(t);
   return { admins, counts };

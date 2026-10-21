@@ -4,6 +4,7 @@ import { getDb } from "@/db/client";
 import { havenDune } from "@/db/seed/presets/haven-dune";
 import { findPublicPage } from "@/features/cms/page-public";
 import { getHomePage } from "@/features/cms/queries";
+import { buildSiteMenus } from "@/features/menus/queries";
 import { sectionInputSchema } from "@/features/cms/sections";
 import { seedPreset, type SeedResult } from "@/db/seed/run";
 import { parseSearch } from "@/features/search/params";
@@ -32,6 +33,25 @@ describe("demo seed: Haven & Dune", () => {
     setStorage(null);
     // The seed sets the market up (AED, sq ft, "HD" references): later files expect defaults.
     await truncate("settings");
+  });
+
+  it("seeds the header and footer menus (links to pages the preset lacks are left out)", async () => {
+    const site = await buildSiteMenus(await getDb());
+    const header = site.header.links;
+    expect(header.map((l) => l.label)).toEqual(
+      expect.arrayContaining(["Buy", "Rent", "Off-plan", "Agents"]),
+    );
+    expect(header.find((l) => l.label === "Buy")?.children.map((c) => c.href)).toContain(
+      "/buy/dubai-marina",
+    );
+    expect(site.footer_1).toMatchObject({
+      title: "Explore",
+      links: expect.arrayContaining([
+        expect.objectContaining({ label: "Homes for sale", href: "/buy" }),
+      ]),
+    });
+    expect(site.footer_2.title).toBe("Areas");
+    expect(result.counts.menus).toBe(4);
   });
 
   it("creates the 16 §1 mix of listings, projects, agents and places", async () => {
