@@ -69,3 +69,23 @@ export const timelineOptions = [
   { value: "later", label: "Later than a year" },
   { value: "browsing", label: "Just browsing" },
 ] as const;
+
+/** How a lead added by the team reached the agency (09 §1 #19), kept as the source detail. */
+export const manualLeadKinds = ["walk-in", "phone call", "referral", "other"] as const;
+
+export const manualLeadSchema = z
+  .object({
+    name: z.string().trim().min(1, "Enter a name").max(120),
+    email: z.union([z.email("Enter a valid email address").max(160), z.literal("")]).default(""),
+    phone: z.string().trim().max(30).default(""),
+    type: z.string().trim().max(30).nullable().default(null),
+    how: z.enum(manualLeadKinds).default("phone call"),
+    propertyId: z.uuid().nullable().default(null),
+    agentId: z.uuid().nullable().default(null),
+    message: z.string().trim().max(2000).default(""),
+  })
+  .strict()
+  .refine((v) => v.email || v.phone, {
+    path: ["email"],
+    message: "Enter an email address or a phone number",
+  });
