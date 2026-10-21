@@ -225,6 +225,32 @@ export async function listPublicProjects(f: ProjectFilters): Promise<ProjectCard
   return cards(db, publicWhere(f), 200);
 }
 
+/** Cards for the home page's "Projects showcase" section (08 §1): featured, a pick, or an area. */
+export async function showcaseProjectCards(props: {
+  source: "featured" | "manual" | "area";
+  projectIds: string[];
+  locationId: string | null;
+  count: number;
+}): Promise<ProjectCardData[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(tags.projects, tags.developers, tags.locations);
+  const db = await getDb();
+  const where = publicWhere();
+  if (props.source === "manual") {
+    if (props.projectIds.length === 0) return [];
+    where.push(inArray(projects.id, props.projectIds));
+  }
+  if (props.source === "area" && props.locationId)
+    where.push(sql`${projects.locationId} in (
+      with recursive sub as (
+        select id from locations where id = ${props.locationId}::uuid
+        union all
+        select l.id from locations l join sub on l.parent_id = sub.id
+      ) select id from sub)`);
+  return cards(db, where, props.count);
+}
+
 /** Choices for the /projects filters: only areas, developers and years that have projects. */
 export async function publicProjectFilterOptions(): Promise<{
   areas: Array<{ slug: string; name: string }>;

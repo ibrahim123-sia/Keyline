@@ -4,15 +4,11 @@ import { cacheLife, cacheTag } from "next/cache";
 import { getDb } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { pages } from "@/db/schema/cms";
-import { developers, locations, propertyTypes } from "@/db/schema/master-data";
+import { locations, propertyTypes } from "@/db/schema/master-data";
 import { media } from "@/db/schema/media";
-import { paymentPlans } from "@/db/schema/payment-plans";
-import { projectMedia, projects } from "@/db/schema/projects";
 import { properties, propertyMedia } from "@/db/schema/properties";
 import { loadListingCards, type ListingCardData } from "@/features/listings/cards";
 import { mediaUrl } from "@/features/media/queries";
-import { loadPlans } from "@/features/payment-plans/store";
-import { suggestSummaryLabel } from "@/features/payment-plans/schema";
 import { searchableStatuses } from "@/features/properties/status";
 import { parseSearch } from "@/features/search/params";
 import { searchListings } from "@/features/search/query";
@@ -103,113 +99,6 @@ export async function featuredListingCards(props: {
     db,
     rows.map((r) => r.id),
   );
-}
-
-export type ProjectCardData = {
-  id: string;
-  slug: string;
-  name: string;
-  developerName: string | null;
-  locationName: string | null;
-  cover: { url: string; alt: string; color: string | null } | null;
-  handover: string | null;
-  startingPrice: number | null;
-  currency: string | null;
-  planLabel: string | null;
-  unitTypesSummary: string | null;
-  progress: number | null;
-};
-
-/** Published projects for a "Projects showcase" section: featured first. */
-export async function showcaseProjects(props: {
-  source: "featured" | "manual" | "area";
-  projectIds: string[];
-  locationId: string | null;
-  count: number;
-}): Promise<ProjectCardData[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(tags.projects);
-  const db = await getDb();
-  const where = [
-    eq(projects.agencyId, currentAgencyId()),
-    eq(projects.isPublished, true),
-    isNull(projects.deletedAt),
-  ];
-  if (props.source === "manual" && props.projectIds.length)
-    where.push(inArray(projects.id, props.projectIds));
-  if (props.source === "area" && props.locationId)
-    where.push(
-      sql`${projects.locationId} in (with recursive sub as (select id from locations where id = ${props.locationId}::uuid union all select l.id from locations l join sub on l.parent_id = sub.id) select id from sub)`,
-    );
-  const rows = await db
-    .select({
-      id: projects.id,
-      slug: projects.slug,
-      name: projects.name,
-      developerName: developers.name,
-      locationName: locations.name,
-      handoverText: projects.handoverText,
-      handoverDate: projects.handoverDate,
-      startingPrice: projects.startingPrice,
-      currency: projects.currency,
-      planId: projects.paymentPlanId,
-      planLabel: paymentPlans.summaryLabel,
-      unitTypesSummary: projects.unitTypesSummary,
-      progress: projects.constructionProgress,
-    })
-    .from(projects)
-    .leftJoin(developers, eq(developers.id, projects.developerId))
-    .leftJoin(locations, eq(locations.id, projects.locationId))
-    .leftJoin(paymentPlans, eq(paymentPlans.id, projects.paymentPlanId))
-    .where(and(...where))
-    .orderBy(desc(projects.isFeatured), desc(projects.publishedAt))
-    .limit(props.count);
-  const ids = rows.map((r) => r.id);
-  const covers = ids.length
-    ? await db
-        .select({
-          projectId: projectMedia.projectId,
-          key: media.r2Key,
-          alt: projectMedia.alt,
-          libraryAlt: media.alt,
-          color: media.dominantColor,
-        })
-        .from(projectMedia)
-        .innerJoin(media, eq(media.id, projectMedia.mediaId))
-        .where(
-          and(
-            inArray(projectMedia.projectId, ids),
-            eq(projectMedia.kind, "photo"),
-            eq(media.status, "ready"),
-          ),
-        )
-        .orderBy(desc(projectMedia.isCover), asc(projectMedia.sortOrder))
-    : [];
-  const plans = await loadPlans(
-    db,
-    rows.flatMap((r) => (r.planId ? [r.planId] : [])),
-  );
-  return rows.map((r) => {
-    const cover = covers.find((c) => c.projectId === r.id);
-    const plan = r.planId ? plans.get(r.planId) : undefined;
-    return {
-      id: r.id,
-      slug: r.slug,
-      name: r.name,
-      developerName: r.developerName,
-      locationName: r.locationName,
-      cover: cover
-        ? { url: mediaUrl(cover.key), alt: cover.alt || cover.libraryAlt || "", color: cover.color }
-        : null,
-      handover: r.handoverText || r.handoverDate,
-      startingPrice: r.startingPrice,
-      currency: r.currency,
-      planLabel: r.planLabel || (plan ? suggestSummaryLabel(plan.steps) || null : null),
-      unitTypesSummary: r.unitTypesSummary,
-      progress: r.progress,
-    };
-  });
 }
 
 export type AreaCardData = {

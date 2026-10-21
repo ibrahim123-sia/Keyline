@@ -1,20 +1,12 @@
 import { BadgeCheckIcon, MapPinIcon } from "lucide-react";
 import { Suspense, type ReactNode } from "react";
-import {
-  ListingCard,
-  handoverLabel,
-  type CardContext,
-} from "@/components/site/listings/listing-card";
+import { ListingCard, type CardContext } from "@/components/site/listings/listing-card";
 import { MediaImage } from "@/components/site/media-image";
-import { PriceTag } from "@/components/site/price-tag";
+import { ProjectCard } from "@/components/site/projects/project-card";
 import { getPublicMedia } from "@/features/media/queries";
 import { visitorCurrency } from "@/features/site/currency";
-import {
-  areaCards,
-  featuredListingCards,
-  heroSearchOptions,
-  showcaseProjects,
-} from "@/features/cms/queries";
+import { areaCards, featuredListingCards, heroSearchOptions } from "@/features/cms/queries";
+import { showcaseProjectCards } from "@/features/projects/public";
 import type { Section } from "@/features/cms/sections";
 import { Icon } from "@/lib/icons";
 import { sectionsText as t } from "@/lib/i18n/dictionaries/home";
@@ -190,7 +182,7 @@ async function ProjectsShowcase({
   s: Extract<Section, { type: "projects_showcase" }>;
   ctx: SectionContext;
 }) {
-  const [items, cardCtx] = await Promise.all([showcaseProjects(s.props), withCurrency(ctx)]);
+  const [items, cardCtx] = await Promise.all([showcaseProjectCards(s.props), withCurrency(ctx)]);
   if (items.length === 0) return null;
   const style = s.props.dark ? { ...s.style, background: "ink" as const } : s.style;
   return (
@@ -211,58 +203,12 @@ async function ProjectsShowcase({
       />
       <ul className="grid gap-6 md:grid-cols-2">
         {items.map((p) => (
-          <li key={p.id}>
-            <article className="relative overflow-hidden rounded-[20px] bg-ink-soft">
-              {p.cover ? (
-                <MediaImage
-                  src={p.cover.url}
-                  alt=""
-                  sizes="(min-width: 768px) 50vw, 100vw"
-                  aspect="16 / 10"
-                  color={p.cover.color}
-                />
-              ) : (
-                <div className="aspect-[16/10] bg-photo-placeholder" />
-              )}
-              <div className="flex flex-col gap-2 p-5 text-surface">
-                <div className="flex flex-wrap items-center gap-2 text-[12.5px]">
-                  {p.planLabel && (
-                    <span className="rounded-full bg-accent px-2.5 py-0.5 font-semibold text-on-accent">
-                      {p.planLabel}
-                    </span>
-                  )}
-                  {p.handover && (
-                    <span className="text-surface/80">
-                      {t.projects.handover} {handoverLabel(p.handover)}
-                    </span>
-                  )}
-                </div>
-                <h3 className="text-h3 text-surface">
-                  <a
-                    href={`/projects/${p.slug}`}
-                    className="after:absolute after:inset-0 after:content-['']"
-                  >
-                    {p.name}
-                  </a>
-                </h3>
-                <p className="text-[14px] text-surface/80">
-                  {[p.developerName, p.locationName].filter(Boolean).join(" · ")}
-                </p>
-                {p.startingPrice != null && p.currency && (
-                  <PriceTag
-                    price={p.startingPrice}
-                    currency={p.currency}
-                    visitorCurrency={cardCtx.visitorCurrency}
-                    rates={cardCtx.rates}
-                    from
-                    className="text-[20px] text-surface [&_span]:text-surface/80"
-                  />
-                )}
-                {p.unitTypesSummary && (
-                  <p className="text-[13px] text-surface/75">{p.unitTypesSummary}</p>
-                )}
-              </div>
-            </article>
+          <li key={p.id} className="flex">
+            <ProjectCard
+              project={p}
+              visitorCurrency={cardCtx.visitorCurrency}
+              rates={cardCtx.rates}
+            />
           </li>
         ))}
       </ul>
