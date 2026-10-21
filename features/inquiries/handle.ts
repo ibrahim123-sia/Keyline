@@ -1,18 +1,15 @@
 import "server-only";
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import { createElement } from "react";
-import type { DbOrTx } from "@/db/client";
+import type { Db } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
+import type { LeadSource } from "@/db/schema/crm";
 import { agents } from "@/db/schema/people";
 import { properties } from "@/db/schema/properties";
-import { loadEmailBrand } from "@/emails/brand";
-import { ListingInquiryEmail } from "@/emails/inquiry-emails";
-import { renderEmail } from "@/emails/render";
-import { queueEmail } from "@/features/notifications/email";
+import { captureLead } from "@/features/leads/capture";
 import { liveStatuses } from "@/features/properties/status";
 import { loadSettings } from "@/features/settings/queries";
 import { ActionError } from "@/lib/actions";
-import { normalizeVisitorPhone, type InquiryKind } from "./schema";
+import type { InquiryKind } from "./schema";
 
 export type ListingInquiry = {
   propertyId: string;
@@ -23,31 +20,28 @@ export type ListingInquiry = {
   message: string;
   preferredTime: string;
   similar: boolean;
+  /** The visitor cookie, for attribution. */
+  visitorKey?: string | null;
 };
 
-const subjects: Record<InquiryKind, string> = {
-  inquiry: "New question",
-  tour: "Tour request",
-  callback: "Callback request",
+const sources: Record<InquiryKind, LeadSource> = {
+  inquiry: "form",
+  tour: "tour",
+  callback: "callback",
 };
 
 /**
- * A visitor's question, tour or callback request from a listing page (06 §5, §10): the agent
- * (or the agency's lead inbox) gets an email to reply to. Returns who will answer, for the
- * "what happens next" message. Phase 6 creates the lead from this same call.
+ * A visitor's question, tour or callback request from a listing page (06 §5, 09 §1 #1, #6,
+ * #7): it becomes a lead (or a new entry on their open lead) with the listing as interest; the
+ * agent and the agency inbox are told, and tours and callbacks get a task. Returns who will
+ * answer, for the "what happens next" message.
  */
 export async function handleListingInquiry(
-  db: DbOrTx,
+  db: Db,
   input: ListingInquiry,
-): Promise<{ who: string; emailsQueued: number }> {
+): Promise<{ who: string; leadId: string }> {
   const [listing] = await db
-    .select({
-      id: properties.id,
-      reference: properties.reference,
-      title: properties.title,
-      slug: properties.slug,
-      agentId: properties.agentId,
-    })
+    .select({ id: properties.id, reference: properties.reference })
     .from(properties)
     .where(
       and(
@@ -59,66 +53,44 @@ export async function handleListingInquiry(
     );
   if (!listing) throw new ActionError("This home is no longer listed.", "NOT_FOUND");
 
-  const market = await loadSettings("market", db);
-  const phone = input.phone ? normalizeVisitorPhone(input.phone, market.phoneCountryCode) : null;
-  if (input.phone && !phone)
-    throw new ActionError("Please check the highlighted fields.", "VALIDATION", {
-      phone: ["Enter the number with the country code, for example +44 20 7946 0000"],
-    });
+  const when = input.preferredTime.trim();
+  const task =
+    input.kind === "callback"
+      ? { title: when ? `Call back (best time: ${when})` : "Call back", dueAt: new Date() }
+      : input.kind === "tour"
+        ? {
+            title: when
+              ? `Arrange a tour of ${listing.reference} (asked for ${when})`
+              : `Arrange a tour of ${listing.reference}`,
+            dueAt: new Date(),
+          }
+        : null;
 
-  const contact = await loadSettings("contact", db);
-  const general = await loadSettings("general", db);
-  const [agent] = listing.agentId
-    ? await db
-        .select({ name: agents.name, email: agents.email, isActive: agents.isActive })
-        .from(agents)
-        .where(eq(agents.id, listing.agentId))
-    : [];
-  const recipients =
-    agent?.isActive && agent.email
-      ? [agent.email]
-      : contact.leadNotifyEmails.length
-        ? contact.leadNotifyEmails
-        : contact.email
-          ? [contact.email]
-          : [];
-  if (recipients.length === 0)
-    throw new ActionError(
-      "We couldn't send your message right now. Please call or message us instead.",
-      "NO_RECIPIENT",
-    );
-
-  const brand = await loadEmailBrand(db);
-  const { html, text } = await renderEmail(
-    createElement(ListingInquiryEmail, {
-      brand,
-      kind: input.kind,
-      reference: listing.reference,
-      title: listing.title,
-      listingUrl: `${brand.appUrl}/property/${listing.slug}`,
+  const lead = await captureLead(db, {
+    source: sources[input.kind],
+    sourceDetail: "listing",
+    contact: {
       name: input.name,
       email: input.email || null,
-      phone,
-      message: input.message,
-      preferredTime: input.preferredTime,
-      similar: input.similar,
-    }),
-  );
-  for (const to of recipients)
-    await queueEmail(
-      {
-        to,
-        subject: `${subjects[input.kind]}: ${listing.reference} from ${input.name}`,
-        template: `listing.${input.kind}`,
-        html,
-        text,
-        replyTo: input.email || undefined,
-        related: { type: "property", id: listing.id },
-      },
-      db,
-    );
-  return {
-    who: agent?.isActive ? agent.name : general.agencyName,
-    emailsQueued: recipients.length,
-  };
+      phone: input.phone || null,
+      preferredContact: input.kind === "callback" ? "call" : null,
+    },
+    propertyId: listing.id,
+    message: input.message || null,
+    details: {
+      ...(when ? { preferredTime: when } : {}),
+      ...(input.similar ? { similar: true } : {}),
+    },
+    visitorKey: input.visitorKey ?? null,
+    task,
+  });
+
+  const [agent] = lead.agentId
+    ? await db
+        .select({ name: agents.name, isActive: agents.isActive })
+        .from(agents)
+        .where(eq(agents.id, lead.agentId))
+    : [];
+  const who = agent?.isActive ? agent.name : (await loadSettings("general", db)).agencyName;
+  return { who, leadId: lead.leadId };
 }

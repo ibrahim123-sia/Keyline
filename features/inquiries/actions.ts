@@ -1,6 +1,7 @@
 "use server";
 
 import { getDb } from "@/db/client";
+import { currentVisitorKey } from "@/features/attribution/current";
 import { errorsByPath, toActionError, type ActionResult } from "@/lib/actions";
 import { hit, rateLimitRules } from "@/lib/rate-limit";
 import { currentRequestMeta } from "@/lib/request";
@@ -10,8 +11,8 @@ import { inquirySchema, type InquiryInput } from "./schema";
 
 /**
  * Public listing form (06 §5, §10): validated on the server, honeypot, a per-IP rate limit and
- * Turnstile; then the agent or agency is emailed. Bots that fill the honeypot get the same
- * success answer, so they learn nothing.
+ * Turnstile; then it becomes a lead (09 §3) with the visitor's attribution. Bots that fill the
+ * honeypot get the same success answer, so they learn nothing.
  */
 export async function sendListingInquiry(
   input: InquiryInput,
@@ -55,6 +56,7 @@ export async function sendListingInquiry(
       message: data.message,
       preferredTime: data.preferredTime,
       similar: data.similar,
+      visitorKey: await currentVisitorKey(),
     });
     return { ok: true, data: { who: res.who } };
   } catch (err) {

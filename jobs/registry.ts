@@ -1,3 +1,4 @@
+import { leadProcessJob, leadScoreJob } from "@/features/leads/process";
 import { mediaFetchUrlJob } from "@/features/media/fetch-url";
 import { mediaProcessJob } from "@/features/media/process";
 import { emailSendJob } from "@/features/notifications/email";
@@ -7,6 +8,8 @@ import type { JobDefinition } from "./types";
 /** Every queue job by name (13-integrations-and-jobs.md §2). */
 const jobs: JobDefinition[] = [
   emailSendJob as JobDefinition,
+  leadProcessJob as JobDefinition,
+  leadScoreJob as JobDefinition,
   mediaProcessJob as JobDefinition,
   mediaFetchUrlJob as JobDefinition,
   poiComputeJob as JobDefinition,

@@ -143,7 +143,7 @@ test("property page: blocks, gallery viewer and an inquiry that reaches the agen
   const whatsapp = card.getByRole("link", { name: "WhatsApp" });
   await expect(whatsapp).toHaveAttribute("href", /^https:\/\/wa\.me\/971501112233\?text=.*HD-E2E1/);
 
-  // The inquiry form emails the agent.
+  // The inquiry form makes a lead; the agent is emailed.
   await card.getByRole("textbox", { name: "Name" }).fill("Sam Visitor");
   await card.getByRole("textbox", { name: "Email" }).fill("sam@example.com");
   await card.getByRole("textbox", { name: "Phone" }).fill("050 123 4567");
@@ -155,10 +155,18 @@ test("property page: blocks, gallery viewer and an inquiry that reaches the agen
   await expect
     .poll(
       async () =>
-        (await db().query(`select "to", subject from email_log where template = 'listing.inquiry'`))
-          .rows,
+        (
+          await db().query(
+            `select "to", subject from email_log where template = 'lead.new' and "to" = 'layla@agency.example'`,
+          )
+        ).rows,
     )
-    .toEqual([{ to: "layla@agency.example", subject: "New question: HD-E2E1 from Sam Visitor" }]);
+    .toEqual([
+      {
+        to: "layla@agency.example",
+        subject: "New lead: Sam Visitor · HD-E2E1 · Website form, listing",
+      },
+    ]);
 });
 
 test("property page @phone: contact options stay at the bottom", async ({

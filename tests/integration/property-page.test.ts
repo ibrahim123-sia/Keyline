@@ -9,6 +9,8 @@ import { projects } from "@/db/schema/projects";
 import { properties, propertyMedia } from "@/db/schema/properties";
 import { seoRedirects } from "@/db/schema/seo";
 import { emailLog } from "@/db/schema/system";
+import { leads, leadTasks } from "@/db/schema/crm";
+import { runDueJobs } from "@/jobs/runner";
 import { sendListingInquiry } from "@/features/inquiries/actions";
 import { publicCards } from "@/features/listings/public-cards";
 import { getPublicListing, listingRedirect } from "@/features/listings/public";
@@ -243,6 +245,12 @@ describe("listing inquiry form", () => {
     adminState.user = testAdmin;
     setTurnstileVerifier(async (token) => token === "good-token");
     await truncate(
+      "contacts",
+      "leads",
+      "lead_events",
+      "lead_tasks",
+      "visitors",
+      "message_templates",
       "properties",
       "agents",
       "locations",
@@ -272,36 +280,55 @@ describe("listing inquiry form", () => {
     captchaToken: "good-token",
   });
 
-  it("emails the agent, with the visitor as reply-to", async () => {
+  const runJobs = async () => {
+    for (let i = 0; i < 5; i++) if ((await runDueJobs()).ran === 0) return;
+  };
+
+  it("becomes a lead for the listing's agent; the agent and the agency inbox are emailed", async () => {
     const { db, ids } = await world();
     const id = await listing(db, { agentId: ids.agent });
     expect(await sendListingInquiry(valid(id))).toEqual({
       ok: true,
       data: { who: "Layla Haddad" },
     });
-    const [mail] = await db.select().from(emailLog);
-    expect(mail).toMatchObject({ to: "layla@agency.example", template: "listing.inquiry" });
-    expect(mail!.subject).toMatch(/^New question: HD-\d+ from Sam Visitor$/);
-    expect(mail!.text).toContain("+971501234567");
-    expect(mail!.text).toContain("Is it still available?");
+    const [lead] = await db.select().from(leads);
+    expect(lead).toMatchObject({ source: "form", agentId: ids.agent, propertyIds: [id] });
+    await runJobs();
+    const mails = await db.select().from(emailLog);
+    expect(mails.map((m) => [m.to, m.template]).sort()).toEqual([
+      ["hello@agency.example", "lead.new"],
+      ["layla@agency.example", "lead.new"],
+      ["sam@example.com", "lead.auto_reply"],
+    ]);
+    const toAgent = mails.find((m) => m.to === "layla@agency.example")!;
+    expect(toAgent.subject).toMatch(/^New lead: Sam Visitor · HD-\d+ · Website form, listing$/);
+    expect(toAgent.text).toContain("+971501234567");
+    expect(toAgent.text).toContain("Is it still available?");
+    expect(toAgent.text).toContain("Would also like similar homes");
   });
 
-  it("without an agent the agency inbox gets it; tours and callbacks too", async () => {
-    const { db } = await world();
+  it("tours and callbacks are leads with a task; without a listing agent, round robin", async () => {
+    const { db, ids } = await world();
     const id = await listing(db, {});
     const tour = await sendListingInquiry({
       ...valid(id),
       kind: "tour",
       preferredTime: "Saturday 10am",
     });
-    expect(tour).toMatchObject({ ok: true });
+    expect(tour).toEqual({ ok: true, data: { who: "Layla Haddad" } });
     expect(
       await sendListingInquiry({ ...valid(id), kind: "callback", email: "", message: "" }),
     ).toMatchObject({ ok: true });
-    const mails = await db.select().from(emailLog);
-    expect(mails.map((m) => [m.to, m.template]).sort()).toEqual([
-      ["hello@agency.example", "listing.callback"],
-      ["hello@agency.example", "listing.tour"],
+    // The same person (by phone): one lead, two tasks.
+    const all = await db.select().from(leads);
+    expect(all).toHaveLength(1);
+    expect(all[0]).toMatchObject({ source: "tour", agentId: ids.agent });
+    const tasks = await db.select({ title: leadTasks.title }).from(leadTasks);
+    expect(tasks.map((x) => x.title).sort()).toEqual([
+      "Arrange a tour of " +
+        (await db.select().from(properties))[0]!.reference +
+        " (asked for Saturday 10am)",
+      "Call back",
     ]);
   });
 
@@ -332,7 +359,7 @@ describe("listing inquiry form", () => {
       ok: true,
       data: { who: "" },
     });
-    expect(await db.select().from(emailLog)).toEqual([]);
+    expect(await db.select().from(leads)).toEqual([]);
     // 5 a minute per address (the checks above count too).
     let last;
     for (let i = 0; i < 6; i++) last = await sendListingInquiry(valid(id));

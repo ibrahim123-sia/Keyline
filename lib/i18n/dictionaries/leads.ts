@@ -1,0 +1,56 @@
+import type { LeadSource, Touch } from "@/db/schema/crm";
+
+/** Leads, CRM and attribution wording (09). Admin screens and notification emails use it. */
+export const leads = {
+  sources: {
+    form: "Website form",
+    chat: "Website chat",
+    whatsapp: "WhatsApp",
+    tour: "Tour request",
+    callback: "Callback request",
+    call_click: "Call button",
+    mortgage: "Mortgage pre-approval",
+    roi: "ROI report",
+    brochure: "Brochure download",
+    valuation: "Valuation request",
+    listing_request: "List your property",
+    signup: "Account signup",
+    saved_search: "Saved search",
+    newsletter: "Newsletter",
+    portal: "Property portal",
+    social_form: "Social lead form",
+    manual: "Added by the team",
+    import: "CSV import",
+    qr: "QR code",
+  } satisfies Record<LeadSource, string>,
+  channels: {
+    paid_search: "Paid search",
+    paid_social: "Paid social",
+    organic_search: "Search",
+    organic_social: "Social",
+    email: "Email",
+    referral: "Referral",
+    direct: "Direct",
+    portal: "Portal",
+    offline_qr: "QR code",
+  } satisfies Record<Touch["channel"], string>,
+  unassigned: "Not assigned yet",
+  /** Form details shown in emails and on the timeline. */
+  details: {
+    preferredTime: "Preferred time",
+    similar: "Would also like similar homes",
+    topic: "Topic",
+    phoneAsGiven: "Phone as typed",
+  },
+  noInterest: "General enquiry",
+  score: {
+    statedBudget: "Gave a budget",
+    budgetFits: "Budget fits the homes asked about",
+    soonTimeline: "Wants to move within 3 months",
+    cashOrApproved: "Cash buyer or pre-approved",
+    fullContact: "Gave email and phone",
+    someContact: "Gave one way to reach them",
+    askedViewing: "Asked for a viewing",
+    vague: "Only browsing or vague",
+  },
+};

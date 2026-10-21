@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { jobRuns } from "@/db/schema/system";
+import { alertUnansweredLeads } from "@/features/leads/process";
 import { cleanupStaleUploads } from "@/features/media/maintenance";
 import { recountAllMediaUsage } from "@/features/media/usage";
 import { refreshStalePois, refreshStaleProjectPois } from "@/features/pois/distances";
@@ -35,6 +36,13 @@ export const every = (minutes: number) => (t: LocalTime) =>
 export const cronTasks: CronTask[] = [
   // Every minute: queued jobs whose time has come (retries, delayed jobs, lost messages).
   { name: "jobs.run-due", schedule: "every minute", due: () => true, run: () => runDueJobs() },
+  // 09 §3.8: leads nobody answered in time alert the team once.
+  {
+    name: "leads.response-timer",
+    schedule: "every minute",
+    due: () => true,
+    run: async () => alertUnansweredLeads(await getDb()),
+  },
   {
     name: "jobs.requeue-stuck",
     schedule: "every 15 minutes",
