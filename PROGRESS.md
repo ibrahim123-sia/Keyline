@@ -239,6 +239,7 @@ Done-when checklist (from `15-build-phases.md`):
 58. **Message templates** have built-in wording in code with `{{variables}}`; an agency's own version (`message_templates`) wins, and a template can be turned off. Emails use the branded layout.
 59. **"Admins" in the notification matrix** means the agency's lead inbox (Settings -> Contact lead alert emails, else the main email), as with the Phase 4 forms; a new lead goes to the agent and that inbox as Settings -> Notifications says.
 60. **Tour requests from the listing page** become leads with an "Arrange a tour" task until the booking flow with real free slots replaces the dialog (Phase 6 viewings).
+61. **Campaign links (09 §2)** point only at pages on this site (a full address on another host is refused, so `/go/<code>` can never be an open redirect). Short codes are five characters without look-alikes; clicks from bots and link previews (WhatsApp, crawlers) are not counted; an unknown or deleted code lands on the home page, because printed QR codes outlive campaigns. QR codes are drawn on demand (SVG, PNG from it in the browser) with `uqr`, already used for two-step setup, instead of being stored (`qr_svg_key` is not needed).
 
 ## Data model changes (vs `05-data-model.md`)
 

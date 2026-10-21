@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { getDb } from "@/db/client";
 import { visitorEventTypes } from "@/db/schema/crm";
+import { isBot } from "@/features/attribution/bots";
 import { recordTrack } from "@/features/attribution/record";
 import { parseVisitorCookie, VISITOR_COOKIE } from "@/features/attribution/visitor-cookie";
 import { loadSettings } from "@/features/settings/queries";
@@ -27,10 +28,6 @@ const trackSchema = z.object({
     .optional(),
 });
 
-/** Crawlers, link previews and lab tools are not visitors. */
-const BOT =
-  /bot|crawl|spider|slurp|preview|facebookexternalhit|headlesschrome|lighthouse|pingdom|uptime|monitor/i;
-
 function deviceFrom(ua: string): string {
   if (/ipad|tablet/i.test(ua)) return "tablet";
   if (/mobi|android|iphone/i.test(ua)) return "mobile";
@@ -45,7 +42,7 @@ const done = () => new Response(null, { status: 204 });
  */
 export async function POST(request: Request): Promise<Response> {
   const ua = request.headers.get("user-agent") ?? "";
-  if (!ua || BOT.test(ua)) return done();
+  if (isBot(ua)) return done();
   const jar = await cookies();
   const visitor = parseVisitorCookie(jar.get(VISITOR_COOKIE)?.value);
   if (!visitor) return done();

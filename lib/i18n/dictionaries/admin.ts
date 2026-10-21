@@ -7,6 +7,7 @@ export const admin = {
     leads: "Leads",
     contacts: "Contacts",
     viewings: "Viewings",
+    campaigns: "Campaigns",
     properties: "Properties",
     projects: "Projects",
     website: "Website",

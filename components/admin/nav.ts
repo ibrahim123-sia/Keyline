@@ -11,6 +11,7 @@ import {
   LayoutDashboardIcon,
   MapIcon,
   MapPinIcon,
+  MegaphoneIcon,
   MenuSquareIcon,
   NewspaperIcon,
   PercentIcon,
@@ -44,6 +45,7 @@ export const adminNav: AdminNavGroup[] = [
       { key: "leads", href: "/admin/leads", icon: UsersIcon, enabled: false },
       { key: "contacts", href: "/admin/contacts", icon: ContactIcon, enabled: false },
       { key: "viewings", href: "/admin/viewings", icon: CalendarDaysIcon, enabled: false },
+      { key: "campaigns", href: "/admin/campaigns", icon: MegaphoneIcon, enabled: true },
     ],
   },
   {
