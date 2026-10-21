@@ -323,6 +323,7 @@ export function LeadsManager({
             {filters}
           </div>
           <LeadsKanban
+            now={now}
             rows={rows}
             stages={options.stages}
             lostReasons={options.lostReasons}

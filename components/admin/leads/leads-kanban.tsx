@@ -29,11 +29,13 @@ function Card({
   stages,
   readOnly,
   onMove,
+  now,
 }: {
   lead: LeadRow;
   stages: LeadStageOption[];
   readOnly?: boolean;
   onMove: (lead: LeadRow, stageId: string) => void;
+  now: Date;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: lead.id,
@@ -68,8 +70,8 @@ function Card({
         <span className="truncate">{lead.agentName ?? "Not assigned"}</span>
         <span className={cn("shrink-0", lead.overdue && "font-semibold text-danger")}>
           {lead.waiting
-            ? `Waiting ${relativeTime(lead.createdAt).replace(" ago", "")}`
-            : relativeTime(lead.lastActivityAt)}
+            ? `Waiting ${relativeTime(lead.createdAt, now).replace(" ago", "")}`
+            : relativeTime(lead.lastActivityAt, now)}
         </span>
       </div>
       {!readOnly && (
@@ -134,7 +136,9 @@ export function LeadsKanban({
   lostReasons,
   currency,
   readOnly,
+  now,
 }: {
+  now: Date;
   rows: LeadRow[];
   stages: LeadStageOption[];
   lostReasons: string[];
@@ -225,6 +229,7 @@ export function LeadsKanban({
                       stages={stages}
                       readOnly={readOnly}
                       onMove={move}
+                      now={now}
                     />
                   ))}
                   {inStage.length === 0 && (
