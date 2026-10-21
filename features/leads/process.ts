@@ -8,8 +8,11 @@ import { agents } from "@/db/schema/people";
 import { projects } from "@/db/schema/projects";
 import { properties } from "@/db/schema/properties";
 import { emailLog } from "@/db/schema/system";
+import { insideWindow, leadReplyAddress, templateParameters, waId } from "@/features/inbox/rules";
+import { ensureConversation, sendOutgoing } from "@/features/inbox/store";
+import { queueWhatsappNotice } from "@/features/integrations/whatsapp/jobs";
+import { fillTemplate, templateDefaults, type TemplateKey } from "@/features/messages/defaults";
 import { renderTemplateEmail } from "@/features/messages/render";
-import type { TemplateKey } from "@/features/messages/defaults";
 import { queueEmail } from "@/features/notifications/email";
 import { loadSettings } from "@/features/settings/queries";
 import { siteUrl } from "@/features/site/url";
@@ -170,26 +173,104 @@ async function notifyTeam(
   if (notifications.agents.newLead.email && ctx.agent?.isActive && ctx.agent.email)
     to.push(ctx.agent.email);
   const source = t.sources[ctx.lead.source];
+  const key = isNew ? "lead.new" : "lead.new_message";
+  const vars = {
+    name: ctx.contact.name,
+    phone: ctx.contact.phone,
+    email: ctx.contact.email,
+    source: ctx.lead.sourceDetail ? `${source}, ${ctx.lead.sourceDetail}` : source,
+    reference: ctx.listing?.reference ?? ctx.project?.name ?? null,
+    interest: interestOf(ctx),
+    details: detailsText(ctx.event?.meta.details),
+    message: ctx.event?.body ?? null,
+    agent: ctx.agent?.name ?? t.unassigned,
+    url: leadAdminUrl(ctx.lead.id),
+  };
+  // WhatsApp notices (13 §3): the agent and, if set, the agency's lead number.
+  const numbers: string[] = [];
+  if (notifications.admins.newLead.whatsapp) numbers.push(...(await agencyWhatsapp(db)));
+  if (notifications.agents.newLead.whatsapp && ctx.agent?.isActive && ctx.agent.whatsapp)
+    numbers.push(ctx.agent.whatsapp);
+  await whatsappNotices(db, key, numbers, vars, `wa:${eventId}`);
   return sendTemplate(
     db,
-    isNew ? "lead.new" : "lead.new_message",
+    key,
     to,
-    {
-      name: ctx.contact.name,
-      phone: ctx.contact.phone,
-      email: ctx.contact.email,
-      source: ctx.lead.sourceDetail ? `${source}, ${ctx.lead.sourceDetail}` : source,
-      reference: ctx.listing?.reference ?? ctx.project?.name ?? null,
-      interest: interestOf(ctx),
-      details: detailsText(ctx.event?.meta.details),
-      message: ctx.event?.body ?? null,
-      agent: ctx.agent?.name ?? t.unassigned,
-      url: leadAdminUrl(ctx.lead.id),
-    },
+    vars,
     leadAdminUrl(ctx.lead.id),
     { type: "lead_event", id: eventId },
     ctx.contact.email,
   );
+}
+
+/** The agency's lead WhatsApp number (Settings -> Contact), for the "admins" column. */
+async function agencyWhatsapp(db: DbOrTx): Promise<string[]> {
+  const contact = await loadSettings("contact", db);
+  return contact.leadNotifyWhatsapp ? [contact.leadNotifyWhatsapp] : [];
+}
+
+/** Team notices on WhatsApp, only when WhatsApp is turned on; once per number and event. */
+async function whatsappNotices(
+  db: DbOrTx,
+  key: string,
+  numbers: string[],
+  vars: Record<string, string | number | null>,
+  dedupe: string,
+) {
+  if (numbers.length === 0) return;
+  if (!(await loadSettings("integrations", db)).whatsapp.enabled) return;
+  for (const to of new Set(numbers.map(waId).filter(Boolean)))
+    await queueWhatsappNotice(db, { to, key, vars, dedupeKey: `${dedupe}:${to}` });
+}
+
+/**
+ * The WhatsApp half of the auto-reply (09 §3.7): free text when they wrote to us on WhatsApp
+ * in the last 24 hours, else the approved template mapped to lead.auto_reply; nothing when
+ * neither is possible.
+ */
+async function whatsappAutoReply(
+  db: DbOrTx,
+  ctx: NonNullable<LeadContext>,
+  vars: Record<string, string | null>,
+): Promise<boolean> {
+  const number = ctx.contact.whatsapp || ctx.contact.phone;
+  const { whatsapp } = await loadSettings("integrations", db);
+  if (!number || !whatsapp.enabled) return false;
+  const now = new Date();
+  const conv = await ensureConversation(db, {
+    channel: "whatsapp",
+    contactId: ctx.contact.id,
+    leadId: ctx.lead.id,
+    externalId: waId(number),
+    now,
+  });
+  const open = insideWindow(conv.waWindowExpiresAt, now);
+  const mapping = whatsapp.templates["lead.auto_reply"];
+  if (!open && !mapping?.name) return false;
+  const text = fillTemplate(templateDefaults["lead.auto_reply"].whatsapp.body, vars);
+  const sent = await sendOutgoing(db, {
+    conversationId: conv.id,
+    text,
+    sender: "system",
+    template: open
+      ? null
+      : {
+          key: "lead.auto_reply",
+          name: mapping!.name,
+          language: mapping!.language || "en",
+          parameters: templateParameters(mapping!.variables, vars),
+        },
+    now,
+  });
+  await db.insert(leadEvents).values({
+    leadId: ctx.lead.id,
+    type: "whatsapp_out",
+    body: text,
+    meta: { template: "lead.auto_reply", auto: true, messageId: sent.messageId },
+    actorType: "system",
+    createdAt: now,
+  });
+  return true;
 }
 
 /** Sources where the visitor did not just write to us: no automatic reply. */
@@ -198,37 +279,46 @@ const noAutoReply = new Set(["manual", "import", "newsletter", "signup", "saved_
 /** 09 §3.7: the instant "thanks, [agent] will reach out" email. */
 async function autoReply(db: DbOrTx, ctx: NonNullable<LeadContext>): Promise<boolean> {
   const settings = await loadSettings("leads", db);
-  if (!settings.autoReply.enabled || !ctx.contact.email || noAutoReply.has(ctx.lead.source))
-    return false;
+  if (!settings.autoReply.enabled || noAutoReply.has(ctx.lead.source)) return false;
   const general = await loadSettings("general", db);
   const firstName = ctx.contact.name.split(/\s+/)[0] ?? ctx.contact.name;
-  const ids = await sendTemplate(
-    db,
-    "lead.auto_reply",
-    [ctx.contact.email],
-    {
-      name: firstName,
-      agent: ctx.agent?.isActive ? ctx.agent.name.split(/\s+/)[0]! : general.agencyName,
-      agency: general.agencyName,
-      reference: ctx.listing?.reference ?? null,
-      url: listingUrl(ctx),
-    },
-    listingUrl(ctx),
-    { type: "lead", id: ctx.lead.id },
-  );
-  if (ids.length === 0) return false;
-  const now = new Date();
-  await db.insert(leadEvents).values({
-    leadId: ctx.lead.id,
-    type: "email_sent",
-    body: null,
-    meta: { template: "lead.auto_reply", auto: true, emailId: ids[0] },
-    actorType: "system",
-    createdAt: now,
-  });
+  const vars = {
+    name: firstName,
+    agent: ctx.agent?.isActive ? ctx.agent.name.split(/\s+/)[0]! : general.agencyName,
+    agency: general.agencyName,
+    reference: ctx.listing?.reference ?? null,
+    url: listingUrl(ctx),
+  };
+  let replied = false;
+  if (ctx.contact.email) {
+    const { resend } = await loadSettings("integrations", db);
+    const ids = await sendTemplate(
+      db,
+      "lead.auto_reply",
+      [ctx.contact.email],
+      vars,
+      listingUrl(ctx),
+      { type: "lead", id: ctx.lead.id },
+      // Their answer comes back into the lead's timeline (13 §1 "Inbound email").
+      leadReplyAddress(ctx.lead.id, resend.inboundDomain),
+    );
+    if (ids.length > 0) {
+      replied = true;
+      await db.insert(leadEvents).values({
+        leadId: ctx.lead.id,
+        type: "email_sent",
+        body: null,
+        meta: { template: "lead.auto_reply", auto: true, emailId: ids[0] },
+        actorType: "system",
+        createdAt: new Date(),
+      });
+    }
+  }
+  if (await whatsappAutoReply(db, ctx, vars)) replied = true;
   // Off by default: a template is not a conversation (09 §3.7).
-  if (settings.autoReply.countsAsFirstResponse) await markFirstResponse(db, ctx.lead.id, now);
-  return true;
+  if (replied && settings.autoReply.countsAsFirstResponse)
+    await markFirstResponse(db, ctx.lead.id, new Date());
+  return replied;
 }
 
 export const leadProcessJob = defineJob({
@@ -339,20 +429,23 @@ export async function alertUnansweredLeads(db: DbOrTx, now = new Date()): Promis
       1,
       Math.round((now.getTime() - ctx.lead.createdAt.getTime()) / 60_000),
     );
-    const ids = await sendTemplate(
-      db,
-      "lead.not_answered",
-      to,
-      {
-        name: ctx.contact.name,
-        minutes,
-        agent: ctx.agent?.name ?? t.unassigned,
-        source: t.sources[ctx.lead.source],
-        url: leadAdminUrl(id),
-      },
-      leadAdminUrl(id),
-      { type: "lead", id },
-    );
+    const vars = {
+      name: ctx.contact.name,
+      minutes,
+      agent: ctx.agent?.name ?? t.unassigned,
+      source: t.sources[ctx.lead.source],
+      url: leadAdminUrl(id),
+    };
+    // 13 §3: the agent hears on WhatsApp; the agency's lead number too if set.
+    const numbers: string[] = [];
+    if (notifications.admins.leadNotAnswered.whatsapp) numbers.push(...(await agencyWhatsapp(db)));
+    if (notifications.agents.leadNotAnswered.whatsapp && ctx.agent?.isActive && ctx.agent.whatsapp)
+      numbers.push(ctx.agent.whatsapp);
+    await whatsappNotices(db, "lead.not_answered", numbers, vars, `wa-late:${id}`);
+    const ids = await sendTemplate(db, "lead.not_answered", to, vars, leadAdminUrl(id), {
+      type: "lead",
+      id,
+    });
     sent += ids.length;
   }
   return sent;

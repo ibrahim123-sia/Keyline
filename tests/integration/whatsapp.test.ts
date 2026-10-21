@@ -324,4 +324,81 @@ describe("WhatsApp (13 §1)", () => {
     expect(failed!.status).toBe("failed");
     expect(failed!.error).toMatch(/WhatsApp is not set up/);
   });
+
+  it("pipeline: team notices and the auto-reply on WhatsApp from mapped templates, once", async () => {
+    const db = await getDb();
+    await patchSettings(
+      db,
+      "integrations",
+      {
+        whatsapp: {
+          enabled: true,
+          phoneNumberId: "123",
+          businessAccountId: "",
+          displayNumber: "",
+          voiceNotes: false,
+          templates: {
+            "lead.new": { name: "new_lead", language: "en", variables: ["name", "interest"] },
+            "lead.auto_reply": { name: "auto_reply", language: "en", variables: ["name", "agent"] },
+          },
+        },
+      },
+      actor,
+    );
+    const agent = newId();
+    await db.insert(agents).values({
+      id: agent,
+      name: "Layla Haddad",
+      slug: "layla",
+      email: "layla@a.example",
+      whatsapp: "+971509990000",
+    });
+    const { captureLead } = await import("@/features/leads/capture");
+    await captureLead(db, {
+      source: "form",
+      contact: { name: "Rania Saleh", phone: "0507778888" },
+      message: "Interested in a villa",
+    });
+    for (let i = 0; i < 4; i++) await runDueJobs();
+    const templates = sent.filter((s) => s.kind === "template");
+    expect(templates).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "template",
+          to: "971509990000",
+          payload: {
+            name: "new_lead",
+            language: "en",
+            parameters: ["Rania Saleh", "General enquiry"],
+          },
+        },
+        {
+          kind: "template",
+          to: "971507778888",
+          payload: {
+            key: "lead.auto_reply",
+            name: "auto_reply",
+            language: "en",
+            parameters: ["Rania", "Layla"],
+          },
+        },
+      ]),
+    );
+    expect(templates).toHaveLength(2);
+    // The auto-reply sits in the customer's WhatsApp conversation and on the timeline.
+    const [conv] = await db.select().from(conversations);
+    expect(conv).toMatchObject({ channel: "whatsapp", externalId: "971507778888" });
+    const auto = await db.select().from(leadEvents).where(eq(leadEvents.type, "whatsapp_out"));
+    expect(auto[0]!.meta).toMatchObject({ auto: true, template: "lead.auto_reply" });
+    // A retried lead job sends nothing again.
+    const { leadProcessJob } = await import("@/features/leads/process");
+    const [lead] = await db.select().from(leads);
+    const [created] = await db.select().from(leadEvents).where(eq(leadEvents.type, "created"));
+    await leadProcessJob.run(
+      { leadId: lead!.id, eventId: created!.id, isNew: false },
+      { db, jobId: newId(), attempt: 2, log: () => {} },
+    );
+    for (let i = 0; i < 3; i++) await runDueJobs();
+    expect(sent.filter((s) => s.kind === "template" && s.to === "971509990000")).toHaveLength(1);
+  });
 });
