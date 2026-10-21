@@ -1,11 +1,13 @@
 import { BadgeCheckIcon, MapPinIcon } from "lucide-react";
-import { Suspense, type ReactNode } from "react";
+import { Fragment, Suspense, type ReactNode } from "react";
 import { ListingCard, type CardContext } from "@/components/site/listings/listing-card";
 import { MediaImage } from "@/components/site/media-image";
 import { ProjectCard } from "@/components/site/projects/project-card";
 import { getPublicMedia } from "@/features/media/queries";
 import { visitorCurrency } from "@/features/site/currency";
+import { withHeadingIds } from "@/features/cms/headings";
 import { areaCards, featuredListingCards, heroSearchOptions } from "@/features/cms/queries";
+import { sectionCatalog } from "@/features/cms/section-catalog";
 import { showcaseProjectCards } from "@/features/projects/public";
 import type { Section } from "@/features/cms/sections";
 import { Icon } from "@/lib/icons";
@@ -295,13 +297,21 @@ function PromiseStrip({ s }: { s: Extract<Section, { type: "promise_strip" }> })
   );
 }
 
-function TextSection({ s }: { s: Extract<Section, { type: "text" }> }) {
+function TextSection({
+  s,
+  headingIds,
+}: {
+  s: Extract<Section, { type: "text" }>;
+  headingIds?: string[];
+}) {
   return (
     <SectionShell style={s.style}>
       <div
         className={`rich-text text-[17px] text-text ${s.props.maxWidth === "narrow" ? "max-w-2xl" : "max-w-4xl"}`}
         // Rendered from the validated document by our own allowlist renderer (lib/rich-text).
-        dangerouslySetInnerHTML={{ __html: renderRichText(s.props.body) }}
+        dangerouslySetInnerHTML={{
+          __html: withHeadingIds(renderRichText(s.props.body), headingIds),
+        }}
       />
     </SectionShell>
   );
@@ -336,54 +346,101 @@ function Cta({ s }: { s: Extract<Section, { type: "cta" }> }) {
   );
 }
 
+export type RenderOptions = {
+  /** Whether the first hero may render the page's h1 (false when the page shows its own). */
+  h1?: boolean;
+  /** The page builder's preview: each section marked so a click selects it in the editor. */
+  editable?: boolean;
+  /** h2 ids per text section (anchors, the legal template's contents). */
+  headingIds?: Map<string, string[]>;
+};
+
+/** The market values sections need (units, base currency); the visitor's currency is read later. */
+export function sectionContext(market: {
+  areaUnit: SectionContext["areaUnit"];
+  distanceUnit: SectionContext["distanceUnit"];
+  baseCurrency: { code: string; decimals: number };
+}): SectionContext {
+  return {
+    areaUnit: market.areaUnit,
+    distanceUnit: market.distanceUnit,
+    baseCurrency: { code: market.baseCurrency.code, decimals: market.baseCurrency.decimals },
+  };
+}
+
+function renderSection(
+  s: Section,
+  ctx: SectionContext,
+  opts: { first: boolean; headingIds?: string[]; faqSchema: boolean },
+): ReactNode {
+  const { first } = opts;
+  switch (s.type) {
+    case "hero_search":
+      return <HeroSearch s={s} ctx={ctx} first={first} />;
+    case "hero_simple":
+      return <HeroSimple s={s} first={first} />;
+    case "promise_strip":
+      return <PromiseStrip s={s} />;
+    case "featured_listings":
+      return (
+        <Suspense fallback={<GridSkeleton count={Math.min(s.props.count, 3)} />}>
+          <FeaturedListings s={s} ctx={ctx} />
+        </Suspense>
+      );
+    case "projects_showcase":
+      return (
+        <Suspense fallback={<GridSkeleton count={2} />}>
+          <ProjectsShowcase s={s} ctx={ctx} />
+        </Suspense>
+      );
+    case "areas_grid":
+      return <AreasGrid s={s} ctx={ctx} />;
+    case "text":
+      return <TextSection s={s} headingIds={opts.headingIds} />;
+    case "stats":
+      return <Stats s={s} />;
+    case "cta":
+      return <Cta s={s} />;
+    default:
+      return null;
+  }
+}
+
 /** Renders a page's sections in order; the first heading section owns the page's h1. */
 export async function RenderSections({
   sections,
   ctx,
+  h1 = true,
+  editable = false,
+  headingIds,
 }: {
   sections: Section[];
   ctx: SectionContext;
-}) {
-  const out: ReactNode[] = [];
-  for (const [i, s] of sections.entries()) {
-    const first = i === 0;
-    switch (s.type) {
-      case "hero_search":
-        out.push(<HeroSearch key={s.id} s={s} ctx={ctx} first={first} />);
-        break;
-      case "hero_simple":
-        out.push(<HeroSimple key={s.id} s={s} first={first} />);
-        break;
-      case "promise_strip":
-        out.push(<PromiseStrip key={s.id} s={s} />);
-        break;
-      case "featured_listings":
-        out.push(
-          <Suspense key={s.id} fallback={<GridSkeleton count={Math.min(s.props.count, 3)} />}>
-            <FeaturedListings s={s} ctx={ctx} />
-          </Suspense>,
+} & RenderOptions) {
+  const visible = sections.filter((s) => !s.hidden);
+  // One FAQPage per page (08 §6): the first FAQ section that asks for it.
+  const faqOwner = visible.find((s) => s.type === "faq" && s.props.schema)?.id ?? null;
+  return (
+    <>
+      {visible.map((s, i) => {
+        const node = renderSection(s, ctx, {
+          first: h1 && i === 0,
+          headingIds: headingIds?.get(s.id),
+          faqSchema: s.id === faqOwner,
+        });
+        return editable ? (
+          <div
+            key={s.id}
+            data-section-id={s.id}
+            data-section-label={sectionCatalog[s.type].label}
+            className="lintel-preview-section"
+          >
+            {node}
+          </div>
+        ) : (
+          <Fragment key={s.id}>{node}</Fragment>
         );
-        break;
-      case "projects_showcase":
-        out.push(
-          <Suspense key={s.id} fallback={<GridSkeleton count={2} />}>
-            <ProjectsShowcase s={s} ctx={ctx} />
-          </Suspense>,
-        );
-        break;
-      case "areas_grid":
-        out.push(<AreasGrid key={s.id} s={s} ctx={ctx} />);
-        break;
-      case "text":
-        out.push(<TextSection key={s.id} s={s} />);
-        break;
-      case "stats":
-        out.push(<Stats key={s.id} s={s} />);
-        break;
-      case "cta":
-        out.push(<Cta key={s.id} s={s} />);
-        break;
-    }
-  }
-  return <>{out}</>;
+      })}
+    </>
+  );
 }
