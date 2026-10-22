@@ -1,110 +1,228 @@
+<div align="center">
+
 # Lintel
 
-AI-powered website, CRM and lead engine for real estate agencies. One agency installs it and
-runs its whole business from it: listings, website pages, blog, SEO, leads, viewings and
-reports, with an AI assistant for visitors and another for the admin.
+**The website, CRM and lead engine for real estate agencies — in one app.**
 
-- Specification: [`lintel-spec/lintel-spec`](lintel-spec/lintel-spec/README.md)
-- Build status, decisions and open questions: [`PROGRESS.md`](PROGRESS.md)
-- Changes: [`CHANGELOG.md`](CHANGELOG.md)
+[![CI](https://github.com/ibrahim123-sia/Lintel/actions/workflows/ci.yml/badge.svg)](https://github.com/ibrahim123-sia/Lintel/actions/workflows/ci.yml)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
+![Cloudflare Workers](https://img.shields.io/badge/runs%20on-Cloudflare%20Workers-f38020?logo=cloudflare&logoColor=white)
+![License: proprietary](https://img.shields.io/badge/license-proprietary-lightgrey)
 
-## Stack
+</div>
 
-Next.js 16 (App Router, Cache Components, Server Actions) · TypeScript strict · Tailwind CSS v4 +
-shadcn/ui · Drizzle ORM · PostgreSQL (Neon in production; PostGIS, pgvector, pg_trgm, unaccent) ·
-Better Auth · Cloudflare Workers via OpenNext (R2, Queues, Hyperdrive, Cron, Images, Browser
-Rendering) · Vitest + Playwright.
+One agency installs Lintel and runs its whole business from it: listings and projects, the public
+website and blog, SEO, leads from every channel, viewings, the customer area and buyer tools, with
+an AI assistant for visitors and another for the team.
 
-## Local setup
+---
 
-Requirements: Node.js 22+ (developed on 24) and pnpm 12. No Docker or local PostgreSQL needed:
-the dev database is PostgreSQL 18 compiled to WebAssembly (PGlite) with the same extensions as
-production.
+## Contents
+
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Getting started](#getting-started)
+- [Demo data](#demo-data)
+- [Configuration](#configuration)
+- [Scripts](#scripts)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Architecture](#architecture)
+- [Project structure](#project-structure)
+- [Documentation](#documentation)
+- [Contributing, security and license](#contributing-security-and-license)
+
+## Features
+
+| Area                    | What it does                                                                                                                                                                                        | Status      |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Public website          | Search for sale, rent and off-plan with filters in the URL, a map with price pins and draw-your-area, property, project, developer and agent pages, currency switcher, structured data, helpful 404 | Available   |
+| Listings and projects   | Listing editor with autosave and publish rules, media library on R2, payment plans, nearby places with travel times, CSV import and export, projects with unit types                                | Available   |
+| Website builder and SEO | Page builder with every section type, blog, area guides, testimonials and FAQs, menus and footer, sitemap, robots, redirects with real 301s, 404 monitor and SEO report                             | Available   |
+| Leads and CRM           | A lead from every source with first and last touch attribution, dedupe, assignment, scoring with reasons, response timer, leads board, inbox (WhatsApp, email, portals, social forms, website chat) | Available   |
+| Viewings                | Online booking at real free times, reminders, calendar invites, a private link to move or cancel, admin calendar, Google Calendar sync                                                              | Available   |
+| Marketing               | Campaign links with QR codes, campaign report, newsletter with double opt-in, editable message templates                                                                                            | Available   |
+| Customer area           | Saved homes and shareable lists, saved searches with instant, daily and weekly alerts, price-drop and status alerts, compare, tours, data download and account deletion                             | Available   |
+| Buyer tools             | Mortgage and rental-return calculators, compare page, branded PDF brochure, valuation, list your property, price trends, commute search, share cards                                                | In progress |
+| AI                      | Customer assistant on the website and WhatsApp, admin assistant with preview and confirm, AI writing helpers, MCP server                                                                            | Planned     |
+| Reports and launch      | Dashboard KPIs, reports with CSV and PDF export, accessibility and performance passes                                                                                                               | Planned     |
+
+Everything the agency sees is configurable from Settings: branding, market (currency, units,
+time zone), contact details, integrations, lead rules and AI behaviour. Nothing about a market or
+an agency is hard-coded.
+
+## Tech stack
+
+| Layer     | Choice                                                                                                 |
+| --------- | ------------------------------------------------------------------------------------------------------ |
+| Framework | Next.js 16 (App Router, Cache Components, Server Actions), React 19, TypeScript in strict mode         |
+| UI        | Tailwind CSS v4, shadcn/ui, design tokens generated from the Branding settings                         |
+| Data      | PostgreSQL with PostGIS, pgvector, pg_trgm and unaccent; Drizzle ORM and migrations                    |
+| Auth      | Better Auth: email and password, email verification, TOTP two-step verification for admins             |
+| Hosting   | Cloudflare Workers via OpenNext, with R2, Queues, Hyperdrive, Cron Triggers, Images, Browser Rendering |
+| Maps      | MapLibre GL with terra-draw; Google Maps Platform (Geocoding, Places, Routes) from the server only     |
+| Email     | Resend with React Email templates                                                                      |
+| Quality   | Vitest (unit and integration), Playwright (end to end), ESLint, Prettier, GitHub Actions               |
+
+## Getting started
+
+### Prerequisites
+
+- Node.js 22 or newer (developed on Node.js 24)
+- pnpm 12 (`corepack enable` picks the version pinned in `package.json`)
+
+No Docker or local PostgreSQL install is needed: the development database is PostgreSQL 18
+compiled to WebAssembly (PGlite), with the same extensions as production.
+
+### Run it locally
 
 ```bash
 pnpm install
-cp .env.example .env.local        # then fill BETTER_AUTH_SECRET, SECRETS_ENCRYPTION_KEY, INTERNAL_JOB_SECRET
-pnpm db:start                     # terminal 1: local database on 127.0.0.1:5433 (data in ~/.lintel/pglite)
-pnpm db:migrate                   # apply migrations
-pnpm admin:create --email you@agency.com --name "Your Name"   # prints a generated password
-pnpm dev                          # terminal 2: http://localhost:3000
-pnpm dev:cron                     # optional terminal 3: runs the every-minute scheduler locally
+cp .env.example .env.local      # fill BETTER_AUTH_SECRET, SECRETS_ENCRYPTION_KEY, INTERNAL_JOB_SECRET
+pnpm db:start                   # terminal 1: database on 127.0.0.1:5433 (data in ~/.lintel/pglite)
+pnpm db:migrate
+pnpm db:seed                    # optional: the demo agency (see below)
+pnpm dev                        # terminal 2: http://localhost:3000
+pnpm dev:cron                   # optional terminal 3: the every-minute scheduler
 ```
 
-Generate secrets:
+Generate each secret with:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-Sign in at `/admin/sign-in`. Admins must set up two-step verification (TOTP) at first sign-in
-(can be relaxed in Settings -> Security for a demo). Customers sign up at `/sign-up`; in
-development, emails are not sent: they are stored in the `email_log` table (status `mocked`)
-until a Resend key is added in Settings -> Integrations.
+To start without demo data, create the first admin instead of seeding:
 
-### Useful scripts
+```bash
+pnpm admin:create --email you@agency.com --name "Your Name"   # prints a generated password
+```
 
-| Script                                                   | What it does                                                                |
-| -------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `pnpm db:start [--memory]`                               | Local PostgreSQL 18 (PGlite) server                                         |
-| `pnpm db:migrate` / `pnpm db:generate`                   | Apply / create migrations (Drizzle Kit)                                     |
-| `pnpm db:reset --yes`                                    | Drop everything and re-apply migrations (refuses in production)             |
-| `pnpm admin:create --email … [--name …] [--password …]`  | Create or promote an admin                                                  |
-| `pnpm dev:cron`                                          | Call the cron endpoint every minute (local stand-in for the Worker trigger) |
-| `pnpm lint` / `pnpm typecheck` / `pnpm format`           | Quality checks                                                              |
-| `pnpm test:unit` / `pnpm test:integration` / `pnpm test` | Vitest (integration uses an in-memory DB)                                   |
-| `pnpm test:e2e`                                          | Playwright (starts its own database and app on port 3200)                   |
+Admins sign in at `/admin/sign-in` and set up two-step verification at first sign-in. Customers
+sign up at `/sign-up`. In development no email leaves the machine: messages are stored in the
+`email_log` table (status `mocked`) until a Resend key is added in Settings → Integrations.
 
-### Environment variables
+## Demo data
 
-Everything is documented in [`.env.example`](.env.example). Integration keys (Google Maps,
-WhatsApp, Resend, AI provider) are **not** environment variables: admins enter them in
-Settings -> Integrations, and they are stored encrypted (AES-256-GCM) in the database.
+`pnpm db:seed` loads **Haven & Dune**, a fictional agency with listings, projects, developers,
+agents, pages, blog posts, leads, viewings, campaign data and customers. Passwords are generated
+and printed once at the end of the run; two-step verification is off for the demo accounts.
 
-## Tests
+| Account                     | Role            |
+| --------------------------- | --------------- |
+| `admin@demo.lintel`         | Admin (owner)   |
+| `staff@demo.lintel`         | Admin           |
+| `viewer@demo.lintel`        | Read-only admin |
+| `mina@demo.lintel`          | Customer        |
+| `omar.customer@demo.lintel` | Customer        |
+| `lucy@demo.lintel`          | Customer        |
 
-- **Unit** (`tests/unit`): ids, geometry parsing, encryption, settings schemas, audit diffs,
-  contrast, permissions, password strength, cron scheduling.
-- **Integration** (`tests/integration`): settings storage and audit, encrypted secrets, auth flows
-  (sign-up, verification, lockout, deactivation, admin sessions, TOTP), database bridge protocol.
-- **End to end** (`tests/e2e`): guests blocked from `/admin` and `/account`; customer sign-up and
-  email verification; first admin with 2FA; design token change after revalidation.
+Each demo customer has saved homes, a saved search and a past tour.
 
-## Deploy to Cloudflare
+Use `pnpm db:seed --reset` to replace the demo data in an existing database.
+
+## Configuration
+
+- **Environment variables** cover only what the app needs to start (database, auth and
+  encryption secrets, internal job secret, Turnstile). They are documented in
+  [`.env.example`](.env.example). [`.dev.vars.example`](.dev.vars.example) is only for
+  `pnpm preview` (the app inside the local Workers runtime).
+- **Integration keys** (Google Maps, WhatsApp, Resend, Meta and TikTok lead forms, Google
+  Calendar, the AI provider) are not environment variables. Admins enter them in
+  Settings → Integrations, and they are stored encrypted (AES-256-GCM) in the database.
+
+## Scripts
+
+| Script                                                   | What it does                                                    |
+| -------------------------------------------------------- | --------------------------------------------------------------- |
+| `pnpm dev`                                               | Next.js development server                                      |
+| `pnpm db:start [--memory]`                               | Local PostgreSQL 18 (PGlite) server                             |
+| `pnpm db:migrate` / `pnpm db:generate`                   | Apply / create migrations (Drizzle Kit)                         |
+| `pnpm db:seed [--reset]`                                 | Load the demo agency                                            |
+| `pnpm db:reset --yes`                                    | Drop everything and re-apply migrations (refuses in production) |
+| `pnpm admin:create --email … [--name …]`                 | Create or promote an admin                                      |
+| `pnpm dev:cron`                                          | Call the cron endpoint every minute (stands in for the Worker)  |
+| `pnpm lint` / `pnpm typecheck` / `pnpm format:check`     | Quality checks                                                  |
+| `pnpm test:unit` / `pnpm test:integration` / `pnpm test` | Vitest (integration tests use an in-memory database)            |
+| `pnpm test:e2e`                                          | Playwright (starts its own database and app on port 3200)       |
+| `pnpm preview` / `pnpm deploy` / `pnpm deploy:staging`   | Build with OpenNext and preview or deploy to Cloudflare         |
+
+## Testing
+
+- **Unit tests** (`tests/unit`): pure logic such as attribution channels, scoring, slots and
+  time zones, money and units, permissions, redirects, search parameters and settings schemas.
+- **Integration tests** (`tests/integration`): server code against a real PostgreSQL (PGlite):
+  lead pipeline, viewings, alerts, accounts, settings and audit, auth flows, the seed, PDF
+  rendering.
+- **End-to-end tests** (`tests/e2e`): the main journeys in Chromium on desktop and phone sizes
+  against a production build, with a Lighthouse report for the property page.
+
+Every push and pull request runs lint, types, formatting, a schema-vs-migrations check, unit and
+integration tests, a dependency audit, Playwright against a production build, and the Cloudflare
+Workers bundle ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+
+## Deployment
 
 Production builds run on Linux (CI or WSL): OpenNext's bundler creates symlinks, which Windows
 only allows in Developer Mode.
 
-1. Create a Neon project (PostgreSQL 16+) and enable the extensions (the first migration does
-   `CREATE EXTENSION` for postgis, vector, pg_trgm, unaccent).
-2. In Cloudflare: create the R2 buckets (`lintel-cache`, `lintel-media`, plus `-staging`
+1. Create a Neon project (PostgreSQL 16 or newer). The first migration enables the PostGIS,
+   pgvector, pg_trgm and unaccent extensions.
+2. In Cloudflare, create the R2 buckets (`lintel-cache`, `lintel-media`, plus `-staging`
    variants), the queues (`lintel-jobs`, `lintel-jobs-dlq`, plus `-staging` variants) and a
-   Hyperdrive config pointing at Neon (`wrangler hyperdrive create`).
-3. Set Worker secrets per environment:
-   `wrangler secret put BETTER_AUTH_SECRET --env staging` (and `SECRETS_ENCRYPTION_KEY`,
-   `INTERNAL_JOB_SECRET`, `TURNSTILE_SECRET_KEY`, `BETTER_AUTH_URL`, `APP_URL`).
-4. GitHub repository: secrets `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`,
-   `STAGING_DATABASE_URL`, `HYPERDRIVE_ID_STAGING`; variables `STAGING_APP_URL`,
-   `TURNSTILE_SITE_KEY` and `DEPLOY_STAGING=true`. Every push to `main` then runs lint, types,
-   tests, Playwright and the Workers build, migrates the staging database and deploys.
+   Hyperdrive configuration pointing at Neon (`wrangler hyperdrive create`).
+3. Set the Worker secrets for each environment, for example
+   `wrangler secret put BETTER_AUTH_SECRET --env staging`, and likewise `SECRETS_ENCRYPTION_KEY`,
+   `INTERNAL_JOB_SECRET`, `TURNSTILE_SECRET_KEY`, `BETTER_AUTH_URL` and `APP_URL`.
+4. In the GitHub repository, add the secrets `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`,
+   `STAGING_DATABASE_URL` and `HYPERDRIVE_ID_STAGING`, and the variables `STAGING_APP_URL`,
+   `TURNSTILE_SITE_KEY` and `DEPLOY_STAGING=true`. Every push to `main` then migrates the staging
+   database and deploys once all checks pass.
 
-How it runs on Workers: [`worker/index.ts`](worker/index.ts) wraps the OpenNext handler and adds
-the Queue consumer and the every-minute Cron trigger. Both forward to internal routes
-(`/api/internal/jobs`, `/api/internal/cron`, protected by `INTERNAL_JOB_SECRET`), so background
-work runs inside the Next.js bundle. Caching uses R2 + regional cache for entries and sharded
-Durable Objects for cache tags ([`open-next.config.ts`](open-next.config.ts)).
+## Architecture
 
-## Project layout
+- **One Next.js app** serves the public site (`app/(site)`), the customer area
+  (`app/(account)`), the admin portal (`app/admin`) and the API (`app/api`).
+- **Feature modules** in `features/` hold each domain's schema validation, queries, server
+  actions and jobs; pages and components stay thin.
+- **Caching** uses Cache Components: public data is cached with tags and revalidated precisely
+  when an admin changes it. On Cloudflare, entries live in R2 behind the regional cache, and tags
+  in sharded Durable Objects ([`open-next.config.ts`](open-next.config.ts)).
+- **Background work**: [`worker/index.ts`](worker/index.ts) wraps the OpenNext handler and adds
+  the Queue consumer and an every-minute Cron trigger. Both call internal routes protected by
+  `INTERNAL_JOB_SECRET`, so jobs run inside the Next.js bundle with retries and a dead-letter
+  queue ([`jobs/`](jobs)).
+- **Security**: every admin page, action and route checks permissions on the server, inputs are
+  validated with Zod, admin changes are written to an append-only audit log, and integration
+  secrets are encrypted at rest.
+
+## Project structure
 
 ```
-app/          routes: (site) public, (account) customer area, admin, api
-components/   ui (shadcn), site, admin, account, auth, forms
-features/     one folder per module (settings, media, notifications, admin-users, ...)
-db/           Drizzle schema, migrations, migrate script
-lib/          auth, permissions, env, tokens, i18n, crypto, rate limits, audit, geo
-jobs/         background job registry, runner, cron schedule
+app/          routes: (site) public website, (account) customer area, admin portal, api
+components/   ui (shadcn), site (with the page-builder sections), account, admin, maps, forms
+features/     one folder per domain module: queries, actions, validation, jobs
+db/           Drizzle schema, migrations and the demo seed
+lib/          auth, permissions, i18n, tokens, money and units, storage, PDF, rate limits, audit
+jobs/         job registry, runner and cron schedule
 emails/       React Email templates
-worker/       Cloudflare custom worker (queue + cron)
-scripts/      local database, test database, setup commands, dev cron
-tests/        unit, integration, e2e
+worker/       Cloudflare Worker entry (queue consumer and cron)
+scripts/      local database, test database, setup and CI helpers
+tests/        unit, integration and end-to-end tests
+docs/         product specification and build progress
 ```
+
+## Documentation
+
+- [`docs/spec/`](docs/spec/README.md): the product specification, from rules and stack to the
+  build phases.
+- [`docs/PROGRESS.md`](docs/PROGRESS.md): build status per phase, done-when checklists, and the
+  decisions taken along the way.
+- [`CHANGELOG.md`](CHANGELOG.md): notable changes.
+
+## Contributing, security and license
+
+- How to set up, branch, commit and open a pull request: [`CONTRIBUTING.md`](.github/CONTRIBUTING.md).
+- To report a vulnerability privately: [`SECURITY.md`](.github/SECURITY.md).
+- Lintel is proprietary software. See [`LICENSE`](LICENSE).

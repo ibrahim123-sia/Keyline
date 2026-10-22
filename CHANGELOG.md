@@ -34,3 +34,8 @@ All notable changes to Lintel. Format: [Keep a Changelog](https://keepachangelog
 - The 404 monitor counts visits at request time instead of breaking prerendering.
 - Website chat and the admin inbox no longer crash in browsers where scrolling returns a promise.
 - Tour booking fits its dialog when there are many days to choose from.
+- A shortlist's opens are counted once per visit in a browser (not twice, and not by link previews).
+
+### Changed
+
+- Documentation moved to `docs/` (specification in `docs/spec/`, build progress in `docs/PROGRESS.md`); new README, contributing guide, security policy, pull request template and licence.
