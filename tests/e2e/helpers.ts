@@ -128,6 +128,27 @@ export async function snap(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: `${dir}/${name}.png`, fullPage: true });
 }
 
+/** Leads, contacts and everything hanging off them (the CRM tables), children first. */
+export async function clearLeads(): Promise<void> {
+  for (const table of [
+    "messages",
+    "approval_queue",
+    "conversations",
+    "shortlists",
+    "lead_tasks",
+    "lead_events",
+    "viewings",
+    "valuation_requests",
+    "listing_requests",
+    "newsletter_subscribers",
+    "visitor_events",
+    "leads",
+    "visitors",
+    "contacts",
+  ])
+    await db().query(`delete from ${table}`);
+}
+
 /**
  * Listings, projects and area guides point at master data and files with "restrict": clear
  * them first (a guide's photos hold library files, its area holds the location).

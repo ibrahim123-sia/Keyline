@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { db, field, signInAsAdmin } from "./helpers";
+import { clearLeads, db, field, signInAsAdmin } from "./helpers";
 
 test("leads settings: default pipeline, edit and delete stages, assignment rule", async ({
   page,
   request,
 }) => {
   test.setTimeout(300_000);
+  await clearLeads();
   await db().query("delete from lead_stages");
   await db().query(`delete from settings where "group" = 'leads'`);
   await signInAsAdmin(page, request);

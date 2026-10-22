@@ -1,5 +1,6 @@
 import { chromium, expect, test, type Page } from "@playwright/test";
 import {
+  clearLeads,
   clearListings,
   db,
   expectNotFoundPage,
@@ -30,6 +31,7 @@ test.beforeAll(async ({ request }) => {
 
 test.afterAll(async ({ request }) => {
   // Later specs expect a fresh agency: drop the demo content and settings again.
+  await clearLeads();
   await clearListings();
   await db().query("delete from posts");
   await db().query("delete from post_categories");
