@@ -1,7 +1,7 @@
 # Lintel — Progress
 
 Single source of truth for what is done, in progress and next. Updated after every step.
-Spec: `lintel-spec/lintel-spec/` (README + `docs/01..16`).
+Spec: [`docs/spec/`](spec/README.md) (README + `01..16`).
 
 ## Status
 
@@ -272,6 +272,8 @@ Done-when checklist (from `15-build-phases.md`):
 72. **Past activity is linked by verified email only**: phones are not verified, so linking by phone could hand someone else's inquiries to a stranger. Linking happens when a session is created.
 73. **Deleting an account anonymises what the agency must keep** (leads, viewings, messages) and deletes the rest; the audit entry uses actor type "system" with `requestedBy: "customer"`, as there is no customer actor type.
 74. **Rich text sent to Server Actions is plain JSON**: the editor's node attributes are not plain objects, so a Server Action received them as opaque references and validation failed; the editor serialises its document before `onChange`.
+75. **Shortlist opens are counted by the browser**, with a beacon sent once the page has loaded, not while it renders: a render can repeat (production rendered the page twice for one visit), and link scanners and chat previews fetch the page without running it.
+76. **Repository layout**: the code keeps the spec's folder structure at the root (`01-rules-and-stack.md` §3: `app`, `components`, `features`, `db`, `lib`, `jobs`, `emails`, `tests`), as usual for a Next.js app, rather than moving into `src/`. Documentation lives in `docs/` (the spec in `docs/spec/`, this file in `docs/`), contributor and security guides in `.github/`. The licence is proprietary (all rights reserved) until the owners choose otherwise; the repository is public, so the code is visible but not licensed for reuse.
 
 ## Data model changes (vs `05-data-model.md`)
 

@@ -121,7 +121,7 @@ export function brandingContrastPairs(colors: BrandingSettings["colors"]): Contr
       minimum: 4.5,
     },
     // Accent on its soft tint is ~4.4:1 with Desert Modern: fine for icons (UI graphics, 3:1),
-    // so badge text on that tint uses ink instead (see PROGRESS.md decisions).
+    // so badge text on that tint uses ink instead (see docs/PROGRESS.md decisions).
     {
       label: "Accent icons on accent tiles",
       foreground: colors.accent,

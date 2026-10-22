@@ -33,7 +33,7 @@ export type AdminNavItem = {
   key: keyof AdminDictionary["nav"];
   href: string;
   icon: LucideIcon;
-  /** Modules appear once they are built (see PROGRESS.md phases). */
+  /** Modules appear once they are built (see docs/PROGRESS.md phases). */
   enabled: boolean;
 };
 

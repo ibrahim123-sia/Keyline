@@ -38,7 +38,7 @@ const eslintConfig = defineConfig([
     "playwright-report/**",
     "test-results/**",
     "db/migrations/**",
-    "lintel-spec/**",
+    "docs/**",
     "next-env.d.ts",
     "cloudflare-env.d.ts",
   ]),

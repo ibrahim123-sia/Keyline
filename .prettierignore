@@ -8,6 +8,6 @@ playwright-report
 test-results
 pnpm-lock.yaml
 db/migrations
-lintel-spec
+docs/spec
 cloudflare-env.d.ts
 next-env.d.ts

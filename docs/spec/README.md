@@ -10,22 +10,22 @@ If two files disagree, or something is unclear, stop and ask. Do not guess on bi
 
 | File | What it covers |
 |---|---|
-| `docs/01-rules-and-stack.md` | Hard rules, locked tech stack, how to work with me |
-| `docs/02-design-system.md` | Desert Modern theme, tokens, components, layout rules, every page layout |
-| `docs/03-roles-and-permissions.md` | Admin, Customer, Guest, agent profiles, full permission table |
-| `docs/04-settings.md` | Every setting the admin controls: branding, market, contact, integrations, AI |
-| `docs/05-data-model.md` | Every table and field |
-| `docs/06-public-website.md` | Every public page, section by section, search and map |
-| `docs/07-properties-and-projects.md` | Listing editor, media, POI distances, payment plans, projects, developers |
-| `docs/08-cms-and-seo.md` | Page builder, all section types, blog, area guides, menus, footer, SEO |
-| `docs/09-leads-and-crm.md` | Every lead source, attribution (UTM), lead record, pipeline, viewings, inbox, reports |
-| `docs/10-ai.md` | Customer assistant, admin assistant, tools, confirm flow, MCP, AI helpers |
-| `docs/11-tools.md` | Mortgage, ROI, compare, brochure PDF, valuation, price trends, map draw, commute, share cards |
-| `docs/12-customer-area.md` | Accounts, saved homes, saved searches, alerts, tours, inquiries |
-| `docs/13-integrations-and-jobs.md` | WhatsApp, email, Google, portals, webhooks, background jobs, notifications |
-| `docs/14-non-functional.md` | Performance, security, privacy, accessibility, logging, testing |
-| `docs/15-build-phases.md` | 10 phases, tasks and "done" checklist per phase |
-| `docs/16-seed-and-demo.md` | Demo data, second market preset, demo script for the video |
+| [`01-rules-and-stack.md`](01-rules-and-stack.md) | Hard rules, locked tech stack, how to work with me |
+| [`02-design-system.md`](02-design-system.md) | Desert Modern theme, tokens, components, layout rules, every page layout |
+| [`03-roles-and-permissions.md`](03-roles-and-permissions.md) | Admin, Customer, Guest, agent profiles, full permission table |
+| [`04-settings.md`](04-settings.md) | Every setting the admin controls: branding, market, contact, integrations, AI |
+| [`05-data-model.md`](05-data-model.md) | Every table and field |
+| [`06-public-website.md`](06-public-website.md) | Every public page, section by section, search and map |
+| [`07-properties-and-projects.md`](07-properties-and-projects.md) | Listing editor, media, POI distances, payment plans, projects, developers |
+| [`08-cms-and-seo.md`](08-cms-and-seo.md) | Page builder, all section types, blog, area guides, menus, footer, SEO |
+| [`09-leads-and-crm.md`](09-leads-and-crm.md) | Every lead source, attribution (UTM), lead record, pipeline, viewings, inbox, reports |
+| [`10-ai.md`](10-ai.md) | Customer assistant, admin assistant, tools, confirm flow, MCP, AI helpers |
+| [`11-tools.md`](11-tools.md) | Mortgage, ROI, compare, brochure PDF, valuation, price trends, map draw, commute, share cards |
+| [`12-customer-area.md`](12-customer-area.md) | Accounts, saved homes, saved searches, alerts, tours, inquiries |
+| [`13-integrations-and-jobs.md`](13-integrations-and-jobs.md) | WhatsApp, email, Google, portals, webhooks, background jobs, notifications |
+| [`14-non-functional.md`](14-non-functional.md) | Performance, security, privacy, accessibility, logging, testing |
+| [`15-build-phases.md`](15-build-phases.md) | 10 phases, tasks and "done" checklist per phase |
+| [`16-seed-and-demo.md`](16-seed-and-demo.md) | Demo data, second market preset, demo script for the video |
 
 ## The product in one paragraph
 
