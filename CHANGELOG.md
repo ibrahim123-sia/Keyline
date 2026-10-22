@@ -23,3 +23,6 @@ All notable changes to Lintel. Format: [Keep a Changelog](https://keepachangelog
 - CRM core: visitor attribution (first and last touch, journey with consent), lead pipeline for every source (dedupe, assignment, timeline, notifications, auto-reply, score with reasons, response timer), editable message templates; listing forms create leads.
 - Website: page builder with every section type, templates, revisions, scheduling and preview links; blog, area guides, testimonials and FAQs; menus, footer and announcement bar; sitemap, robots, structured data, title patterns, redirects manager, 404 monitor and SEO report.
 - CRM: leads list and board, lead page, shortlists, contacts and merges, manual entry and CSV import; inbox with WhatsApp, email, portals, social lead forms and website chat; campaign links with QR codes; viewings booked online with reminders, invites and a private link to move or cancel.
+- Viewings admin calendar with Google Calendar sync, days off, and tours on project pages; message templates editor; page forms as leads; newsletter with double opt-in; campaign report.
+- Saved-search and saved-home alerts: instant, daily and weekly, price drops and status changes, with one-click unsubscribe.
+- Redirects now answer with a real 301 from the middleware, and unknown addresses with a real 404.

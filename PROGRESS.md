@@ -12,8 +12,8 @@ Spec: `lintel-spec/lintel-spec/` (README + `docs/01..16`).
 | 3     | Properties and projects  | done (staging deploy waits for credentials) |
 | 4     | Public site core         | in progress (Lighthouse LCP check open)     |
 | 5     | CMS and SEO              | in progress                                 |
-| 6     | Leads and CRM            | in progress                                 |
-| 7     | Customer area            | not started                                 |
+| 6     | Leads and CRM            | built; e2e in CI                            |
+| 7     | Customer area            | in progress                                 |
 | 8     | Tools                    | not started                                 |
 | 9     | AI                       | not started                                 |
 | 10    | Reports, polish, launch  | not started                                 |
@@ -117,11 +117,24 @@ Done-when checklist (from `15-build-phases.md`):
 
 Done-when checklist (from `15-build-phases.md`):
 
-- [ ] Every source in the table creates a lead with the right `source` and attribution
+- [ ] Every source in the table creates a lead with the right `source` and attribution — all but signup and saved search (Phase 7) and mortgage, ROI and brochure (Phase 8 tools)
 - [x] First and last touch behave as specified (unit tests) — `tests/unit/attribution.test.ts` "first touch is written once; last touch changes on campaign or referral visits only"
-- [ ] Duplicate leads merge correctly
+- [x] Duplicate leads merge correctly — `tests/integration/leads-pipeline.test.ts` "the same person by email or phone joins their open lead; another type is a second lead", `tests/integration/merge.test.ts` "merges two contacts field by field…" and "merges leads…"
 - [x] A lead unanswered past the limit triggers an alert — `tests/integration/leads-pipeline.test.ts` "tasks, the response timer and the first response"
-- [ ] Tour booking shows real free slots and syncs to Google Calendar
+- [x] Tour booking shows real free slots and syncs to Google Calendar — `tests/integration/viewings.test.ts` "books a real free slot…", `tests/integration/google-calendar.test.ts` "busy times from the calendar block viewing slots…" and "the agent's calendar follows the viewing…" (with a fake Google; a real account needs the agency's OAuth client)
+
+## Phase 7 — Customer area (plan)
+
+1. Schema for saved lists and homes, saved searches with a drawn area, sent alerts, compare sets and alert preferences (done, migration 0012).
+2. Alerts: instant new matches, daily and weekly digests, price drops and status changes, never twice, one-click unsubscribe (done).
+3. Account: save buttons and the sign-in modal that completes the action, signup linking past activity, the /account pages, data export and account deletion.
+
+Done-when checklist (from `15-build-phases.md`):
+
+- [ ] Guest save → signup → save completes
+- [x] Publishing a matching listing sends an instant alert once — `tests/integration/alerts.test.ts` "publishing a matching listing sends one instant alert, even when the job runs twice"
+- [x] Lowering a saved home's price sends a price-drop email — `tests/integration/alerts.test.ts` "price drops: the savers and matching instant searches, once per new price"
+- [ ] Data export and account deletion work
 
 ## Done
 
@@ -167,13 +180,16 @@ Done-when checklist (from `15-build-phases.md`):
 - Phase 6 core: CRM schema (migration 0010); attribution (first-party visitor id set by the middleware only when new or when consent changes; first and last touch with the channel rules of 09 §2; `/api/track` for page views, listing views and contact clicks, journey events only with analytics consent; WhatsApp ref codes; a known lead tapping Call leaves a note); the lead pipeline (`captureLead`: normalise, find the contact by email and/or phone, join their open lead of the same type or start one, fill requirements from the listing, copy touches, assign, response timer, tasks, timeline; after commit `lead.process` notifies the agent and the agency inbox and sends the auto-reply, `lead.score` scores by the 10 §2 rubric with reasons; every-minute alert for unanswered leads); editable message templates; the listing page's question, tour and callback forms are leads. Unit + integration.
 - Phase 5: page builder (pages list and editor with live preview, drafts, revisions, templates, scheduling, preview links, every section type, /[slug] pages in default, landing and legal templates, demo pages); blog (extended rich text, categories, tags, scheduling, /insights), area guides with live counts (/areas, and the guide's intro and questions on the area's search pages), testimonials and FAQs; menus (header, phone, footer) with an editor, footer text and the announcement bar, sitemap index and robots.txt, structured data and title patterns, thin-page noindex and generated area x type landings, redirects manager and 404 monitor, SEO report with a weekly link check, the SEO panel checklist and share previews. Unit, integration, e2e.
 - Phase 6 so far: campaign links (UTM builder, /go short links, QR codes); viewings (free slots from working hours, buffers, notice, days off and busy times, in the agency's time zone; booking on the listing page; confirmation, reminders, moved, cancelled and feedback emails with .ics invites; the private link to move, cancel or rate); inbox (web chat, WhatsApp, email; take over, approvals, quick replies, listing cards, the 24-hour rule), WhatsApp Cloud API webhook and sending, inbound email, portal leads by email or CSV, social lead form webhooks (Meta, TikTok, Google), the website chat shell; leads admin (list and Kanban with filters, views and bulk actions; the lead page with timeline, composer, score, matches, tasks and journey; shortlists at /s/[token]; contacts and merges; manual entry and CSV import); demo leads, contacts and conversations. Unit, integration, e2e.
+- Phase 6 rest: viewings admin (calendar with day, week and agent views, drag to move, status buttons with their emails, new viewings for a lead, days off and other hours), Google Calendar per agent (OAuth, encrypted tokens, busy times every 15 minutes, events follow viewings), "Book a tour" on project pages; message templates editor; page-builder forms as leads (contact, callback, valuation and list-your-property requests with tasks); newsletter with double opt-in and one-click unsubscribe; campaign report by source, medium, campaign and channel (first or last touch); subscribers list.
+- Phase 7 alerts: new matches (instant, daily and weekly digests), price drops and status changes for saved homes and searches, never the same listing twice, preferences and WhatsApp opt-in respected, one-click unsubscribe with List-Unsubscribe headers.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
 
 - Phase 4: LCP on the property page (decision 62; the check reports instead of failing).
 - Phase 5: built and merged; its new e2e specs (page builder, content admin, blog, SEO) run in CI for the first time.
-- Phase 6: built so far: CRM core, campaign links, viewings booking on the site, inbox and channels, leads admin. Left: admin calendar for viewings with Google Calendar sync, the message templates editor, newsletter with double opt-in, and the page builder's forms as leads.
+- Phase 6: built and merged; the new e2e specs (inbox, leads, viewings admin, marketing) run in CI.
+- Phase 7: alerts merged; the account area is being built.
 
 ## Next
 
@@ -248,6 +264,10 @@ Done-when checklist (from `15-build-phases.md`):
 65. **Channels:** a WhatsApp message outside the 24-hour window can only be an approved template, and the composer switches to template mode; when WhatsApp is not set up, a send is stored as failed with the reason, never shown as sent. Web chat is off by default (Settings -> AI) until the assistant arrives in Phase 9.
 66. **Shortlists** ("send properties", 09 §4) are personal links at /s/[token] (noindex) that count opens and which homes were opened.
 67. **Site bookings are confirmed at once** (the visitor picked a real free time); the agent can still move or cancel them. Phone is required for a viewing, email optional (it carries the confirmation).
+68. **Redirects are served by the middleware** with a real 301/302: a streamed page (Cache Components) cannot change its 200 status, so the middleware keeps the redirects table per instance for 5 seconds, refreshed from `/api/internal/redirects` (through the service binding on Workers), and reports hits. A new rule reaches it within seconds; until then pages still redirect themselves. Unknown addresses are real 404s (no catch-all route); missing slugs on existing routes stay soft 404s with `noindex` (decision 50).
+69. **Newsletter confirm and unsubscribe links do nothing until their button is pressed**, so mail scanners that open links cannot confirm or unsubscribe anyone; the unsubscribe link is signed from the subscriber id, so no token is stored.
+70. **Alerts never repeat**: each alert is recorded with its email in one transaction (search or saved home, listing, kind, and the new price or status), so a raced job rolls back and a second drop to a new price sends again. Digests cover listings first published since the search's last email; a listing back from off market alerts instantly but is not in digests (a "went live at" column would fix that).
+71. **Google Calendar busy times are polled every 15 minutes** (push notifications are left for later); a viewing's Google event follows it through a retried job, and nothing is called while the integration is not set up.
 
 ## Data model changes (vs `05-data-model.md`)
 
