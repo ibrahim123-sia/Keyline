@@ -1,5 +1,8 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { db, field, signInAsAdmin, snap } from "./helpers";
+
+// Fields with suggestions (a datalist) are comboboxes, not plain text boxes.
+const combo = (page: Page, name: string) => page.getByRole("combobox", { name, exact: true });
 
 test("campaign links: a tagged link with a short link and QR code that counts clicks", async ({
   page,
@@ -14,15 +17,15 @@ test("campaign links: a tagged link with a short link and QR code that counts cl
   await page.getByRole("button", { name: "New link" }).click();
   const panel = page.getByRole("dialog", { name: "New campaign link" });
   await field(page, "Name").fill("Flyer, open day");
-  await field(page, "Page").fill("https://evil.example/x");
-  await field(page, "Source").fill("flyer");
-  await field(page, "Medium").fill("qr");
+  await combo(page, "Page").fill("https://evil.example/x");
+  await combo(page, "Source").fill("flyer");
+  await combo(page, "Medium").fill("qr");
   await field(page, "Campaign").fill("open-day");
   await panel.getByRole("button", { name: "Save" }).click();
   // A short link never sends people to another site.
   await expect(panel.getByText("Use a page on this site")).toBeVisible();
 
-  await field(page, "Page").fill("/buy");
+  await combo(page, "Page").fill("/buy");
   await expect(
     panel.getByText(/\/buy\?utm_source=flyer&utm_medium=qr&utm_campaign=open-day$/),
   ).toBeVisible();

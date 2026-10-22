@@ -32,13 +32,17 @@ test("page builder: build a page from sections, publish it, move it with a redir
     .getByRole("dialog", { name: "Add a section" })
     .getByRole("button", { name: /^Hero Heading/ })
     .click();
-  await settings.getByRole("textbox", { name: "Heading" }).fill("Spring offer: two weeks only");
+  await settings
+    .getByRole("textbox", { name: "Heading", exact: true })
+    .fill("Spring offer: two weeks only");
   await page.getByRole("button", { name: "Add section" }).click();
   await page
     .getByRole("dialog", { name: "Add a section" })
     .getByRole("button", { name: /^Call to action/ })
     .click();
-  await settings.getByRole("textbox", { name: "Heading" }).fill("Book a viewing this weekend");
+  await settings
+    .getByRole("textbox", { name: "Heading", exact: true })
+    .fill("Book a viewing this weekend");
   await expect(page.getByRole("status").filter({ hasText: /Draft saved/ })).toBeVisible({
     timeout: 30_000,
   });
@@ -68,7 +72,9 @@ test("page builder: build a page from sections, publish it, move it with a redir
     .getByRole("complementary", { name: "Sections" })
     .getByRole("button", { name: /^Hero/ })
     .click();
-  await settings.getByRole("textbox", { name: "Heading" }).fill("Spring offer: last days");
+  await settings
+    .getByRole("textbox", { name: "Heading", exact: true })
+    .fill("Spring offer: last days");
   await expect(page.getByRole("status").filter({ hasText: /Draft saved/ })).toBeVisible({
     timeout: 30_000,
   });

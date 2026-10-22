@@ -54,7 +54,8 @@ test("404: a search box and the agency's popular areas", async ({ page, request 
   );
   await revalidateTags(request, ["locations"]);
 
-  const res = await page.goto("/no-such-page-e2e");
+  // One segment could be a page-builder page (a soft 404); two segments match no route.
+  const res = await page.goto("/no/such-page-e2e");
   expect(res?.status()).toBe(404);
   await expect(
     page.getByRole("heading", { name: "We couldn't find that page", level: 1 }),

@@ -20,6 +20,8 @@ async function seedListing(request: APIRequestContext) {
     email: "hello@agency.example",
     whatsapp: "+97140000000",
   });
+  // Another spec switches assignment to round robin: the listing's agent answers here.
+  await setSettings(request, "leads", { assignmentRule: "listing_agent" });
   const q = async (sql: string, params: unknown[] = []) => (await db().query(sql, params)).rows;
   const suffix = Math.floor(Math.random() * 1e6);
   const [type] = await q(
