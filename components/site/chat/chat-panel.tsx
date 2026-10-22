@@ -71,7 +71,9 @@ export function ChatPanel({
   useEffect(() => {
     panel.current?.querySelector<HTMLElement>("input, textarea")?.focus();
   }, [started]);
-  useEffect(() => end.current?.scrollIntoView({ block: "end" }), [messages.length]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: "end" });
+  }, [messages.length]);
 
   const submitStart = async () => {
     setBusy(true);

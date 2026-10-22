@@ -317,7 +317,9 @@ function ConversationPane({
   const { conversation: conv, contact, lead } = detail;
   const update = useAction(updateConversation, { onSuccess: () => router.refresh() });
   const bottom = useRef<HTMLDivElement>(null);
-  useEffect(() => bottom.current?.scrollIntoView({ block: "end" }), [detail.messages.length]);
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ block: "end" });
+  }, [detail.messages.length]);
   const act = (action: "take_over" | "hand_back" | "close" | "reopen", success: string) =>
     update.run({ id: conv.id, action }).then((r) => r.ok && toast.success(success));
 
