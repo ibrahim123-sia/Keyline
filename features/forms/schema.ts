@@ -55,11 +55,3 @@ export const pageFormSchema = z
 
 export type PageFormInput = z.input<typeof pageFormSchema>;
 export type PageForm = z.output<typeof pageFormSchema>;
-
-export const pageFormSubjects: Record<PageFormType, string> = {
-  contact: "New message",
-  callback: "Callback request",
-  valuation: "Valuation request",
-  list_property: "Property to list",
-  newsletter: "Newsletter signup",
-};

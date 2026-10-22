@@ -1,6 +1,7 @@
 "use server";
 
 import { getDb } from "@/db/client";
+import { currentVisitorKey } from "@/features/attribution/current";
 import { errorsByPath, toActionError, type ActionResult } from "@/lib/actions";
 import { hit, rateLimitRules } from "@/lib/rate-limit";
 import { currentRequestMeta } from "@/lib/request";
@@ -10,8 +11,8 @@ import { pageFormSchema, type PageFormInput } from "./schema";
 
 /**
  * Public page forms (06 §10): validated on the server, a honeypot, a per-IP rate limit and
- * Turnstile; then the agency is emailed. Bots that fill the honeypot get the same success
- * answer, so they learn nothing.
+ * Turnstile; then a lead (or a newsletter signup) with the visitor's attribution. Bots that
+ * fill the honeypot get the same success answer, so they learn nothing.
  */
 export async function sendPageForm(input: PageFormInput): Promise<ActionResult<{ sent: true }>> {
   try {
@@ -43,7 +44,7 @@ export async function sendPageForm(input: PageFormInput): Promise<ActionResult<{
         error: "Please complete the check below and send again.",
         code: "CAPTCHA",
       };
-    await handlePageForm(db, data);
+    await handlePageForm(db, data, await currentVisitorKey());
     return { ok: true, data: { sent: true } };
   } catch (err) {
     return toActionError(err);

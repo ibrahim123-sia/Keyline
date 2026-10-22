@@ -1,8 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { pages } from "@/db/schema/cms";
 import { faqs, testimonials } from "@/db/schema/content";
+import {
+  leadEvents,
+  leads,
+  leadTasks,
+  listingRequests,
+  newsletterSubscribers,
+  valuationRequests,
+} from "@/db/schema/crm";
 import { emailLog } from "@/db/schema/system";
+import { runDueJobs } from "@/jobs/runner";
 import { faqItems, filtersFromSearchLink, testimonialCards } from "@/features/cms/section-data";
 import { sendPageForm } from "@/features/forms/actions";
 import { patchSettings } from "@/features/settings/mutations";
@@ -26,6 +36,14 @@ describe("page builder sections: forms and content", () => {
       "pages",
       "testimonials",
       "faqs",
+      "contacts",
+      "leads",
+      "lead_events",
+      "lead_tasks",
+      "valuation_requests",
+      "listing_requests",
+      "newsletter_subscribers",
+      "message_templates",
       "email_log",
       "job_runs",
       "rate_limits",
@@ -51,35 +69,112 @@ describe("page builder sections: forms and content", () => {
     captchaToken: "good-token",
   };
 
-  it("emails the agency from any page form, with what was asked and where", async () => {
+  it("every page form is a lead with its source, the owner's request and a task", async () => {
     const db = await getDb();
     const pageId = newId();
     await db.insert(pages).values({ id: pageId, title: "Sell with us", slug: "sell-with-us" });
     expect(await sendPageForm({ ...contact, pageId })).toEqual({ ok: true, data: { sent: true } });
+    const owner = {
+      name: "Rana Owner",
+      phone: "050 123 4567",
+      area: "Marina, Tower 3",
+      beds: "2",
+      consent: true as const,
+      captchaToken: "good-token",
+    };
     expect(
       await sendPageForm({
+        ...owner,
         formType: "list_property",
-        name: "Rana Owner",
-        phone: "050 123 4567",
         purpose: "rent",
-        area: "Marina, Tower 3",
-        beds: "2",
+        expectedPrice: "120k",
+      }),
+    ).toMatchObject({ ok: true });
+    expect(
+      await sendPageForm({
+        formType: "valuation",
+        name: "Omar Seller",
+        email: "omar@example.com",
+        area: "JVC",
+        propertyType: "Villa",
         consent: true,
         captchaToken: "good-token",
       }),
     ).toMatchObject({ ok: true });
-    const mails = await db.select().from(emailLog);
-    expect(mails.map((m) => [m.to, m.template]).sort()).toEqual([
-      ["hello@agency.example", "page-form.contact"],
-      ["hello@agency.example", "page-form.list_property"],
+    expect(
+      await sendPageForm({
+        formType: "callback",
+        name: "Callie",
+        phone: "050 999 8888",
+        preferredTime: "after 6pm",
+        consent: true,
+        captchaToken: "good-token",
+      }),
+    ).toMatchObject({ ok: true });
+
+    const all = await db.select().from(leads);
+    expect(all.map((l) => [l.source, l.type, l.sourceDetail]).sort()).toEqual([
+      ["callback", "buyer", "page form"],
+      ["form", "buyer", "contact"],
+      ["listing_request", "landlord", "page form"],
+      ["valuation", "seller", "page form"],
     ]);
-    const message = mails.find((m) => m.template === "page-form.contact")!;
-    expect(message.subject).toBe("New message from Sam Visitor");
-    expect(message.text).toContain("Do you manage rentals?");
-    expect(message.text).toContain("Sell with us");
-    const listing = mails.find((m) => m.template === "page-form.list_property")!;
-    expect(listing.text).toContain("+971501234567");
-    expect(listing.text).toContain("Marina, Tower 3");
+    const [created] = await db
+      .select({ body: leadEvents.body, meta: leadEvents.meta })
+      .from(leadEvents)
+      .where(eq(leadEvents.type, "created"))
+      .orderBy(leadEvents.createdAt)
+      .limit(1);
+    expect(created).toMatchObject({
+      body: "Do you manage rentals?",
+      meta: { details: { page: "Sell with us" } },
+    });
+    const [listing] = await db.select().from(listingRequests);
+    expect(listing).toMatchObject({
+      purpose: "rent",
+      building: "Marina, Tower 3",
+      beds: 2,
+      askingPrice: 12_000_000,
+      notes: "Expected price: 120k",
+    });
+    const [valuation] = await db.select().from(valuationRequests);
+    expect(valuation).toMatchObject({ purpose: "sell", building: "JVC" });
+    expect(
+      (await db.select({ title: leadTasks.title }).from(leadTasks)).map((x) => x.title).sort(),
+    ).toEqual([
+      "Call about listing the home in Marina, Tower 3",
+      "Call back (best time: after 6pm)",
+      "Value the home in JVC",
+    ]);
+
+    // The agency hears through the lead pipeline, with what was asked and where from.
+    for (let i = 0; i < 5; i++) if ((await runDueJobs()).ran === 0) break;
+    const mails = await db.select().from(emailLog);
+    expect(mails.filter((m) => m.template.startsWith("page-form"))).toEqual([]);
+    const toAgency = mails.filter((m) => m.to === "hello@agency.example");
+    expect(toAgency.map((m) => m.template)).toEqual([
+      "lead.new",
+      "lead.new",
+      "lead.new",
+      "lead.new",
+    ]);
+    const message = toAgency.find((m) => (m.text ?? "").includes("Do you manage rentals?"))!;
+    expect(message.text).toContain("Sent from: Sell with us");
+  });
+
+  it("the newsletter form signs the address up for confirmation", async () => {
+    const db = await getDb();
+    expect(
+      await sendPageForm({
+        formType: "newsletter",
+        email: "News@Example.com",
+        consent: true,
+        captchaToken: "good-token",
+      }),
+    ).toEqual({ ok: true, data: { sent: true } });
+    const [sub] = await db.select().from(newsletterSubscribers);
+    expect(sub).toMatchObject({ email: "news@example.com", source: "page", confirmedAt: null });
+    expect(await db.select().from(leads)).toEqual([]);
   });
 
   it("checks each form's fields, the honeypot, Turnstile and the rate limit", async () => {
@@ -117,9 +212,10 @@ describe("page builder sections: forms and content", () => {
     expect(last).toMatchObject({ ok: false, code: "RATE_LIMITED" });
   });
 
-  it("says so when there is nobody to send it to", async () => {
+  it("keeps the lead even when there is nobody to email", async () => {
     await patchSettings(await getDb(), "contact", { email: "", leadNotifyEmails: [] }, actor);
-    expect(await sendPageForm(contact)).toMatchObject({ ok: false, code: "NO_RECIPIENT" });
+    expect(await sendPageForm(contact)).toEqual({ ok: true, data: { sent: true } });
+    expect(await (await getDb()).select().from(leads)).toHaveLength(1);
   });
 
   it("testimonials and FAQs: only published ones, latest or picked in order", async () => {

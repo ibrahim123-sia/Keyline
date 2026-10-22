@@ -41,6 +41,12 @@ export const leads = {
     similar: "Would also like similar homes",
     topic: "Topic",
     phoneAsGiven: "Phone as typed",
+    page: "Sent from",
+    purpose: "For",
+    area: "Where",
+    propertyType: "Type",
+    beds: "Bedrooms",
+    expectedPrice: "Expected price",
   },
   noInterest: "General enquiry",
   score: {
