@@ -44,19 +44,19 @@ test.describe("SEO and navigation", () => {
 
     await page.getByRole("button", { name: "Add link" }).click();
     let panel = inPanel(page, "New link");
-    await panel.getByLabel("Label", { exact: true }).fill("E2E Buy");
-    await panel.getByLabel("Links to").click();
+    await panel.getByRole("textbox", { name: "Label", exact: true }).fill("E2E Buy");
+    await panel.getByRole("combobox", { name: "Links to" }).click();
     await page.getByRole("option", { name: "Search preset" }).click();
-    await panel.getByLabel("Search address").fill("/buy");
+    await panel.getByRole("textbox", { name: "Search address", exact: true }).fill("/buy");
     await panel.getByRole("button", { name: "Add" }).click();
     await expect(panel).toBeHidden();
 
     await page.getByRole("button", { name: "Add a dropdown link under E2E Buy" }).click();
     panel = inPanel(page, "New dropdown link");
-    await panel.getByLabel("Label", { exact: true }).fill("E2E Agents");
-    await panel.getByLabel("Links to").click();
+    await panel.getByRole("textbox", { name: "Label", exact: true }).fill("E2E Agents");
+    await panel.getByRole("combobox", { name: "Links to" }).click();
     await page.getByRole("option", { name: "Web address" }).click();
-    await panel.getByLabel("Address", { exact: true }).fill("/agents");
+    await panel.getByRole("textbox", { name: "Address", exact: true }).fill("/agents");
     await panel.getByRole("button", { name: "Add" }).click();
     await expect(panel).toBeHidden();
 
@@ -151,8 +151,10 @@ test.describe("SEO and navigation", () => {
     const row = page.getByRole("row").filter({ hasText: "/e2e-old-site/listing.php" });
     await row.getByRole("button", { name: "Create redirect" }).click();
     const panel = inPanel(page, "New redirect");
-    await expect(panel.getByLabel("Old address")).toHaveValue("/e2e-old-site/listing.php");
-    await panel.getByLabel("New address").fill("/rent");
+    await expect(panel.getByRole("textbox", { name: "Old address", exact: true })).toHaveValue(
+      "/e2e-old-site/listing.php",
+    );
+    await panel.getByRole("textbox", { name: "New address", exact: true }).fill("/rent");
     await panel.getByRole("button", { name: "Save" }).click();
     await expect(page.getByText("Redirect saved")).toBeVisible();
     await expect(

@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { after } from "next/server";
+import { after, connection } from "next/server";
 import { getDb } from "@/db/client";
 import { CRAWLER_AGENT } from "@/features/seo/crawl";
 import { recordNotFound } from "@/features/seo/not-found-log";
@@ -9,6 +9,8 @@ import { recordNotFound } from "@/features/seo/not-found-log";
  * the address in x-lintel-path; render inside <Suspense> (it reads the request).
  */
 export async function NotFoundLogger() {
+  // Request time only: after() reads the clock, which prerendering must not do.
+  await connection();
   const h = await headers();
   const path = h.get("x-lintel-path");
   // The weekly link check reports broken links itself.
