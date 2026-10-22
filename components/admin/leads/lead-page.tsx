@@ -299,6 +299,7 @@ export function LeadPage({
         <label className="flex items-center gap-1.5 text-[13px] text-text-muted">
           Type
           <select
+            aria-label="Type"
             value={lead.type}
             disabled={readOnly || typeAction.pending}
             onChange={(e) => typeAction.run({ id: lead.id, type: e.target.value })}
@@ -314,6 +315,7 @@ export function LeadPage({
         <label className="flex items-center gap-1.5 text-[13px] text-text-muted">
           Stage
           <select
+            aria-label="Stage"
             value={lead.stageId ?? ""}
             disabled={readOnly || stageAction.pending}
             onChange={(e) => moveTo(e.target.value)}
@@ -330,6 +332,7 @@ export function LeadPage({
         <label className="flex items-center gap-1.5 text-[13px] text-text-muted">
           Agent
           <select
+            aria-label="Agent"
             value={lead.agentId ?? ""}
             disabled={readOnly || agentAction.pending}
             onChange={(e) => agentAction.run({ id: lead.id, agentId: e.target.value || null })}

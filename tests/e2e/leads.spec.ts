@@ -80,7 +80,9 @@ test("leads: list -> lead page -> note, stage, shortlist; board move with a lost
   await expect(timeline.getByText("Prefers a high floor")).toBeVisible();
 
   // Stage change from the header.
-  await page.getByLabel("Stage", { exact: true }).selectOption({ label: "Contacted" });
+  await page
+    .getByRole("combobox", { name: "Stage", exact: true })
+    .selectOption({ label: "Contacted" });
   await expect
     .poll(
       async () =>
