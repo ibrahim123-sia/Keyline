@@ -34,7 +34,7 @@ export function FeedbackForm({ token }: { token: string }) {
       }}
     >
       {error && <FormAlert>{error}</FormAlert>}
-      <fieldset>
+      <fieldset className="min-w-0">
         <legend className="mb-2 text-[14px] font-semibold text-ink">{t.feedback.rating}</legend>
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map((n) => (

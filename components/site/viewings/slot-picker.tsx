@@ -104,7 +104,7 @@ export function SlotPicker({
           })}
         </p>
       )}
-      <fieldset>
+      <fieldset className="min-w-0">
         <legend className="mb-2 text-[14px] font-semibold text-ink">{t.booking.dayLabel}</legend>
         <div className="flex gap-2 overflow-x-auto pb-1">
           {days.map(([key, slots]) => (
@@ -133,7 +133,7 @@ export function SlotPicker({
           ))}
         </div>
       </fieldset>
-      <fieldset>
+      <fieldset className="min-w-0">
         <legend className="mb-2 text-[14px] font-semibold text-ink">{t.booking.timeLabel}</legend>
         <div className="flex flex-wrap gap-2">
           {times.map((s) => (

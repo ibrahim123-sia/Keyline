@@ -79,7 +79,7 @@ test("viewings calendar: open a viewing, mark it done; book one from a lead", as
   await snap(page, "viewings-calendar");
   await block.click();
   const panel = page.getByRole("dialog", { name: "E2E Viewer: HD-V1 · E2E Viewing Home" });
-  await expect(panel.getByText("E2E Viewing Agent")).toBeVisible();
+  await expect(panel.getByRole("combobox", { name: "Agent" })).toHaveText("E2E Viewing Agent");
   await panel.getByRole("button", { name: "Mark done" }).click();
   await expect.poll(async () => (await q("select status from viewings"))[0]?.status).toBe("done");
   // Done asks the visitor how it went.
@@ -131,7 +131,7 @@ test("project page: book a tour at the agency's free times", async ({
     .first()
     .check({ force: true });
   await dialog.getByRole("textbox", { name: "Name" }).fill("Project Visitor");
-  await dialog.getByRole("textbox", { name: "Phone" }).fill("050 222 3344");
+  await dialog.getByRole("textbox", { name: "Phone" }).fill("+971 50 222 3344");
   await dialog
     .getByRole("checkbox", { name: "I agree to be contacted about this viewing." })
     .check();

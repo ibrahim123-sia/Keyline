@@ -179,7 +179,7 @@ export function NewViewingForm({
             ...agents.map((a) => ({ value: a.id, label: a.name })),
           ]}
         />
-        <fieldset>
+        <fieldset className="min-w-0">
           <legend className="mb-2 text-[13px] font-medium text-ink">Type</legend>
           <div className="flex gap-4 text-[14px]">
             {(["in_person", "video"] as const).map((k) => (

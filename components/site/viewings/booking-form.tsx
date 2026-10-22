@@ -130,7 +130,7 @@ export function BookingForm({
       }}
     >
       {formError && <FormAlert>{formError}</FormAlert>}
-      <fieldset>
+      <fieldset className="min-w-0">
         <legend className="mb-2 text-[14px] font-semibold text-ink">{t.booking.typeLabel}</legend>
         <div className="flex gap-2">
           {(["in_person", "video"] as const).map((k) => (
