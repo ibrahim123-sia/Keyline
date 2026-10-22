@@ -15,6 +15,7 @@ import { SortableList } from "@/components/admin/sortable-list";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { deleteAgent, reorderAgents, saveAgent, setAgentActive } from "@/features/agents/actions";
+import { disconnectAgentCalendar } from "@/features/integrations/google-calendar/actions";
 import type { AgentRow } from "@/features/agents/queries";
 import { commonLanguages, emptyAgent, type AgentInput } from "@/features/agents/schema";
 import type { LocationNode } from "@/features/locations/queries";
@@ -35,6 +36,7 @@ export function AgentsManager({
   agencyHours,
   firstDayOfWeek,
   calendarEnabled,
+  calendars = {},
   siteName,
   readOnly,
 }: {
@@ -43,6 +45,11 @@ export function AgentsManager({
   agencyHours: WeekHours;
   firstDayOfWeek: number;
   calendarEnabled: boolean;
+  /** Connected Google Calendars by agent id. */
+  calendars?: Record<
+    string,
+    { accountEmail: string | null; lastSyncAt: string | null; lastError: string | null }
+  >;
   siteName: string;
   readOnly?: boolean;
 }) {
@@ -358,20 +365,66 @@ export function AgentsManager({
             </Section>
 
             <Section title="Calendar">
-              <div className="flex items-start gap-3 text-[13px]">
-                <CalendarIcon className="mt-0.5 size-4 shrink-0 text-text-muted" aria-hidden />
-                <div>
-                  <p className="font-medium text-ink">
-                    Google Calendar:{" "}
-                    {editing.row?.calendarConnected ? "connected" : "not connected"}
-                  </p>
-                  <p className="text-text-muted">
-                    {calendarEnabled
-                      ? "Each agent connects their own calendar so booked viewings appear there and busy times are blocked."
-                      : "Turn on Google Calendar in Settings -> Integrations to connect agent calendars."}
-                  </p>
-                </div>
-              </div>
+              {(() => {
+                const cal = editing.id ? calendars[editing.id] : undefined;
+                return (
+                  <div className="flex items-start gap-3 text-[13px]">
+                    <CalendarIcon className="mt-0.5 size-4 shrink-0 text-text-muted" aria-hidden />
+                    <div className="flex flex-col gap-2">
+                      <p className="font-medium text-ink">
+                        Google Calendar:{" "}
+                        {cal
+                          ? `connected${cal.accountEmail ? ` as ${cal.accountEmail}` : ""}`
+                          : "not connected"}
+                      </p>
+                      {cal?.lastError && (
+                        <p className="text-danger">Last problem: {cal.lastError}</p>
+                      )}
+                      {cal?.lastSyncAt && !cal.lastError && (
+                        <p className="text-text-muted">
+                          Busy times read {new Date(cal.lastSyncAt).toLocaleString()}.
+                        </p>
+                      )}
+                      <p className="text-text-muted">
+                        {calendarEnabled
+                          ? "Booked viewings appear in this calendar and its busy times are kept free of viewings."
+                          : "Turn on Google Calendar in Settings -> Integrations to connect agent calendars."}
+                      </p>
+                      {calendarEnabled && editing.id && !readOnly && (
+                        <div className="flex flex-wrap gap-2">
+                          {cal ? (
+                            <ConfirmDialog
+                              trigger={
+                                <Button type="button" variant="outline" size="sm">
+                                  Disconnect
+                                </Button>
+                              }
+                              title="Disconnect this calendar?"
+                              description="Viewings stop appearing in it and its busy times no longer block bookings."
+                              confirmLabel="Disconnect"
+                              destructive
+                              onConfirm={async () => {
+                                const res = await disconnectAgentCalendar({
+                                  agentId: editing.id!,
+                                });
+                                if (!res.ok) return toast.error(res.error);
+                                toast.success("Calendar disconnected");
+                                router.refresh();
+                              }}
+                            />
+                          ) : (
+                            <Button asChild size="sm" variant="outline">
+                              <a href={`/api/integrations/google/connect?agent=${editing.id}`}>
+                                Connect Google Calendar
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </Section>
 
             <Section title="SEO">

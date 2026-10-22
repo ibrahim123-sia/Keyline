@@ -4,21 +4,12 @@ import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { agentAvailabilityOverrides, viewings } from "@/db/schema/crm";
 import { agents } from "@/db/schema/people";
+import { storedBusy } from "@/features/integrations/google-calendar/calendar";
 import { loadSettings } from "@/features/settings/queries";
 import { freeSlots, zonedDate, type Interval, type SlotRules } from "./slots";
 
 /** Viewings that hold their time (a cancelled or finished one frees it). */
 export const holdingStatuses = ["requested", "confirmed"] as const;
-
-/**
- * Busy times from other calendars (Google Calendar, 13 §1). Until an agent's calendar is
- * connected there are none; the calendar connector registers itself here.
- */
-export type BusySource = (agentId: string, from: Date, to: Date) => Promise<Interval[]>;
-let calendarBusy: BusySource = async () => [];
-export function setCalendarBusySource(source: BusySource): void {
-  calendarBusy = source;
-}
 
 /** The booking rules for an agent (their hours, or the agency's) from Settings -> Viewings. */
 export async function slotRulesFor(db: DbOrTx, agentId: string | null): Promise<SlotRules> {
@@ -82,7 +73,8 @@ export async function busyTimes(
   const held = rows
     .filter((r) => r.id !== exceptViewingId)
     .map(({ start, end }) => ({ start, end }));
-  return agentId ? [...held, ...(await calendarBusy(agentId, from, to))] : held;
+  // Busy times read from the agent's connected calendar (refreshed every 15 minutes).
+  return agentId ? [...held, ...(await storedBusy(db, agentId, from, to))] : held;
 }
 
 /** Free slots for an agent over the booking window (09 §5). */

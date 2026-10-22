@@ -9,6 +9,7 @@ import { enqueue } from "@/jobs/enqueue";
 import { ActionError } from "@/lib/actions";
 import { busyTimes, slotRulesFor } from "./availability";
 import { manageTokenHash } from "./book";
+import { queueCalendarSync } from "./calendar-sync";
 import { isFreeSlot } from "./slots";
 
 /** The viewing a reschedule / cancel link points to, with what it is about. */
@@ -79,6 +80,7 @@ export async function rescheduleViewing(db: Db, token: string, start: Date, now 
     { viewingId: v.id, event: "rescheduled" },
     { db, dedupeKey: `viewing.notify:rescheduled:${v.id}:${start.toISOString()}` },
   );
+  await queueCalendarSync(db, v.id);
 }
 
 export async function cancelViewing(db: Db, token: string, now = new Date()) {
@@ -108,6 +110,7 @@ export async function cancelViewing(db: Db, token: string, now = new Date()) {
     { viewingId: v.id, event: "cancelled" },
     { db, dedupeKey: `viewing.notify:cancelled:${v.id}` },
   );
+  await queueCalendarSync(db, v.id);
 }
 
 /** After a viewing: the visitor's rating and words (09 §5), kept on the viewing and the lead. */

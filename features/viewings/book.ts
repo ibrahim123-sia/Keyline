@@ -14,6 +14,7 @@ import { ActionError } from "@/lib/actions";
 import { bytesToBase64Url, hmacSha256, sha256Hex } from "@/lib/crypto";
 import { newId } from "@/lib/ids";
 import { busyTimes, slotRulesFor } from "./availability";
+import { queueCalendarSync } from "./calendar-sync";
 import { isFreeSlot } from "./slots";
 
 export type Booking = {
@@ -186,5 +187,6 @@ export async function bookViewing(
     { viewingId, event: "booked" },
     { db, dedupeKey: `viewing.notify:booked:${viewingId}` },
   );
+  await queueCalendarSync(db, viewingId);
   return { viewingId, leadId: lead.leadId, manageToken: token, agentId: target.agentId };
 }

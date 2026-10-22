@@ -3,6 +3,7 @@ import type { DbOrTx } from "@/db/client";
 import { loadSettings } from "@/features/settings/queries";
 import { getSecret, recordSecretTest } from "@/features/settings/secrets";
 import type { SecretKey } from "@/features/settings/schema";
+import { testGoogleCalendar } from "./google-calendar/calendar";
 import { testMapsConnection } from "./google-maps";
 
 /**
@@ -11,7 +12,13 @@ import { testMapsConnection } from "./google-maps";
  */
 export type CheckResult = { ok: boolean; message: string };
 
-export const testableIntegrations = ["googleMaps", "resend", "whatsapp", "ai"] as const;
+export const testableIntegrations = [
+  "googleMaps",
+  "googleCalendar",
+  "resend",
+  "whatsapp",
+  "ai",
+] as const;
 export type TestableIntegration = (typeof testableIntegrations)[number];
 
 /** Graph API version for WhatsApp Cloud API calls (supported until mid-2027). */
@@ -129,6 +136,8 @@ export function runCheck(name: TestableIntegration, db?: DbOrTx): Promise<CheckR
   switch (name) {
     case "googleMaps":
       return testMapsConnection(db);
+    case "googleCalendar":
+      return testGoogleCalendar(db);
     case "resend":
       return testResend(db);
     case "whatsapp":

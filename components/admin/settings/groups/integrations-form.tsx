@@ -240,6 +240,7 @@ export function IntegrationsSettingsForm({
           <FormSection
             title="Google Calendar"
             description="Viewings appear in each agent's calendar; busy times are blocked."
+            actions={testButton("googleCalendar")}
           >
             <SwitchField
               label="Use Google Calendar"
@@ -255,8 +256,12 @@ export function IntegrationsSettingsForm({
               error={errorFor("googleCalendar.clientId")}
             />
             {keyField("google_oauth_client_secret")}
+            <Webhook
+              label="Authorised redirect URI (add it to the OAuth client in Google Cloud)"
+              url={`${appUrl}/api/integrations/google/callback`}
+            />
             <p className="text-[12.5px] text-text-muted">
-              Each agent connects their own calendar from their profile.
+              Each agent connects their own calendar from their profile in Setup, Agents.
             </p>
           </FormSection>
 

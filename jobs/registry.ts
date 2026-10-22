@@ -9,6 +9,7 @@ import { mediaFetchUrlJob } from "@/features/media/fetch-url";
 import { mediaProcessJob } from "@/features/media/process";
 import { emailSendJob } from "@/features/notifications/email";
 import { poiComputeJob, projectPoiComputeJob } from "@/features/pois/distances";
+import { calendarSyncJob } from "@/features/integrations/google-calendar/calendar";
 import { viewingNotifyJob } from "@/features/viewings/notify";
 import { seoCrawlJob } from "@/features/seo/crawl-job";
 import type { JobDefinition } from "./types";
@@ -28,6 +29,7 @@ const jobs: JobDefinition[] = [
   poiComputeJob as JobDefinition,
   projectPoiComputeJob as JobDefinition,
   viewingNotifyJob as JobDefinition,
+  calendarSyncJob as JobDefinition,
   seoCrawlJob as JobDefinition,
 ];
 

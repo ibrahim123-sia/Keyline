@@ -14,6 +14,7 @@ import { pruneNotFound } from "@/features/seo/not-found-log";
 import { enqueue } from "./enqueue";
 import { loadSettings } from "@/features/settings/queries";
 import { queueViewingReminders } from "@/features/viewings/notify";
+import { refreshCalendarBusy } from "@/features/integrations/google-calendar/calendar";
 import { newId } from "@/lib/ids";
 import { purgeExpired } from "@/lib/rate-limit";
 import { requeueStuckJobs, runDueJobs } from "./runner";
@@ -65,6 +66,14 @@ export const cronTasks: CronTask[] = [
     schedule: "every minute",
     due: () => true,
     run: async () => alertUnansweredLeads(await getDb()),
+    quiet: true,
+  },
+  // 13 §2: busy times from connected Google Calendars, for the free viewing slots.
+  {
+    name: "calendar.busy-refresh",
+    schedule: "every 15 minutes",
+    due: every(15),
+    run: async () => refreshCalendarBusy(await getDb()),
     quiet: true,
   },
   // 13 §2: viewing reminders that are due.
