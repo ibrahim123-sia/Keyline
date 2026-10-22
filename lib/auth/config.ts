@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
+import { parseVisitorCookie } from "@/features/attribution/visitor-cookie";
 import { nextCookies } from "better-auth/next-js";
 import { captcha, twoFactor } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
@@ -169,11 +170,26 @@ export function createAuth(db: Db, options: { nextCookies?: boolean } = {}) {
             }
             return { data: session };
           },
-          after: async (session) => {
+          after: async (session, ctx) => {
             await db
               .update(users)
               .set({ lastLoginAt: new Date() })
               .where(eq(users.id, session.userId));
+            // 12 §1: past inquiries, tours, chats and the guest compare set join the account.
+            try {
+              const { linkCustomerActivity } = await import("@/features/account/link");
+              const cookie =
+                (ctx as { headers?: Headers } | null | undefined)?.headers?.get("cookie") ??
+                (ctx as { request?: Request } | null | undefined)?.request?.headers.get("cookie") ??
+                "";
+              const vid = /(?:^|;\s*)vid=([^;]+)/.exec(cookie)?.[1];
+              await linkCustomerActivity(db, {
+                userId: session.userId,
+                visitorKey: vid ? (parseVisitorCookie(decodeURIComponent(vid))?.key ?? null) : null,
+              });
+            } catch (err) {
+              console.error("[auth] linking past activity failed", err);
+            }
           },
         },
       },
