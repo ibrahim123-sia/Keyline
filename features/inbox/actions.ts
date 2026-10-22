@@ -4,7 +4,13 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { approvalQueue, conversations, quickReplies } from "@/db/schema/crm";
-import { fillTemplate, templateDefaults, type TemplateDefault } from "@/features/messages/defaults";
+import {
+  fillTemplate,
+  isTemplateKey,
+  templateDefaults,
+  type TemplateDefault,
+} from "@/features/messages/defaults";
+import { loadTemplate } from "@/features/messages/render";
 import { currencyFormats, priceLabel } from "@/features/properties/format";
 import { loadSettings } from "@/features/settings/queries";
 import { siteUrl } from "@/features/site/url";
@@ -61,9 +67,12 @@ export const sendTemplateReply = adminAction(
         "VALIDATION",
       );
     const parameters = templateParameters(mapping.variables, input.variables);
+    // The agency's wording when it has one (Settings -> Message templates).
+    const wording = isTemplateKey(input.key) ? await loadTemplate(db, "whatsapp", input.key) : null;
     const builtIn = (templateDefaults as Record<string, TemplateDefault>)[input.key]?.whatsapp;
-    const preview = builtIn
-      ? fillTemplate(builtIn.body, input.variables)
+    const body = wording?.body ?? builtIn?.body;
+    const preview = body
+      ? fillTemplate(body, input.variables)
       : `${mapping.name}: ${parameters.join(" · ")}`;
     return db.transaction(async (tx) => {
       const sent = await sendOutgoing(tx, {

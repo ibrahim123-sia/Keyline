@@ -11,8 +11,8 @@ import { emailLog } from "@/db/schema/system";
 import { insideWindow, leadReplyAddress, templateParameters, waId } from "@/features/inbox/rules";
 import { ensureConversation, sendOutgoing } from "@/features/inbox/store";
 import { queueWhatsappNotice } from "@/features/integrations/whatsapp/jobs";
-import { fillTemplate, templateDefaults, type TemplateKey } from "@/features/messages/defaults";
-import { renderTemplateEmail } from "@/features/messages/render";
+import { fillTemplate, type TemplateKey } from "@/features/messages/defaults";
+import { loadTemplate, renderTemplateEmail } from "@/features/messages/render";
 import { queueEmail } from "@/features/notifications/email";
 import { loadSettings } from "@/features/settings/queries";
 import { siteUrl } from "@/features/site/url";
@@ -247,7 +247,10 @@ async function whatsappAutoReply(
   const open = insideWindow(conv.waWindowExpiresAt, now);
   const mapping = whatsapp.templates["lead.auto_reply"];
   if (!open && !mapping?.name) return false;
-  const text = fillTemplate(templateDefaults["lead.auto_reply"].whatsapp.body, vars);
+  // The agency's wording (Settings -> Message templates); turned off, nothing is sent.
+  const wording = await loadTemplate(db, "whatsapp", "lead.auto_reply");
+  if (!wording?.isActive) return false;
+  const text = fillTemplate(wording.body, vars);
   const sent = await sendOutgoing(db, {
     conversationId: conv.id,
     text,
