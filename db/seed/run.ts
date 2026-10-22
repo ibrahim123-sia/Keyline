@@ -53,6 +53,7 @@ import { seedPages } from "./pages";
 import { seedContent } from "./content";
 import { seedCrm } from "./crm";
 import { seedMenus } from "./menus";
+import { seedNewsletter } from "./newsletter";
 import { rng } from "./rng";
 import type { ListingSpec, SeedPreset } from "./types";
 
@@ -815,6 +816,8 @@ export async function seedPreset(
   // After the leads, so conversations join their open leads.
   progress("Inbox");
   await seedInbox(db, { now });
+  progress("Newsletter");
+  await seedNewsletter(db, { now });
 
   const count = async (table: string) =>
     (
@@ -832,6 +835,7 @@ export async function seedPreset(
     "media",
     "property_pois",
     "property_badges",
+    "newsletter_subscribers",
     "pages",
     "conversations",
     "posts",

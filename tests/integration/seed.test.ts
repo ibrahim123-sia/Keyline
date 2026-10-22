@@ -285,4 +285,17 @@ describe("demo seed: Haven & Dune", () => {
     expect(facts!.events).toBeGreaterThan(100);
     expect(facts!.tasks).toBeGreaterThan(10);
   });
+
+  it("turns the footer newsletter on, with subscribers in each state", async () => {
+    expect(result.counts.newsletter_subscribers).toBe(7);
+    const states = await rows<{ confirmed: number; pending: number; unsubscribed: number }>(
+      `select
+        (count(*) filter (where confirmed_at is not null and unsubscribed_at is null))::int as confirmed,
+        (count(*) filter (where confirmed_at is null and unsubscribed_at is null))::int as pending,
+        (count(*) filter (where unsubscribed_at is not null))::int as unsubscribed
+      from newsletter_subscribers`,
+    );
+    expect(states[0]).toEqual({ confirmed: 5, pending: 1, unsubscribed: 1 });
+    expect((await loadSettings("website", await getDb())).footer.newsletter).toBe(true);
+  });
 });
