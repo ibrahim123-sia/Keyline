@@ -298,4 +298,23 @@ describe("demo seed: Haven & Dune", () => {
     expect(states[0]).toEqual({ confirmed: 5, pending: 1, unsubscribed: 1 });
     expect((await loadSettings("website", await getDb())).footer.newsletter).toBe(true);
   });
+
+  it("adds viewings: done ones with feedback, a no-show, and confirmed ones coming up", async () => {
+    const byStatus = await rows<{ status: string; n: number; rated: number; ahead: number }>(
+      `select status, count(*)::int as n, count(feedback_rating)::int as rated,
+         count(*) filter (where starts_at > '2026-10-20T08:00:00Z')::int as ahead
+       from viewings group by status order by status`,
+    );
+    const of = (s: string) => byStatus.find((x) => x.status === s);
+    expect(of("done")!.n).toBeGreaterThan(4);
+    expect(of("done")!.rated).toBeGreaterThan(2);
+    expect(of("done")!.ahead).toBe(0);
+    expect(of("no_show")!.n).toBe(1);
+    expect(of("confirmed")!.n).toBe(of("confirmed")!.ahead);
+    expect(of("confirmed")!.n).toBeGreaterThan(2);
+    const [linked] = await rows<{ n: number }>(
+      "select count(*)::int as n from viewings v where v.manage_token_hash is null or v.lead_id is null",
+    );
+    expect(linked!.n).toBe(0);
+  });
 });

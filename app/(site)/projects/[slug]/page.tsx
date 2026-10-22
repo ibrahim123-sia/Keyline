@@ -5,6 +5,7 @@ import { PaymentPlanView } from "@/components/payment-plan/plan-view";
 import { Breadcrumb } from "@/components/site/breadcrumb";
 import { JsonLd } from "@/components/site/json-ld";
 import { ContactCard } from "@/components/site/contact-card";
+import { BookTourButton } from "@/components/site/viewings/book-tour-button";
 import { ListingCard, handoverLabel } from "@/components/site/listings/listing-card";
 import { PlaceMap } from "@/components/site/maps/place-map";
 import { MediaImage } from "@/components/site/media-image";
@@ -560,7 +561,12 @@ export default async function ProjectPage(props: PageProps<"/projects/[slug]">) 
           )}
         </div>
 
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        <aside className="flex flex-col gap-3 lg:sticky lg:top-24 lg:self-start">
+          <BookTourButton
+            projectId={p.id}
+            subject={p.name}
+            agentName={(await getSettings("general")).agencyName}
+          />
           <ContactCard
             id="contact"
             entity={{ type: "project", id: p.id }}

@@ -52,6 +52,7 @@ import {
 import { seedPages } from "./pages";
 import { seedContent } from "./content";
 import { seedCrm } from "./crm";
+import { seedViewings } from "./viewings";
 import { seedMenus } from "./menus";
 import { seedNewsletter } from "./newsletter";
 import { rng } from "./rng";
@@ -818,6 +819,8 @@ export async function seedPreset(
   await seedInbox(db, { now });
   progress("Newsletter");
   await seedNewsletter(db, { now });
+  progress("Viewings");
+  await seedViewings(db, { now, timeZone: preset.settings.general.timeZone ?? "UTC" });
 
   const count = async (table: string) =>
     (
@@ -845,6 +848,7 @@ export async function seedPreset(
     "contacts",
     "leads",
     "lead_events",
+    "viewings",
     "menus",
   ])
     counts[t] = await count(t);
