@@ -2,6 +2,7 @@
   "name": "lintel",
   "version": "0.1.0",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "description": "Lintel: AI-powered website, CRM and lead engine for real estate agencies",
   "packageManager": "pnpm@12.14.0",
