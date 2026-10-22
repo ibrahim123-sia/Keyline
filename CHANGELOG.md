@@ -26,3 +26,11 @@ All notable changes to Lintel. Format: [Keep a Changelog](https://keepachangelog
 - Viewings admin calendar with Google Calendar sync, days off, and tours on project pages; message templates editor; page forms as leads; newsletter with double opt-in; campaign report.
 - Saved-search and saved-home alerts: instant, daily and weekly, price drops and status changes, with one-click unsubscribe.
 - Redirects now answer with a real 301 from the middleware, and unknown addresses with a real 404.
+- Customer area: save and compare homes, save searches, a sign-in prompt that finishes a guest's save, and `/account` (saved homes and shareable lists, searches, tours, inquiries, chats, compare, profile, notifications, data download and account deletion); 3 demo customers.
+
+### Fixed
+
+- Blog and page rich text saved from the editor no longer fails validation ("Invalid input").
+- The 404 monitor counts visits at request time instead of breaking prerendering.
+- Website chat and the admin inbox no longer crash in browsers where scrolling returns a promise.
+- Tour booking fits its dialog when there are many days to choose from.

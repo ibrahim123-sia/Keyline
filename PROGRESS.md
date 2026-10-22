@@ -13,7 +13,7 @@ Spec: `lintel-spec/lintel-spec/` (README + `docs/01..16`).
 | 4     | Public site core         | in progress (Lighthouse LCP check open)     |
 | 5     | CMS and SEO              | in progress                                 |
 | 6     | Leads and CRM            | built; e2e in CI                            |
-| 7     | Customer area            | in progress                                 |
+| 7     | Customer area            | built; e2e in CI                            |
 | 8     | Tools                    | not started                                 |
 | 9     | AI                       | not started                                 |
 | 10    | Reports, polish, launch  | not started                                 |
@@ -117,7 +117,7 @@ Done-when checklist (from `15-build-phases.md`):
 
 Done-when checklist (from `15-build-phases.md`):
 
-- [ ] Every source in the table creates a lead with the right `source` and attribution — all but signup and saved search (Phase 7) and mortgage, ROI and brochure (Phase 8 tools)
+- [ ] Every source in the table creates a lead with the right `source` and attribution — all but mortgage, ROI and brochure (Phase 8 tools); signup and saved search: `tests/integration/account.test.ts` "sign-ups become leads as Settings -> Leads says"
 - [x] First and last touch behave as specified (unit tests) — `tests/unit/attribution.test.ts` "first touch is written once; last touch changes on campaign or referral visits only"
 - [x] Duplicate leads merge correctly — `tests/integration/leads-pipeline.test.ts` "the same person by email or phone joins their open lead; another type is a second lead", `tests/integration/merge.test.ts` "merges two contacts field by field…" and "merges leads…"
 - [x] A lead unanswered past the limit triggers an alert — `tests/integration/leads-pipeline.test.ts` "tasks, the response timer and the first response"
@@ -131,10 +131,10 @@ Done-when checklist (from `15-build-phases.md`):
 
 Done-when checklist (from `15-build-phases.md`):
 
-- [ ] Guest save → signup → save completes
+- [ ] Guest save → signup → save completes — `tests/e2e/account.spec.ts` "a guest saves and compares a home, signs up, and comes back with both kept" (ticked when CI is green)
 - [x] Publishing a matching listing sends an instant alert once — `tests/integration/alerts.test.ts` "publishing a matching listing sends one instant alert, even when the job runs twice"
 - [x] Lowering a saved home's price sends a price-drop email — `tests/integration/alerts.test.ts` "price drops: the savers and matching instant searches, once per new price"
-- [ ] Data export and account deletion work
+- [x] Data export and account deletion work — `tests/integration/account.test.ts` "exports the customer's data and deletes the account, anonymising what the agency keeps"; in the browser `tests/e2e/account.spec.ts` "a customer downloads their data, then deletes the account"
 
 ## Done
 
@@ -181,6 +181,7 @@ Done-when checklist (from `15-build-phases.md`):
 - Phase 5: page builder (pages list and editor with live preview, drafts, revisions, templates, scheduling, preview links, every section type, /[slug] pages in default, landing and legal templates, demo pages); blog (extended rich text, categories, tags, scheduling, /insights), area guides with live counts (/areas, and the guide's intro and questions on the area's search pages), testimonials and FAQs; menus (header, phone, footer) with an editor, footer text and the announcement bar, sitemap index and robots.txt, structured data and title patterns, thin-page noindex and generated area x type landings, redirects manager and 404 monitor, SEO report with a weekly link check, the SEO panel checklist and share previews. Unit, integration, e2e.
 - Phase 6 so far: campaign links (UTM builder, /go short links, QR codes); viewings (free slots from working hours, buffers, notice, days off and busy times, in the agency's time zone; booking on the listing page; confirmation, reminders, moved, cancelled and feedback emails with .ics invites; the private link to move, cancel or rate); inbox (web chat, WhatsApp, email; take over, approvals, quick replies, listing cards, the 24-hour rule), WhatsApp Cloud API webhook and sending, inbound email, portal leads by email or CSV, social lead form webhooks (Meta, TikTok, Google), the website chat shell; leads admin (list and Kanban with filters, views and bulk actions; the lead page with timeline, composer, score, matches, tasks and journey; shortlists at /s/[token]; contacts and merges; manual entry and CSV import); demo leads, contacts and conversations. Unit, integration, e2e.
 - Phase 6 rest: viewings admin (calendar with day, week and agent views, drag to move, status buttons with their emails, new viewings for a lead, days off and other hours), Google Calendar per agent (OAuth, encrypted tokens, busy times every 15 minutes, events follow viewings), "Book a tour" on project pages; message templates editor; page-builder forms as leads (contact, callback, valuation and list-your-property requests with tasks); newsletter with double opt-in and one-click unsubscribe; campaign report by source, medium, campaign and channel (first or last touch); subscribers list.
+- Phase 7 customer area: hearts and compare on cards and listing pages, "Save search" on search pages, a compare tray, and a sign-in prompt that finishes a guest's save afterwards; `/account` with saved homes and lists (shareable by private link), saved searches, tours, inquiries, chats, compare, profile, notifications and privacy (data download as JSON, account deletion that anonymises what the agency keeps); signing in links past inquiries by verified email; 3 demo customers in the seed.
 - Phase 7 alerts: new matches (instant, daily and weekly digests), price drops and status changes for saved homes and searches, never the same listing twice, preferences and WhatsApp opt-in respected, one-click unsubscribe with List-Unsubscribe headers.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
@@ -189,7 +190,7 @@ Done-when checklist (from `15-build-phases.md`):
 - Phase 4: LCP on the property page (decision 62; the check reports instead of failing).
 - Phase 5: built and merged; its new e2e specs (page builder, content admin, blog, SEO) run in CI for the first time.
 - Phase 6: built and merged; the new e2e specs (inbox, leads, viewings admin, marketing) run in CI.
-- Phase 7: alerts merged; the account area is being built.
+- Phase 7: built and merged (alerts and the customer area); its e2e spec runs in CI.
 
 ## Next
 
@@ -268,6 +269,9 @@ Done-when checklist (from `15-build-phases.md`):
 69. **Newsletter confirm and unsubscribe links do nothing until their button is pressed**, so mail scanners that open links cannot confirm or unsubscribe anyone; the unsubscribe link is signed from the subscriber id, so no token is stored.
 70. **Alerts never repeat**: each alert is recorded with its email in one transaction (search or saved home, listing, kind, and the new price or status), so a raced job rolls back and a second drop to a new price sends again. Digests cover listings first published since the search's last email; a listing back from off market alerts instantly but is not in digests (a "went live at" column would fix that).
 71. **Google Calendar busy times are polled every 15 minutes** (push notifications are left for later); a viewing's Google event follows it through a retried job, and nothing is called while the integration is not set up.
+72. **Past activity is linked by verified email only**: phones are not verified, so linking by phone could hand someone else's inquiries to a stranger. Linking happens when a session is created.
+73. **Deleting an account anonymises what the agency must keep** (leads, viewings, messages) and deletes the rest; the audit entry uses actor type "system" with `requestedBy: "customer"`, as there is no customer actor type.
+74. **Rich text sent to Server Actions is plain JSON**: the editor's node attributes are not plain objects, so a Server Action received them as opaque references and validation failed; the editor serialises its document before `onChange`.
 
 ## Data model changes (vs `05-data-model.md`)
 
