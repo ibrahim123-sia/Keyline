@@ -302,13 +302,33 @@ export function viewingEvent(v: {
   };
 }
 
-const removedStatuses = new Set(["cancelled", "no_show", "rescheduled"]);
+// A cancelled viewing leaves the calendar; done and no-show ones stay as a record.
+const removedStatuses = new Set(["cancelled", "rescheduled"]);
 
 /**
  * calendar.sync (13 §2): the viewing's event in its agent's calendar follows the viewing —
  * created, moved or removed. Not connected means nothing to do, never a fake success.
  */
-export async function syncViewingEvent(db: DbOrTx, viewingId: string) {
+export async function syncViewingEvent(
+  db: DbOrTx,
+  viewingId: string,
+  previous?: { agentId: string; eventId: string } | null,
+) {
+  // Moved to another agent: the event leaves the previous agent's calendar first.
+  if (previous) {
+    const old = await connectionFor(db, previous.agentId);
+    if (old && (await googleConfig(db)))
+      try {
+        await calendarApi().deleteEvent(
+          await accessToken(db, old),
+          old.calendarId,
+          previous.eventId,
+        );
+      } catch (err) {
+        await recordError(db, old, err);
+        throw err;
+      }
+  }
   const [row] = await db
     .select({
       v: viewings,
@@ -371,9 +391,15 @@ export async function syncViewingEvent(db: DbOrTx, viewingId: string) {
 
 export const calendarSyncJob = defineJob({
   name: "calendar.sync",
-  payload: z.object({ viewingId: z.uuid() }),
+  payload: z.object({
+    viewingId: z.uuid(),
+    previous: z
+      .object({ agentId: z.uuid(), eventId: z.string().min(1) })
+      .nullable()
+      .default(null),
+  }),
   maxAttempts: 5,
-  run: ({ viewingId }, { db }) => syncViewingEvent(db, viewingId),
+  run: ({ viewingId, previous }, { db }) => syncViewingEvent(db, viewingId, previous),
 });
 
 /** Settings -> Integrations "Test connection": Google accepts the OAuth client. */
