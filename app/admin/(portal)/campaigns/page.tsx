@@ -1,3 +1,4 @@
+import { CampaignTabs } from "@/components/admin/campaigns/campaign-tabs";
 import { UtmLinksManager } from "@/components/admin/campaigns/utm-links-manager";
 import { PageHeader } from "@/components/admin/page-header";
 import { getDb } from "@/db/client";
@@ -23,6 +24,7 @@ export default async function CampaignsPage(props: PageProps<"/admin/campaigns">
         description="Links with campaign tags for ads, posts, emails and printed QR codes. Each one has a short link, and its clicks and leads are counted here."
         breadcrumb={[{ label: "Campaigns" }]}
       />
+      <CampaignTabs current="links" />
       <UtmLinksManager
         rows={rows}
         total={total}
