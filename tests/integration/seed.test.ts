@@ -219,4 +219,48 @@ describe("demo seed: Haven & Dune", () => {
     );
     expect(unused!.n).toBe(0);
   });
+
+  it("adds demo leads from every kind of source, with touches, stages, timelines and scores", async () => {
+    expect(result.counts).toMatchObject({ contacts: 40, leads: 45 });
+    const sources = await rows<{ source: string; n: number }>(
+      "select source, count(*)::int as n from leads group by source order by source",
+    );
+    expect(sources.map((x) => x.source)).toEqual([
+      "callback",
+      "chat",
+      "form",
+      "listing_request",
+      "manual",
+      "portal",
+      "social_form",
+      "tour",
+      "valuation",
+      "whatsapp",
+    ]);
+    const [facts] = await rows<{
+      unanswered: number;
+      touched: number;
+      scored: number;
+      won: number;
+      lost: number;
+      owners: number;
+      events: number;
+      tasks: number;
+      stages: number;
+    }>(`select
+      (select count(*)::int from leads where first_response_at is null) as unanswered,
+      (select count(*)::int from leads where first_touch is not null) as touched,
+      (select count(*)::int from leads where ai_score is not null) as scored,
+      (select count(*)::int from leads where status = 'won') as won,
+      (select count(*)::int from leads where status = 'lost' and lost_reason is not null) as lost,
+      (select count(*)::int from leads where type in ('seller', 'landlord')) as owners,
+      (select count(*)::int from lead_events) as events,
+      (select count(*)::int from lead_tasks) as tasks,
+      (select count(*)::int from lead_stages) as stages`);
+    expect(facts).toMatchObject({ scored: 45, owners: 5, stages: 6, won: 4, lost: 4 });
+    expect(facts!.unanswered).toBeGreaterThan(3);
+    expect(facts!.touched).toBeGreaterThan(30);
+    expect(facts!.events).toBeGreaterThan(100);
+    expect(facts!.tasks).toBeGreaterThan(10);
+  });
 });

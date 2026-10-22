@@ -51,6 +51,7 @@ import {
 } from "./images";
 import { seedPages } from "./pages";
 import { seedContent } from "./content";
+import { seedCrm } from "./crm";
 import { rng } from "./rng";
 import type { ListingSpec, SeedPreset } from "./types";
 
@@ -59,9 +60,6 @@ const DAY = 86_400_000;
 
 /** Tables the demo data fills, children first (a reset empties them in this order). */
 const resetOrder = [
-  "approval_queue",
-  "messages",
-  "conversations",
   "quick_replies",
   "faqs",
   "area_guide_media",
@@ -71,6 +69,22 @@ const resetOrder = [
   "posts",
   "post_categories",
   "testimonials",
+  // CRM (children first; contacts are referenced by leads, viewings and conversations).
+  "messages",
+  "approval_queue",
+  "conversations",
+  "shortlists",
+  "lead_tasks",
+  "lead_events",
+  "viewings",
+  "valuation_requests",
+  "listing_requests",
+  "newsletter_subscribers",
+  "visitor_events",
+  "leads",
+  "visitors",
+  "contacts",
+  "lead_stages",
   "property_daily_stats",
   "price_history",
   "property_pois",
@@ -773,8 +787,6 @@ export async function seedPreset(
       tower: ofKind("tower")[0],
     },
   });
-  progress("Inbox");
-  await seedInbox(db, { now });
   if (preset.content) {
     progress("Blog, area guides, FAQs and testimonials");
     await seedContent(db, preset.content, {
@@ -789,6 +801,16 @@ export async function seedPreset(
   for (const id of listingIds) await computePropertyPois(db, id, now);
   for (const p of projectRows.values()) await computeProjectPois(db, p.id, now);
   await recountAllMediaUsage(db);
+
+  progress("Leads");
+  await seedCrm(db, {
+    now,
+    agentIds: agentIds.map((a) => a.id),
+    phoneCode: preset.settings.market.phoneCountryCode ?? null,
+  });
+  // After the leads, so conversations join their open leads.
+  progress("Inbox");
+  await seedInbox(db, { now });
 
   const count = async (table: string) =>
     (
@@ -812,6 +834,9 @@ export async function seedPreset(
     "area_guides",
     "faqs",
     "testimonials",
+    "contacts",
+    "leads",
+    "lead_events",
   ])
     counts[t] = await count(t);
   return { admins, counts };
