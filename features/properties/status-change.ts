@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import type { Tx } from "@/db/client";
+import { queueListingAlerts } from "@/features/alerts/triggers";
 import { properties, type PropertyStatus } from "@/db/schema/properties";
 import { auditChange, type AuditActor } from "@/lib/audit";
 import { refreshAutoBadges } from "./badges";
@@ -51,6 +52,9 @@ export async function changeStatus(
     after: { status: after!.status, publishedAt: after!.publishedAt },
   });
   await refreshAutoBadges(tx, [args.id], now);
+  // 12 §3: new matches for saved searches; reserved, sold or rented for saved homes.
+  if (publishing) await queueListingAlerts(tx, { kind: "live", propertyId: args.id }, now);
+  await queueListingAlerts(tx, { kind: "status", propertyId: args.id, status: args.next }, now);
   return { ok: true, changed: true, firstPublish, projectId: row.projectId };
 }
 

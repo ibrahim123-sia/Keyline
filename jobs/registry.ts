@@ -1,3 +1,8 @@
+import {
+  alertsNewListingJob,
+  alertsPriceDropJob,
+  alertsStatusChangeJob,
+} from "@/features/alerts/jobs";
 import { whatsappNotifyJob, whatsappSendJob } from "@/features/integrations/whatsapp/jobs";
 import { leadProcessJob, leadScoreJob } from "@/features/leads/process";
 import { mediaFetchUrlJob } from "@/features/media/fetch-url";
@@ -10,6 +15,9 @@ import type { JobDefinition } from "./types";
 
 /** Every queue job by name (13-integrations-and-jobs.md §2). */
 const jobs: JobDefinition[] = [
+  alertsNewListingJob as JobDefinition,
+  alertsPriceDropJob as JobDefinition,
+  alertsStatusChangeJob as JobDefinition,
   emailSendJob as JobDefinition,
   leadProcessJob as JobDefinition,
   leadScoreJob as JobDefinition,

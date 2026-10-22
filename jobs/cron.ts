@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
+import { runAlertDigest } from "@/features/alerts/jobs";
 import { jobRuns } from "@/db/schema/system";
 import { publishDuePages } from "@/features/cms/schedule";
 import { publishDueContent } from "@/features/content/schedule";
@@ -92,6 +93,19 @@ export const cronTasks: CronTask[] = [
     schedule: "every hour",
     due: every(60),
     run: () => cleanupStaleUploads(),
+  },
+  // 12 §3: saved-search digests at 06:00 agency time, daily, and weekly on Mondays.
+  {
+    name: "alerts.daily-digest",
+    schedule: "daily at 06:00",
+    due: at(6),
+    run: async () => runAlertDigest(await getDb(), "daily"),
+  },
+  {
+    name: "alerts.weekly-digest",
+    schedule: "Mondays at 06:00",
+    due: (t) => t.weekday === 1 && at(6)(t),
+    run: async () => runAlertDigest(await getDb(), "weekly"),
   },
   // Just after midnight: featured dates end, automatic badges start and end (05 §3).
   {

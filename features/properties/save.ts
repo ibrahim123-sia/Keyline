@@ -15,6 +15,7 @@ import {
 } from "@/db/schema/properties";
 import { syncMediaUsage } from "@/features/media/usage";
 import { deletePlan, writePlan } from "@/features/payment-plans/store";
+import { queueListingAlerts } from "@/features/alerts/triggers";
 import { queuePoiCompute } from "@/features/pois/distances";
 import { redirectSlugChange } from "@/features/seo/redirects";
 import { ActionError } from "@/lib/actions";
@@ -374,6 +375,15 @@ export async function saveListing(
       currency: data.currency,
       changedBy: args.userId,
     });
+    // 12 §3: a lower price tells the people who saved it (same currency only).
+    if (row.price !== null && data.price !== null && row.currency === data.currency)
+      await queueListingAlerts(tx, {
+        kind: "price",
+        propertyId: row.id,
+        oldPrice: row.price,
+        newPrice: data.price,
+        currency: data.currency ?? "",
+      });
   }
 
   if (row.publishedAt && row.slug !== slug)

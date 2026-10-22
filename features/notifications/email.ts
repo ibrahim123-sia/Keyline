@@ -17,6 +17,8 @@ export type OutgoingEmail = {
   text: string;
   replyTo?: string;
   related?: { type: string; id: string };
+  /** Extra headers, e.g. List-Unsubscribe on alerts (12 §3). */
+  headers?: Record<string, string>;
 };
 
 /**
@@ -40,7 +42,7 @@ export async function queueEmail(email: OutgoingEmail, db?: DbOrTx): Promise<str
   });
   await enqueue(
     "email.send",
-    { emailId: id, replyTo: email.replyTo ?? null },
+    { emailId: id, replyTo: email.replyTo ?? null, headers: email.headers ?? null },
     { db: conn, dedupeKey: `email:${id}` },
   );
   return id;
@@ -71,6 +73,7 @@ async function sendWithResend(
     html: string;
     text: string;
     replyTo: string | null;
+    headers?: Record<string, string> | null;
   },
 ): Promise<string> {
   const res = await fetch("https://api.resend.com/emails", {
@@ -87,6 +90,7 @@ async function sendWithResend(
       html: email.html,
       text: email.text,
       reply_to: email.replyTo ?? config.replyTo ?? undefined,
+      ...(email.headers ? { headers: email.headers } : {}),
     }),
   });
   const body = (await res.json().catch(() => ({}))) as { id?: string; message?: string };
@@ -97,9 +101,13 @@ async function sendWithResend(
 
 export const emailSendJob = defineJob({
   name: "email.send",
-  payload: z.object({ emailId: z.uuid(), replyTo: z.string().nullable().default(null) }),
+  payload: z.object({
+    emailId: z.uuid(),
+    replyTo: z.string().nullable().default(null),
+    headers: z.record(z.string(), z.string()).nullable().default(null),
+  }),
   maxAttempts: 5,
-  async run({ emailId, replyTo }, { db, log }) {
+  async run({ emailId, replyTo, headers }, { db, log }) {
     const [row] = await db.select().from(emailLog).where(eq(emailLog.id, emailId)).limit(1);
     if (!row) return { skipped: "missing" };
     if (row.status === "sent" || row.status === "mocked") return { skipped: row.status };
@@ -121,6 +129,7 @@ export const emailSendJob = defineJob({
         html: row.html ?? "",
         text: row.text ?? "",
         replyTo,
+        headers,
       });
       await db
         .update(emailLog)

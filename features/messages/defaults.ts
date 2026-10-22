@@ -172,6 +172,50 @@ export const templateDefaults = {
     },
     whatsapp: { body: "Hello {{name}}, {{homes}} picked for you: {{url}}" },
   },
+  "alerts.new_match": {
+    audience: "customer",
+    label: "New homes for a saved search, at once (alerts)",
+    variables: ["name", "search", "count", "homes", "url"],
+    email: {
+      subject: "{{homes}} for “{{search}}”",
+      body: "Hello {{name}},\n\n{{homes}} just came on the market for your search “{{search}}”.",
+      button: "View all matches",
+    },
+    whatsapp: { body: "{{homes}} for your search “{{search}}”: {{url}}" },
+  },
+  "alerts.digest": {
+    audience: "customer",
+    label: "New homes for a saved search, daily or weekly (alerts)",
+    variables: ["name", "search", "count", "homes", "period", "url"],
+    email: {
+      subject: "{{homes}} {{period}} for “{{search}}”",
+      body: "Hello {{name}},\n\nHere is what came on the market {{period}} for your search “{{search}}”.",
+      button: "View all matches",
+    },
+    whatsapp: { body: "{{homes}} {{period}} for “{{search}}”: {{url}}" },
+  },
+  "alerts.price_drop": {
+    audience: "customer",
+    label: "A saved or matching home dropped in price (alerts)",
+    variables: ["name", "title", "price", "drop", "url"],
+    email: {
+      subject: "Price dropped by {{drop}}: {{title}}",
+      body: "Hello {{name}},\n\n{{title}} is now {{price}}, {{drop}} less than before.",
+      button: "See the home",
+    },
+    whatsapp: { body: "{{title}} dropped by {{drop}} to {{price}}: {{url}}" },
+  },
+  "alerts.status_change": {
+    audience: "customer",
+    label: "A saved home was reserved, sold or rented (alerts)",
+    variables: ["name", "title", "status", "url"],
+    email: {
+      subject: "{{title}} is now {{status}}",
+      body: "Hello {{name}},\n\nA home you saved, {{title}}, is now {{status}}. Similar homes are on its page.",
+      button: "See the home",
+    },
+    whatsapp: { body: "A home you saved is now {{status}}: {{title}} {{url}}" },
+  },
 } satisfies Record<string, TemplateDefault>;
 
 export type TemplateKey = keyof typeof templateDefaults;
