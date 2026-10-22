@@ -1,11 +1,12 @@
 import { getSessionCookie } from "better-auth/cookies";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import {
   VISITOR_COOKIE,
   VISITOR_MAX_AGE,
   visitorCookieUpdate,
   visitorCookieValue,
 } from "@/features/attribution/visitor-cookie";
+import { edgeRedirect } from "@/features/seo/edge-redirects";
 import { CONSENT_COOKIE, parseConsent } from "@/lib/consent";
 
 /**
@@ -15,10 +16,11 @@ import { CONSENT_COOKIE, parseConsent } from "@/lib/consent";
  * - Passes the current path to server components (for "back to where you were" after sign-in).
  * - Gives site visitors their first-party visitor id (09 §2), only when it is new or consent
  *   changed, so cached pages are not sent with a cookie every time.
+ * - Serves the redirects manager's rules with their real 301/302 (08 §6) before pages stream.
  */
 const PUBLIC_ADMIN_PATHS = ["/admin/sign-in", "/admin/two-factor"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest, event: NextFetchEvent) {
   const { pathname, search } = request.nextUrl;
   const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
   const isAccount = pathname === "/account" || pathname.startsWith("/account/");
@@ -34,6 +36,11 @@ export function middleware(request: NextRequest) {
       url.search = `?next=${encodeURIComponent(pathname + search)}`;
       return NextResponse.redirect(url);
     }
+  }
+
+  if (!isAdmin && !isAccount && (request.method === "GET" || request.method === "HEAD")) {
+    const moved = await edgeRedirect(request.nextUrl, (p) => event.waitUntil(p));
+    if (moved) return NextResponse.redirect(moved.location, moved.status);
   }
 
   const headers = new Headers(request.headers);

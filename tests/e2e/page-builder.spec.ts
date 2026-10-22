@@ -102,8 +102,13 @@ test("page builder: build a page from sections, publish it, move it with a redir
   await sheet.getByRole("textbox", { name: "URL slug" }).fill("e2e-spring");
   await sheet.getByRole("button", { name: "Save settings" }).click();
   await expect(page.getByText(/old address now redirects/)).toBeVisible({ timeout: 30_000 });
+  // A real 301 from the middleware, which picks up new rules within seconds.
+  await expect
+    .poll(async () => (await request.get("/e2e-spring-offer", { maxRedirects: 0 })).status(), {
+      timeout: 30_000,
+    })
+    .toBe(301);
   const moved = await request.get("/e2e-spring-offer", { maxRedirects: 0 });
-  expect([301, 308]).toContain(moved.status());
   expect(moved.headers().location).toMatch(/\/e2e-spring$/);
   await site.goto("/e2e-spring-offer");
   await expect(site).toHaveURL(/\/e2e-spring$/);

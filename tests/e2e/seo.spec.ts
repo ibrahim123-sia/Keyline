@@ -159,12 +159,23 @@ test.describe("SEO and navigation", () => {
       page.getByRole("row").filter({ hasText: "/e2e-old-site/listing.php" }),
     ).toHaveCount(0);
 
+    // The middleware serves redirects with a real 301; it picks up new rules within seconds.
+    await expect
+      .poll(
+        async () => (await request.get("/e2e-old-site/listing.php", { maxRedirects: 0 })).status(),
+        { timeout: 30_000 },
+      )
+      .toBe(301);
     await page.goto("/e2e-old-site/listing.php");
     await expect(page).toHaveURL(/\/rent$/);
-    const { rows } = await db().query(
-      "select hits from seo_redirects where from_path = '/e2e-old-site/listing.php'",
-    );
-    expect(rows[0]?.hits).toBeGreaterThanOrEqual(1);
+    await expect
+      .poll(async () => {
+        const { rows } = await db().query(
+          "select hits from seo_redirects where from_path = '/e2e-old-site/listing.php'",
+        );
+        return rows[0]?.hits ?? 0;
+      })
+      .toBeGreaterThanOrEqual(1);
     await page.goto("/admin/website/seo");
     await expect(
       page.getByRole("row").filter({ hasText: "/e2e-old-site/listing.php" }),

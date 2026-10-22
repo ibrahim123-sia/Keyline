@@ -1,38 +1,8 @@
 import { z } from "zod";
 import { CsvError, detectDelimiter, parseCsv } from "@/lib/csv";
+import { normalizePath, splitQuery } from "./redirect-path";
 
-/**
- * Redirects (08 §6): addresses are compared lowercased, decoded, without a trailing slash
- * and without the site's own origin. Plain functions: the admin screens use them too.
- */
-export function normalizePath(path: string): string {
-  let p = path.trim();
-  try {
-    if (/^https?:\/\//i.test(p)) {
-      const url = new URL(p);
-      p = url.pathname + url.search;
-    }
-  } catch {
-    /* keep as typed */
-  }
-  try {
-    p = decodeURI(p);
-  } catch {
-    /* malformed escapes: keep as typed */
-  }
-  if (!p.startsWith("/")) p = `/${p}`;
-  const [pathname = "/", query] = splitQuery(p);
-  const clean = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-  return (query ? `${clean}?${query}` : clean).toLowerCase();
-}
-
-/** "/a?b=1" -> ["/a", "b=1"]; the query is undefined when there is none. */
-export function splitQuery(path: string): [string, string | undefined] {
-  const at = path.indexOf("?");
-  if (at < 0) return [path, undefined];
-  const query = path.slice(at + 1);
-  return [path.slice(0, at), query || undefined];
-}
+export { normalizePath, splitQuery };
 
 export const isExternal = (to: string) => /^https?:\/\//i.test(to);
 
