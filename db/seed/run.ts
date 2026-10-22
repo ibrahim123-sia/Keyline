@@ -53,6 +53,7 @@ import { seedPages } from "./pages";
 import { seedContent } from "./content";
 import { seedCrm } from "./crm";
 import { seedViewings } from "./viewings";
+import { seedCustomers } from "./customers";
 import { seedMenus } from "./menus";
 import { seedNewsletter } from "./newsletter";
 import { rng } from "./rng";
@@ -119,6 +120,8 @@ const resetOrder = [
 
 export type SeedResult = {
   admins: Array<{ email: string; password: string; readOnly: boolean }>;
+  /** Demo customers for the site's account area (16 §1). */
+  customers: Array<{ email: string; password: string }>;
   counts: Record<string, number>;
 };
 
@@ -822,6 +825,13 @@ export async function seedPreset(
   progress("Viewings");
   await seedViewings(db, { now, timeZone: preset.settings.general.timeZone ?? "UTC" });
 
+  progress("Customers");
+  const customers = await seedCustomers(db, {
+    now,
+    passwords: options.passwords,
+    generatePassword,
+  });
+
   const count = async (table: string) =>
     (
       (await db.execute<{ n: number }>(sql.raw(`select count(*)::int as n from "${table}"`)))
@@ -850,7 +860,9 @@ export async function seedPreset(
     "lead_events",
     "viewings",
     "menus",
+    "saved_homes",
+    "saved_searches",
   ])
     counts[t] = await count(t);
-  return { admins, counts };
+  return { admins, customers, counts };
 }

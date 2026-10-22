@@ -317,4 +317,20 @@ describe("demo seed: Haven & Dune", () => {
     );
     expect(linked!.n).toBe(0);
   });
+
+  it("adds 3 demo customers with saved homes, searches, a compare set and past tours", async () => {
+    expect(result.customers.map((c) => c.email)).toEqual([
+      "mina@demo.lintel",
+      "omar.customer@demo.lintel",
+      "lucy@demo.lintel",
+    ]);
+    expect(result.counts.saved_searches).toBe(3);
+    expect(result.counts.saved_homes).toBeGreaterThanOrEqual(9);
+    const [facts] = await rows<{ tours: number; compare: number; lists: number }>(`select
+      (select count(*)::int from viewings v join contacts c on c.id = v.contact_id
+        where c.user_id is not null and v.status = 'done') as tours,
+      (select count(*)::int from compare_sets where user_id is not null) as compare,
+      (select count(*)::int from saved_lists where not is_default) as lists`);
+    expect(facts).toMatchObject({ tours: 3, compare: 1, lists: 1 });
+  });
 });

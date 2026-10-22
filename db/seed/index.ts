@@ -27,7 +27,7 @@ if (!preset) {
 try {
   const db = await getDb();
   const started = Date.now();
-  const { admins, counts } = await seedPreset(db, preset, {
+  const { admins, customers, counts } = await seedPreset(db, preset, {
     reset: values.reset,
     onProgress: (step) => console.log(`  ${step}…`),
   });
@@ -39,6 +39,8 @@ try {
     console.log(
       `  ${a.email.padEnd(22)} ${a.password}${a.readOnly ? "   (read-only viewer)" : ""}`,
     );
+  console.log("\nDemo customers (the site's /account area):");
+  for (const c of customers) console.log(`  ${c.email.padEnd(26)} ${c.password}`);
 } catch (err) {
   console.error("Seeding failed:", err);
   process.exitCode = 1;
