@@ -372,7 +372,8 @@ export async function listsOf(db: DbOrTx, userId: string) {
       name: savedLists.name,
       isDefault: savedLists.isDefault,
       shareToken: savedLists.shareToken,
-      homes: sql<number>`(select count(*)::int from ${savedHomes} where ${savedHomes.listId} = ${savedLists.id})`,
+      // Spelled out: inside the subquery an unqualified "id" would be the saved home's.
+      homes: sql<number>`(select count(*)::int from saved_homes h where h.list_id = saved_lists.id)`,
     })
     .from(savedLists)
     .where(eq(savedLists.userId, userId))
