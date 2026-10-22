@@ -12,20 +12,12 @@ import {
   type AreaUnit,
   type DistanceUnit,
 } from "@/lib/units";
+import { VerifiedAgo } from "./verified-ago";
 
 /** "Q3 2027" for a date; quarter texts as they are. */
 export function handoverLabel(value: string): string {
   const m = value.match(/^(\d{4})-(\d{2})-\d{2}$/);
   return m ? `Q${Math.ceil(Number(m[2]) / 3)} ${m[1]}` : value;
-}
-
-/** "Verified today", "Verified 3 days ago" (02 §1 "trust is visible"). */
-export function verifiedLabel(iso: string, now = Date.now()): string {
-  const days = Math.max(0, Math.floor((now - Date.parse(iso)) / 86_400_000));
-  if (days === 0) return "Verified today";
-  if (days === 1) return "Verified yesterday";
-  if (days < 60) return `Verified ${days} days ago`;
-  return `Verified ${Math.round(days / 30)} months ago`;
 }
 
 export const bedsText = (beds: number) =>
@@ -176,7 +168,7 @@ export function ListingCard({
             {l.verifiedAt && (
               <p className="flex items-center gap-1 text-success">
                 <BadgeCheckIcon className="size-3.5" aria-hidden />
-                {verifiedLabel(l.verifiedAt)}
+                <VerifiedAgo iso={l.verifiedAt} />
               </p>
             )}
           </div>
