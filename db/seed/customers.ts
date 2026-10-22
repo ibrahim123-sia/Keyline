@@ -1,7 +1,8 @@
 import { and, eq, inArray } from "drizzle-orm";
 import type { Db } from "../client";
 import { users } from "../schema/auth";
-import { contacts, viewings } from "../schema/crm";
+import { contacts, leads, viewings } from "../schema/crm";
+import { manageTokenFor, manageTokenHash } from "@/features/viewings/book";
 import { compareSets, customerPreferences, savedLists, savedSearches } from "../schema/customer";
 import { properties } from "../schema/properties";
 import { createAuth } from "@/lib/auth/config";
@@ -100,7 +101,25 @@ export async function seedCustomers(
     if (toured) {
       const at = new Date(input.now.getTime() - (i + 2) * 86_400_000);
       at.setUTCHours(10, 0, 0, 0);
+      // Like a booking on the site: the tour belongs to a lead and has its private link.
+      const [lead] = await db
+        .insert(leads)
+        .values({
+          contactId: contact!.id,
+          type: i === 1 ? "tenant" : "buyer",
+          source: "tour",
+          sourceDetail: "booking",
+          propertyIds: [toured],
+          createdAt: new Date(at.getTime() - 3 * 86_400_000),
+          lastActivityAt: at,
+          firstResponseAt: new Date(at.getTime() - 3 * 86_400_000 + 20 * 60_000),
+        })
+        .returning({ id: leads.id });
+      const viewingId = newId();
       await db.insert(viewings).values({
+        id: viewingId,
+        leadId: lead!.id,
+        manageTokenHash: await manageTokenHash(await manageTokenFor(viewingId)),
         contactId: contact!.id,
         propertyId: toured,
         type: "in_person",
