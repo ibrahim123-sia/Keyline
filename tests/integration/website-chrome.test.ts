@@ -37,7 +37,7 @@ describe("footer settings and the announcement bar", () => {
     const footer = await saveFooterSettings({ text: "Homes by the sea.", legalText: "Regulated." });
     expect(footer).toEqual({
       ok: true,
-      data: { text: "Homes by the sea.", legalText: "Regulated." },
+      data: { text: "Homes by the sea.", legalText: "Regulated.", newsletter: false },
     });
     expect(updateTag).toHaveBeenCalledWith(tags.settings("website"));
     // Saving the footer kept the announcement that was saved before it.

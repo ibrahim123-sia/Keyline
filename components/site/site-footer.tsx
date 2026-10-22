@@ -9,6 +9,7 @@ import { format, pages, site } from "@/lib/i18n";
 import { CookieSettingsLink } from "./cookie-banner";
 import { Logo } from "./logo";
 import { MenuLink } from "./menu-link";
+import { FooterSignup } from "./newsletter/footer-signup";
 
 type FooterColumn = { title: string; links: SiteLink[] };
 
@@ -51,6 +52,7 @@ export async function SiteFooter() {
         <div className="max-w-sm space-y-4">
           <Logo agencyName={general.agencyName} logo={logo} inverted />
           {text && <p className="text-[15px] leading-relaxed">{text}</p>}
+          {website.footer.newsletter && <FooterSignup />}
           {socials.length > 0 && (
             <ul className="flex flex-wrap gap-2" aria-label={site.footer.social}>
               {socials.map((k) => (

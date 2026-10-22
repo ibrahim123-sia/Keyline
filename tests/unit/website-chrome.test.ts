@@ -15,7 +15,7 @@ const base = {
 describe("announcement bar", () => {
   it("defaults to off", () => {
     expect(defaultsFor("website").announcement).toMatchObject({ enabled: false, text: "" });
-    expect(defaultsFor("website").footer).toEqual({ text: "", legalText: "" });
+    expect(defaultsFor("website").footer).toEqual({ text: "", legalText: "", newsletter: false });
   });
 
   it("validates text, link pairs, safe links and the date order", () => {

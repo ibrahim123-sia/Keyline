@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FormSection } from "@/components/admin/page-header";
-import { TextInputField, TextareaField } from "@/components/admin/fields";
+import { SwitchField, TextInputField, TextareaField } from "@/components/admin/fields";
 import { Button } from "@/components/ui/button";
 import type { FooterSettings } from "@/features/settings/schema";
 import { saveFooterSettings } from "@/features/website/actions";
@@ -70,6 +70,13 @@ export function FooterSettingsForm({
         disabled={readOnly}
         onChange={(legalText) => set({ legalText })}
         error={save.errorFor("legalText")}
+      />
+      <SwitchField
+        label="Newsletter signup"
+        description="An email box in the footer. People confirm by email before they are on the list (Campaigns -> Newsletter)."
+        checked={value.newsletter}
+        disabled={readOnly}
+        onChange={(newsletter) => set({ newsletter })}
       />
       <p className="flex flex-wrap gap-x-4 gap-y-1 text-[12.5px]">
         <Link

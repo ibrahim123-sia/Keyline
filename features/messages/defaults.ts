@@ -216,7 +216,23 @@ export const templateDefaults = {
     },
     whatsapp: { body: "A home you saved is now {{status}}: {{title}} {{url}}" },
   },
+  "newsletter.confirm": {
+    audience: "customer",
+    label: "Confirm a newsletter signup (double opt-in)",
+    variables: ["agency", "confirmUrl", "unsubscribeUrl"],
+    email: {
+      subject: "Please confirm your subscription to {{agency}}",
+      body: "Hello,\n\nSomeone (we hope you) asked to get news and new homes from {{agency}} by email. Please confirm with the button below.\n\nIf it wasn't you, ignore this email and nothing will be sent. To stop these emails for good: {{unsubscribeUrl}}",
+      button: "Confirm my subscription",
+    },
+  },
 } satisfies Record<string, TemplateDefault>;
+
+/** Variables used in a text that the template does not offer (they would render empty). */
+export function unknownVariables(text: string, allowed: readonly string[]): string[] {
+  const used = [...text.matchAll(/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g)].map((m) => m[1]!);
+  return [...new Set(used.filter((v) => !allowed.includes(v)))];
+}
 
 export type TemplateKey = keyof typeof templateDefaults;
 

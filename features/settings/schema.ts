@@ -648,6 +648,8 @@ export const footerSchema = z.strictObject({
   text: z.string().trim().max(300, "Use at most 300 characters").default(""),
   /** An extra line next to the copyright, e.g. who regulates the agency. */
   legalText: z.string().trim().max(300, "Use at most 300 characters").default(""),
+  /** A newsletter signup in the footer (double opt-in, 05 §13). */
+  newsletter: z.boolean().default(false),
 });
 
 /** Optional bar above the header with text, a link and a date range. */
@@ -683,7 +685,7 @@ export const announcementSchema = z
   });
 
 export const websiteSchema = z.object({
-  footer: footerSchema.default({ text: "", legalText: "" }),
+  footer: footerSchema.default({ text: "", legalText: "", newsletter: false }),
   announcement: announcementSchema.default({
     enabled: false,
     text: "",
