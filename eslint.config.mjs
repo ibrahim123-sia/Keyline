@@ -28,6 +28,7 @@ const eslintConfig = defineConfig([
   globalIgnores([
     ".next/**",
     ".next-e2e/**",
+    ".next-buildcheck/**",
     "out/**",
     "build/**",
     ".open-next/**",

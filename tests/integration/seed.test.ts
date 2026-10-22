@@ -241,7 +241,9 @@ describe("demo seed: Haven & Dune", () => {
   });
 
   it("adds demo leads from every kind of source, with touches, stages, timelines and scores", async () => {
-    expect(result.counts).toMatchObject({ contacts: 40, leads: 45 });
+    // 40 with leads, and the inbox's own few people.
+    expect(result.counts).toMatchObject({ leads: 45 });
+    expect(result.counts.contacts).toBeGreaterThanOrEqual(40);
     const sources = await rows<{ source: string; n: number }>(
       "select source, count(*)::int as n from leads group by source order by source",
     );

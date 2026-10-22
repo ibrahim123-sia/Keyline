@@ -1167,10 +1167,11 @@ export const havenDune: SeedPreset = {
           label: "Buy",
           search: "/buy",
           children: [
-            { label: "Dubai Marina", area: "dubai-marina" },
-            { label: "Downtown Dubai", area: "downtown-dubai" },
-            { label: "Palm Jumeirah", area: "palm-jumeirah" },
-            { label: "Dubai Hills Estate", area: "dubai-hills-estate" },
+            // Homes for sale there; the footer's "Areas" links open the area guides.
+            { label: "Dubai Marina", search: "/buy/dubai-marina" },
+            { label: "Downtown Dubai", search: "/buy/downtown-dubai" },
+            { label: "Palm Jumeirah", search: "/buy/palm-jumeirah" },
+            { label: "Dubai Hills Estate", search: "/buy/dubai-hills-estate" },
           ],
         },
         { label: "Rent", search: "/rent" },
@@ -1195,6 +1196,8 @@ export const havenDune: SeedPreset = {
         { label: "Homes to rent", search: "/rent" },
         { label: "Off-plan projects", url: "/projects" },
         { label: "Developers", url: "/developers" },
+        { label: "Area guides", url: "/areas" },
+        { label: "Insights", url: "/insights" },
       ],
     },
     footer_2: {
