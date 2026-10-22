@@ -77,7 +77,7 @@ export const cms = {
       callback: "Thank you. We'll call you back on the number you gave.",
       valuation: "Thank you. A consultant will contact you to arrange the valuation.",
       list_property: "Thank you. A consultant will contact you about listing your property.",
-      newsletter: "Thank you. You're on the list.",
+      newsletter: "Thank you. Check your inbox and confirm with the link we sent.",
     },
   },
   contact: {
