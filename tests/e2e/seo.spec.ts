@@ -147,7 +147,8 @@ test.describe("SEO and navigation", () => {
         return rows[0]?.hits ?? 0;
       })
       .toBeGreaterThan(0);
-    await page.goto("/admin/website/seo/not-found");
+    // The whole suite's 404s share the list: search for this one.
+    await page.goto("/admin/website/seo/not-found?q=e2e-old-site");
     const row = page.getByRole("row").filter({ hasText: "/e2e-old-site/listing.php" });
     await row.getByRole("button", { name: "Create redirect" }).click();
     const panel = inPanel(page, "New redirect");
