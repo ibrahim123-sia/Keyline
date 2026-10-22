@@ -85,6 +85,13 @@
       "when": 1792596962287,
       "tag": "0011_calendars",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792645073321,
+      "tag": "0012_customer",
+      "breakpoints": true
     }
   ]
 }
