@@ -108,4 +108,11 @@ export const sampleValues: Record<string, string> = {
   homes: "3 homes",
   confirmUrl: "https://example.com/newsletter/confirm/…",
   unsubscribeUrl: "https://example.com/newsletter/unsubscribe?…",
+  search: "2 beds in Dubai Marina",
+  count: "3",
+  period: "this week",
+  title: "Two bed with a marina view",
+  price: "AED 2,350,000",
+  drop: "AED 100,000",
+  status: "reserved",
 };
