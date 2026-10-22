@@ -38,6 +38,8 @@ jobs:
             exit 1
           fi
       - run: scripts/ci/run.sh "Unit tests" pnpm test:unit
+      # PDF rendering (brochures, reports) uses Chromium outside Workers.
+      - run: pnpm exec playwright install --with-deps chromium
       - run: scripts/ci/run.sh "Integration tests" pnpm test:integration
 
   audit:
