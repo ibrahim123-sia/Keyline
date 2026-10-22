@@ -87,7 +87,9 @@ export function RichTextEditor<D extends { type: "doc" } = RichDoc>({
     extensions,
     content: value ?? emptyDoc(),
     editorProps: { attributes },
-    onUpdate: ({ editor: e }) => onChange(e.getJSON() as unknown as D),
+    // The editor's node attributes are not plain objects, so a Server Action receives them as
+    // opaque references (the server sees a function): pass plain JSON instead.
+    onUpdate: ({ editor: e }) => onChange(JSON.parse(JSON.stringify(e.getJSON())) as D),
   });
 
   // Changes from outside (discard, an AI draft) replace the text. The editor's own updates
