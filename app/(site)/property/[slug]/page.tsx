@@ -29,6 +29,8 @@ import { MortgageMini } from "@/components/site/property/mortgage-mini";
 import { NearbyList } from "@/components/site/property/nearby-list";
 import { RecentlyViewed } from "@/components/site/property/recently-viewed";
 import { TrackListingView } from "@/components/site/visitor-tracker";
+import { CompareButton } from "@/components/site/account/compare-button";
+import { SaveHomeButton } from "@/components/site/account/save-home-button";
 import { SharePrint } from "@/components/site/property/share-print";
 import { getPublicListing, listingRedirect, type PublicListing } from "@/features/listings/public";
 import { similarListings } from "@/features/listings/similar";
@@ -179,7 +181,11 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
             <h1 className="text-h1 text-ink">{l.title}</h1>
             <p className="text-[15px] text-text-muted">{addressLine(l)}</p>
           </div>
-          <SharePrint title={l.title} url={url} />
+          <div className="flex flex-wrap gap-2 print:hidden">
+            <SaveHomeButton propertyId={l.id} label={l.title} variant="page" />
+            <CompareButton propertyId={l.id} label={l.title} />
+            <SharePrint title={l.title} url={url} />
+          </div>
         </header>
 
         <StatusBanner listing={l} />

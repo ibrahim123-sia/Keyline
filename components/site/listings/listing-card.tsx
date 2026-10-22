@@ -12,6 +12,7 @@ import {
   type AreaUnit,
   type DistanceUnit,
 } from "@/lib/units";
+import { SaveHomeButton } from "@/components/site/account/save-home-button";
 import { VerifiedAgo } from "./verified-ago";
 
 /** "Q3 2027" for a date; quarter texts as they are. */
@@ -108,6 +109,9 @@ export function ListingCard({
             ))}
           </div>
         )}
+        <div className="absolute end-3 top-3">
+          <SaveHomeButton propertyId={l.id} label={l.title} />
+        </div>
         {l.photos.length > 1 && (
           <span className="pointer-events-none absolute end-3 bottom-3 rounded-full bg-ink/70 px-2 py-0.5 text-[11.5px] font-medium text-surface">
             {l.photos.length} photos

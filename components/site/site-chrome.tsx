@@ -8,6 +8,7 @@ import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import { SiteToaster } from "./site-toaster";
 import { VisitorTracker } from "./visitor-tracker";
+import { CompareTray } from "./account/compare-tray";
 import { SiteStructuredData } from "./site-structured-data";
 
 /**
@@ -34,6 +35,7 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
       <SiteFooter />
       <SiteToaster />
       <VisitorTracker />
+      <CompareTray />
       {ai.webChat.enabled && (
         <ChatLauncher
           title={ai.assistantName}

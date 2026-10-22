@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SaveHomeButton } from "@/components/site/account/save-home-button";
 import { notFound } from "next/navigation";
 import { resolveMapStyle } from "@/components/maps/map-style";
 import { PaymentPlanView } from "@/components/payment-plan/plan-view";
@@ -141,7 +142,10 @@ export default async function ProjectPage(props: PageProps<"/projects/[slug]">) 
               </span>
             )}
           </div>
-          <h1 className="text-display">{p.name}</h1>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <h1 className="text-display">{p.name}</h1>
+            <SaveHomeButton projectId={p.id} label={p.name} variant="page" />
+          </div>
           {(p.developer || area) && (
             <p className="text-lg text-text">
               {[

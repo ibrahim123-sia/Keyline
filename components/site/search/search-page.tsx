@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { SaveSearchButton } from "@/components/site/account/save-search-button";
 import { Suspense } from "react";
 import { Breadcrumb, type Crumb } from "@/components/site/breadcrumb";
 import { FaqList } from "@/components/site/content/faq-list";
@@ -133,6 +134,7 @@ async function SearchContent({
             {countText(result.total)}
           </p>
         </div>
+        <SaveSearchButton query={searchQuery({ ...f, page: 1 })} defaultName={heading} />
       </div>
       {(landing?.guide?.intro || landing?.location?.description) && (
         <div className="mb-5 flex max-w-3xl flex-col gap-2">
