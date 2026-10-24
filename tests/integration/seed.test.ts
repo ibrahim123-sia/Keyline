@@ -7,6 +7,7 @@ import { getHomePage } from "@/features/cms/queries";
 import { buildSiteMenus } from "@/features/menus/queries";
 import { sectionInputSchema } from "@/features/cms/sections";
 import { seedPreset, type SeedResult } from "@/db/seed/run";
+import { getPriceTrends } from "@/features/price-trends/queries";
 import { parseSearch } from "@/features/search/params";
 import { searchListings } from "@/features/search/query";
 import { loadSettings } from "@/features/settings/queries";
@@ -333,5 +334,28 @@ describe("demo seed: Haven & Dune", () => {
       (select count(*)::int from compare_sets where user_id is not null) as compare,
       (select count(*)::int from saved_lists where not is_default) as lists`);
     expect(facts).toMatchObject({ tours: 3, compare: 1, lists: 1 });
+  });
+
+  it("adds owner requests and price trends for the demo areas (11 §5-7, 16 §1)", async () => {
+    expect(result.counts).toMatchObject({ valuation_requests: 2, listing_requests: 1 });
+    const [facts] = await rows<{ entered: number; areas: number; agency: number; note: string }>(`
+      select
+        (select count(*)::int from area_price_stats where source = 'admin_entered') as entered,
+        (select count(distinct location_id)::int from area_price_stats
+          where source = 'admin_entered') as areas,
+        (select count(*)::int from area_price_stats where source = 'agency_data') as agency,
+        (select min(source_note) from area_price_stats where source = 'admin_entered') as note`);
+    // 12 months for sale (and rent where the area has rentals) in each of the 8 demo areas.
+    expect(facts!.areas).toBe(8);
+    expect(facts!.entered % 12).toBe(0);
+    expect(facts!.entered).toBeGreaterThanOrEqual(8 * 12);
+    expect(facts!.agency).toBeGreaterThan(0);
+    expect(facts!.note).toBe("Sample data for demo");
+    const marina = await rows<{ id: string }>(
+      "select id from locations where slug = 'dubai-marina'",
+    );
+    const trends = await getPriceTrends(marina[0]!.id);
+    expect(trends?.sale.series.length).toBeGreaterThan(0);
+    expect(trends?.sale.series.map((x) => x.source)).toContain("admin_entered");
   });
 });

@@ -56,6 +56,7 @@ import { seedViewings } from "./viewings";
 import { seedCustomers } from "./customers";
 import { seedMenus } from "./menus";
 import { seedNewsletter } from "./newsletter";
+import { seedOwnerRequests, seedPriceStats } from "./owner-tools";
 import { rng } from "./rng";
 import type { ListingSpec, SeedPreset } from "./types";
 
@@ -89,6 +90,7 @@ const resetOrder = [
   "visitors",
   "contacts",
   "lead_stages",
+  "area_price_stats",
   "property_daily_stats",
   "price_history",
   "property_pois",
@@ -824,6 +826,9 @@ export async function seedPreset(
   await seedNewsletter(db, { now });
   progress("Viewings");
   await seedViewings(db, { now, timeZone: preset.settings.general.timeZone ?? "UTC" });
+  progress("Valuations and price trends");
+  await seedOwnerRequests(db);
+  await seedPriceStats(db, { now });
 
   progress("Customers");
   const customers = await seedCustomers(db, {
@@ -862,6 +867,9 @@ export async function seedPreset(
     "menus",
     "saved_homes",
     "saved_searches",
+    "valuation_requests",
+    "listing_requests",
+    "area_price_stats",
   ])
     counts[t] = await count(t);
   return { admins, customers, counts };

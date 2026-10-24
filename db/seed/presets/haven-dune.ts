@@ -21,6 +21,7 @@ export const havenDune: SeedPreset = {
       referencePrefix: "HD",
       dateFormat: "d MMM yyyy",
       firstDayOfWeek: 1,
+      headerButton: { label: "List your property", href: "/list-your-property" },
     },
     market: {
       baseCurrency: { code: "AED", symbol: "AED", symbolPosition: "before", decimals: 2 },
@@ -1239,6 +1240,8 @@ export const havenDune: SeedPreset = {
         { label: "About us", page: "about" },
         { label: "Our agents", url: "/agents" },
         { label: "Sell with us", page: "sell-with-us" },
+        { label: "Free valuation", url: "/valuation" },
+        { label: "List your property", url: "/list-your-property" },
         { label: "Contact", page: "contact" },
       ],
     },
