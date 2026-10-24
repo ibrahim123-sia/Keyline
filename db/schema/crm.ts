@@ -256,6 +256,11 @@ export const leads = pgTable(
     index("leads_contact_idx").on(t.contactId),
     index("leads_agent_idx").on(t.agentId),
     index("leads_source_idx").on(t.agencyId, t.source, t.createdAt),
+    // Reports and the dashboard (09 §7): leads by creation date and deals by the day they were won.
+    index("leads_created_idx").on(t.agencyId, t.createdAt),
+    index("leads_won_idx")
+      .on(t.agencyId, t.wonAt)
+      .where(sql`${t.wonAt} is not null`),
     index("leads_response_due_idx").on(t.responseDueAt),
     index("leads_next_task_idx").on(t.nextTaskAt),
   ],
