@@ -9,3 +9,16 @@ minimumReleaseAgeExclude:
 overrides:
   # GHSA-5j98-mcp5-4vw2 (glob CLI command injection) via @opennextjs/aws > @node-minify/core.
   "glob@>=10.2.0 <10.5.0": "^10.5.0"
+  # GHSA-xjj6-f33q-929c (undici DoS) via @opennextjs/cloudflare > wrangler > miniflare (local tooling).
+  "undici@7.29.1": "7.30.1"
+auditConfig:
+  ignoreGhsas:
+    # extract-zip (no fixed version) and basic-ftp (fix needs a major upgrade) are only reached by
+    # @cloudflare/puppeteer > @puppeteer/browsers, which downloads browsers for Node. Lintel never
+    # calls it: on Workers it uses the BROWSER binding, elsewhere Playwright's Chromium.
+    - GHSA-jmr9-qjv8-65gv
+    - GHSA-7pqw-9j4j-h8q3
+    - GHSA-c475-qrg2-pj4r
+    # body-parser via @opennextjs/aws > express, used by OpenNext's Node server, not on Workers.
+    # The fix (2.4.0, 2026-10-22) is too new to adopt yet; override it after 2026-11-05.
+    - GHSA-27r3-jxmh-p828
