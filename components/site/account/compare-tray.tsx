@@ -48,7 +48,7 @@ export function CompareTray() {
   return (
     <div className="fixed start-4 bottom-20 z-30 lg:bottom-6 print:hidden">
       <a
-        href="/account/compare"
+        href="/tools/compare"
         className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-[14px] font-semibold text-surface shadow-pin"
       >
         <ColumnsIcon aria-hidden className="size-4" />

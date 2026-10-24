@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CompareButton } from "@/components/site/account/compare-button";
 import { ListingCard } from "@/components/site/listings/listing-card";
 import { getDb } from "@/db/client";
@@ -11,7 +12,7 @@ export const instant = false;
 
 const t = account.comparePage;
 
-/** Compare (12 §2): the homes picked to compare (the side-by-side page comes in Phase 8). */
+/** Compare (12 §2): the homes picked to compare, with the way to the side-by-side table. */
 export default async function ComparePage() {
   const user = await requireCustomerPage();
   const [cards, ctx] = [await compareCardsOf(await getDb(), user.id), await accountCardContext()];
@@ -22,7 +23,14 @@ export default async function ComparePage() {
         <p className="text-text-muted">{t.none}</p>
       ) : (
         <>
-          <p className="text-[14px] text-text-muted">{t.soon}</p>
+          <p>
+            <Link
+              href="/tools/compare"
+              className="font-semibold text-accent underline-offset-4 hover:underline"
+            >
+              {t.sideBySide}
+            </Link>
+          </p>
           <ul className="grid gap-6 sm:grid-cols-2">
             {cards.map((c) => (
               <li key={c.id} className="flex flex-col gap-2">

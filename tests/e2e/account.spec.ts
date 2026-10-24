@@ -109,7 +109,7 @@ test.describe("customer area (12 §1, §2)", () => {
       page.getByRole("button", { name: `Remove from saved: ${home.title}` }),
     ).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("link", { name: "Compare (1)" }).click();
-    await expectPath(page, "/account/compare");
+    await expectPath(page, "/tools/compare");
     await expect(page.getByRole("main").getByRole("link", { name: home.title })).toBeVisible();
 
     await page.goto("/account/saved");

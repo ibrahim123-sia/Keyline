@@ -106,6 +106,7 @@ export const sampleValues: Record<string, string> = {
   bookUrl: "https://example.com/property/two-bed-marina",
   feedbackUrl: "https://example.com/viewings/…/feedback",
   homes: "3 homes",
+  list: "Two bed with a marina view\nGarden villa with a pool",
   confirmUrl: "https://example.com/newsletter/confirm/…",
   unsubscribeUrl: "https://example.com/newsletter/unsubscribe?…",
   search: "2 beds in Dubai Marina",

@@ -3,7 +3,7 @@ import { and, asc, count, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { compareSets, savedHomes, savedLists, savedSearches } from "@/db/schema/customer";
-import { projects } from "@/db/schema/projects";
+import { projects, projectUnitTypes } from "@/db/schema/projects";
 import { properties } from "@/db/schema/properties";
 import { ActionError } from "@/lib/actions";
 import { bytesToBase64Url } from "@/lib/crypto";
@@ -318,7 +318,7 @@ async function writeCompare(db: DbOrTx, owner: CompareOwner, ids: string[]) {
     });
 }
 
-/** Adds or removes a listing in the compare set (up to 4). */
+/** Adds or removes a listing (or a project unit type) in the compare set (up to 4). */
 export async function toggleCompare(
   db: DbOrTx,
   owner: CompareOwner,
@@ -343,7 +343,22 @@ export async function toggleCompare(
         isNotNull(properties.publishedAt),
       ),
     );
-  if (!p) throw notFound();
+  if (!p) {
+    // A unit type of a published project can be compared too (11 §3); the set keeps its id.
+    const [unit] = await db
+      .select({ id: projectUnitTypes.id })
+      .from(projectUnitTypes)
+      .innerJoin(projects, eq(projects.id, projectUnitTypes.projectId))
+      .where(
+        and(
+          eq(projectUnitTypes.id, propertyId),
+          eq(projects.agencyId, currentAgencyId()),
+          eq(projects.isPublished, true),
+          isNull(projects.deletedAt),
+        ),
+      );
+    if (!unit) throw notFound();
+  }
   const next = [...ids, propertyId];
   await writeCompare(db, owner, next);
   return next;

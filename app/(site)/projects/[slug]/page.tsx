@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CompareButton } from "@/components/site/account/compare-button";
 import { SaveHomeButton } from "@/components/site/account/save-home-button";
 import { notFound } from "next/navigation";
 import { resolveMapStyle } from "@/components/maps/map-style";
@@ -331,13 +332,17 @@ export default async function ProjectPage(props: PageProps<"/projects/[slug]">) 
                           )}
                         </td>
                         <td className="px-4 py-3 text-end">
-                          <a
-                            href="#contact"
-                            className="font-semibold text-accent underline-offset-2 hover:underline"
-                          >
-                            {t.enquire}
-                            <span className="sr-only">: {u.name}</span>
-                          </a>
+                          <div className="flex items-center justify-end gap-3">
+                            {/* Unit types can be compared side by side too (11 §3). */}
+                            <CompareButton propertyId={u.id} label={`${p.name} · ${u.name}`} />
+                            <a
+                              href="#contact"
+                              className="font-semibold text-accent underline-offset-2 hover:underline"
+                            >
+                              {t.enquire}
+                              <span className="sr-only">: {u.name}</span>
+                            </a>
+                          </div>
                         </td>
                       </tr>
                     ))}

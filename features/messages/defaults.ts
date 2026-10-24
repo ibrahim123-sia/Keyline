@@ -182,6 +182,16 @@ export const templateDefaults = {
       button: "Download the brochure",
     },
   },
+  "compare.sent": {
+    audience: "customer",
+    label: "A comparison sent to the visitor's own email",
+    variables: ["name", "homes", "list", "agency", "url"],
+    email: {
+      subject: "Your comparison: {{homes}}",
+      body: "Hello {{name}},\n\nHere is the side-by-side comparison you made on our website:\n\n{{list}}\n\nThe button below opens it again; anyone you share the link with sees the same table.\n\n{{agency}}",
+      button: "Open the comparison",
+    },
+  },
   "alerts.new_match": {
     audience: "customer",
     label: "New homes for a saved search, at once (alerts)",

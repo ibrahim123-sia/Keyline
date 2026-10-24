@@ -123,7 +123,7 @@ export const account = {
   comparePage: {
     title: "Compare",
     none: "Tap “Compare” on up to four homes to see them side by side.",
-    soon: "The side-by-side comparison page is on its way; your picks are kept here.",
+    sideBySide: "See them side by side",
   },
   profilePage: {
     title: "Profile",
