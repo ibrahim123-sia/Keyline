@@ -1,9 +1,22 @@
 import type { NextConfig } from "next";
+import { API_CSP, PREVIEW_FRAME_OPTIONS, baseSecurityHeaders } from "./lib/security/headers";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  // Security headers on every response (14 §2); pages get their CSP from middleware.ts so the
+  // report-only switch works at runtime. A later rule wins for the same header.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: baseSecurityHeaders({ production: process.env.NODE_ENV === "production" }),
+      },
+      { source: "/preview/:path*", headers: [PREVIEW_FRAME_OPTIONS] },
+      { source: "/api/:path*", headers: [{ key: "Content-Security-Policy", value: API_CSP }] },
+    ];
+  },
   // Separate build folder for the e2e server, so it can run next to `pnpm dev`.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   experimental: {

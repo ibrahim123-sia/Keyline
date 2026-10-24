@@ -211,10 +211,13 @@ export const publicTags = [
 ];
 
 /**
- * Loads the Haven & Dune demo preset into the e2e database (the real `pnpm db:seed`, with the
+ * Loads a demo preset (Haven & Dune by default) into the e2e database (the real `pnpm db:seed`, with the
  * e2e server's database and file folder), then expires the app's caches.
  */
-export async function seedDemo(request: APIRequestContext): Promise<void> {
+export async function seedDemo(
+  request: APIRequestContext,
+  preset: "haven-dune" | "us-demo" = "haven-dune",
+): Promise<void> {
   const appUrl = `http://localhost:${process.env.E2E_PORT ?? 3200}`;
   await new Promise<void>((resolve, reject) => {
     const child = spawn(
@@ -225,6 +228,7 @@ export async function seedDemo(request: APIRequestContext): Promise<void> {
         "--import",
         "./scripts/register-server-only.mjs",
         "db/seed/index.ts",
+        `--preset=${preset}`,
         "--reset",
       ],
       {
@@ -288,4 +292,27 @@ export async function expectNotFoundPage(page: Page, path: string): Promise<void
     page.getByRole("heading", { name: "We couldn't find that page", level: 1 }),
   ).toBeVisible();
   await expect(page.locator('meta[name="robots"][content*="noindex"]').first()).toBeAttached();
+}
+
+/** Collects CSP violations the page reports (events) and logs (console). */
+export async function watchCsp(page: Page): Promise<() => Promise<string[]>> {
+  const consoleHits: string[] = [];
+  page.on("console", (m) => {
+    const text = m.text();
+    if (/Content Security Policy|Content-Security-Policy|Refused to/i.test(text))
+      consoleHits.push(text);
+  });
+  await page.addInitScript(() => {
+    const w = window as unknown as { __cspViolations: string[] };
+    w.__cspViolations = [];
+    document.addEventListener("securitypolicyviolation", (e) => {
+      w.__cspViolations.push(`${e.effectiveDirective} ${e.blockedURI}`);
+    });
+  });
+  return async () => {
+    const events = await page
+      .evaluate(() => (window as unknown as { __cspViolations?: string[] }).__cspViolations ?? [])
+      .catch(() => [] as string[]);
+    return [...consoleHits, ...events];
+  };
 }

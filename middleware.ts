@@ -8,6 +8,8 @@ import {
 } from "@/features/attribution/visitor-cookie";
 import { edgeRedirect } from "@/features/seo/edge-redirects";
 import { CONSENT_COOKIE, parseConsent } from "@/lib/consent";
+import { REQUEST_ID_HEADER } from "@/lib/log";
+import { pageCsp } from "@/lib/security/headers";
 
 /**
  * Edge middleware: small and Edge-safe on purpose (OpenNext does not run Node middleware).
@@ -17,6 +19,9 @@ import { CONSENT_COOKIE, parseConsent } from "@/lib/consent";
  * - Gives site visitors their first-party visitor id (09 §2), only when it is new or consent
  *   changed, so cached pages are not sent with a cookie every time.
  * - Serves the redirects manager's rules with their real 301/302 (08 §6) before pages stream.
+ * - Tags the request with an id for the structured logs, and sends the page
+ *   Content-Security-Policy (14 §2, lib/security/headers.ts); the other
+ *   security headers come from next.config.ts for every response.
  */
 const PUBLIC_ADMIN_PATHS = ["/admin/sign-in", "/admin/two-factor"];
 
@@ -45,7 +50,13 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
 
   const headers = new Headers(request.headers);
   headers.set("x-keyline-path", pathname + search);
+  // One id per request for the structured logs (lib/log.ts): Cloudflare's ray id when present.
+  const requestId = request.headers.get("cf-ray") ?? crypto.randomUUID();
+  headers.set(REQUEST_ID_HEADER, requestId);
   const response = NextResponse.next({ request: { headers } });
+  response.headers.set(REQUEST_ID_HEADER, requestId);
+  const csp = pageCsp(pathname, process.env);
+  response.headers.set(csp.name, csp.value);
   if (!isAdmin) {
     const consent = parseConsent(request.cookies.get(CONSENT_COOKIE)?.value);
     const update = visitorCookieUpdate(
