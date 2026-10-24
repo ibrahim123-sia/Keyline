@@ -1,5 +1,7 @@
 import type { SeedPreset } from "../types";
 import { havenDuneContent } from "./haven-dune-content";
+import { havenDuneCustomers, havenDuneInbox } from "./haven-dune-crm";
+import { havenDunePages } from "./haven-dune-pages";
 
 /**
  * Main demo preset (16 §1): Haven & Dune, a fictional agency with Dubai-style data. Places are
@@ -1147,6 +1149,18 @@ export const havenDune: SeedPreset = {
     ],
     ["rent", "office", "bay", null, 2, 1800, 185_000, "Office to rent in Business Bay", {}],
   ],
+  listingDefaults: {
+    agencyFeeSale: "2% + VAT",
+    agencyFeeRent: "5% of the yearly rent",
+    serviceCharge: [16, 9],
+    depositShare: 0.05,
+    maidRooms: true,
+    views: { palm: ["Sea"], jbr: ["Sea"], marina: ["Marina"], downtown: ["City"] },
+  },
+  crm: { phone: (i) => `+971500000${String(100 + i).padStart(3, "0")}` },
+  customers: havenDuneCustomers,
+  inbox: havenDuneInbox,
+  pages: havenDunePages,
   content: havenDuneContent,
   home: {
     hero: {

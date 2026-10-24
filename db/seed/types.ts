@@ -1,5 +1,7 @@
 import type { HideableField } from "@/db/schema/master-data";
 import type { SeedContent } from "./content";
+import type { SeedPagesCopy } from "./pages";
+import type { PlanTemplate } from "@/features/payment-plans/templates";
 import type { SettingsOf } from "@/features/settings/schema";
 
 type LngLatTuple = [number, number];
@@ -17,6 +19,8 @@ export type ListingSpec = [
   title: string,
   extras: {
     building?: string;
+    /** Street address for houses (US-style "1408 Elm Street"); otherwise building, area. */
+    address?: string;
     reducedFrom?: number;
     featured?: boolean;
     stale?: boolean;
@@ -44,6 +48,8 @@ export type SeedPreset = {
     category: "residential" | "commercial" | "land";
     icon: string;
     hidden: HideableField[];
+    /** How the seed draws and fills it; defaults from the key (villa, townhouse, office...). */
+    shape?: "apartment" | "house" | "commercial" | "shop" | "plot";
   }>;
   locations: Array<{
     key: string;
@@ -106,8 +112,8 @@ export type SeedPreset = {
     handover: string;
     handoverText: string;
     progress: number;
-    /** A built-in payment plan template key. */
-    plan: string;
+    /** A built-in payment plan template key, or the preset's own plan. */
+    plan: string | PlanTemplate;
     featured: boolean;
     highlights: string[];
     description: string[];
@@ -122,14 +128,43 @@ export type SeedPreset = {
     }>;
   }>;
   listings: ListingSpec[];
+  /** Market wording and habits on the seeded listings (fees, service charges, rooms, views). */
+  listingDefaults: {
+    agencyFeeSale: string;
+    agencyFeeRent: string;
+    /** Yearly service charge per area unit in major units, [from, spread]; null: none. */
+    serviceCharge: [number, number] | null;
+    /** Rent deposit as a share of the listed rent (yearly rent: 0.05; monthly: 1). */
+    depositShare: number;
+    /** "Maid's room" on homes with 3+ beds (a Gulf habit). */
+    maidRooms: boolean;
+    /** Location key -> views of listings there. */
+    views: Record<string, string[]>;
+  };
+  /** Demo people for the CRM seed: phones in the preset's own format, and how many leads. */
+  crm: { phone: (i: number) => string; leads?: number };
+  /** Demo customers (16 §1) and the search each one saved. */
+  customers: Array<{
+    email: string;
+    name: string;
+    phone: string;
+    search: { name: string; query: string; frequency: "instant" | "daily" | "weekly" };
+  }>;
+  /** Demo inbox: quick replies and conversations (written straight to the tables). */
+  inbox: SeedInbox;
+  /** Page builder pages and the extra home page sections. */
+  pages?: SeedPagesCopy;
   /** Blog posts, area guides, FAQs and testimonials (16 §1 "Content"). */
   content?: SeedContent;
   /** Words of the home page sections. */
   home: {
     hero: { eyebrow: string; heading: string; subheading: string; floatingBadgeText: string };
+    /** Hero search tabs; default buy, rent and off-plan. */
+    tabs?: Array<"buy" | "rent" | "off_plan">;
     promises: Array<{ title: string; text: string; icon: string }>;
     featured: { eyebrow: string; heading: string; viewAllLabel: string };
-    projects: { eyebrow: string; heading: string; viewAllLabel: string };
+    /** Left out: no projects section on the home page. */
+    projects?: { eyebrow: string; heading: string; viewAllLabel: string };
     areas: { eyebrow: string; heading: string };
   };
   /** Header, phone and footer menus (08 §2); links point at seeded content by slug. */
@@ -150,3 +185,26 @@ export type SeedMenuLink = { label: string; newTab?: boolean; children?: SeedMen
   | { project: string }
   | { category: string }
 );
+
+/** A demo conversation line; `ago` is minutes before the seed's "now". */
+export type SeedInboxLine = {
+  dir: "in" | "out";
+  sender: "customer" | "ai" | "admin" | "system";
+  body: string;
+  ago: number;
+  status?: "sent" | "delivered" | "read";
+  tools?: Array<{ tool: string; summary: string }>;
+};
+
+export type SeedInbox = {
+  quickReplies: Array<{ title: string; body: string }>;
+  conversations: Array<{
+    channel: "whatsapp" | "web_chat" | "email";
+    who: { name: string; email?: string; phone?: string };
+    status: "ai" | "needs_human" | "human" | "closed";
+    subject?: string;
+    lines: SeedInboxLine[];
+    /** A draft reply waiting in the approval queue (10 §1). */
+    approval?: { draftReply: string; reason: string; ago: number };
+  }>;
+};

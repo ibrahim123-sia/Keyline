@@ -5,7 +5,6 @@ import { pageRevisions, pages, type StoredSection } from "@/db/schema/cms";
 import type { PageTemplate } from "@/features/cms/page-schema";
 import { sectionInputSchema, type SectionType } from "@/features/cms/sections";
 import { patchSettings } from "@/features/settings/mutations";
-import { havenDunePages } from "./presets/haven-dune-pages";
 
 /**
  * The page builder pages of a demo preset (08 §1 "Seed pages"): About, Contact, Sell with us,
@@ -31,8 +30,6 @@ export type SeedPage = {
 };
 
 export type SeedPagesCopy = { home: SeedSection[]; pages: SeedPage[] };
-
-const copies: Record<string, SeedPagesCopy> = { "haven-dune": havenDunePages };
 
 const system = { type: "system", id: null } as const;
 
@@ -66,10 +63,9 @@ function build(sections: SeedSection[], images: Record<string, string | undefine
 
 export async function seedPages(
   db: Db,
-  presetKey: string,
+  copy: SeedPagesCopy | undefined,
   opts: { images: Record<string, string | undefined> },
 ): Promise<{ pages: number }> {
-  const copy = copies[presetKey];
   if (!copy) return { pages: 0 };
   const legal: Record<string, string> = {};
   for (const page of copy.pages) {

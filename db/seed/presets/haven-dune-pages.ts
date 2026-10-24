@@ -6,17 +6,17 @@ import type { SeedPagesCopy } from "../pages";
  * the seed ("$living" is one of the drawn living-room pictures). Figures and policies are
  * samples for the demo, and say so.
  */
-const sample = {
-  p: "This is sample text for the Haven & Dune demo, not legal advice. Replace it with your own policy, checked by your lawyer, before you go live.",
-};
-
-function legalText(kind: "privacy" | "terms" | "cookies") {
+/** The demo policies as a text section; other presets reuse them with their agency's name. */
+export function legalText(kind: "privacy" | "terms" | "cookies", agency = "Haven & Dune") {
+  const sample = {
+    p: `This is sample text for the ${agency} demo, not legal advice. Replace it with your own policy, checked by your lawyer, before you go live.`,
+  };
   const blocks: Record<typeof kind, Array<{ h?: string; p?: string; list?: string[] }>> = {
     privacy: [
       sample,
       { h: "Who we are" },
       {
-        p: "Haven & Dune (demo) is the company responsible for the personal data you share on this website. You can reach us through the contact page.",
+        p: `${agency} (demo) is the company responsible for the personal data you share on this website. You can reach us through the contact page.`,
       },
       { h: "What we collect" },
       {

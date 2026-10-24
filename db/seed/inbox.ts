@@ -1,5 +1,6 @@
 import { and, asc, eq, isNull, or } from "drizzle-orm";
 import type { Db } from "../client";
+import type { SeedInbox, SeedInboxLine } from "./types";
 import {
   approvalQueue,
   contacts,
@@ -10,8 +11,8 @@ import {
 } from "../schema/crm";
 
 /**
- * Demo inbox (16 §1): WhatsApp, web chat and email conversations with demo contacts, quick
- * replies and one draft waiting for approval. Contacts are found by email or phone (the leads
+ * Demo inbox (16 §1): the preset's WhatsApp, web chat and email conversations with demo
+ * contacts, quick replies and drafts waiting for approval. Contacts are found by email or phone (the leads
  * seed may have made them) or created. Rows are written directly: seeding sends nothing.
  */
 const MIN = 60_000;
@@ -48,14 +49,7 @@ async function person(db: Db, p: Person): Promise<{ contactId: string; leadId: s
   return { contactId: row!.id, leadId: lead?.id ?? null };
 }
 
-type Line = {
-  dir: "in" | "out";
-  sender: "customer" | "ai" | "admin" | "system";
-  body: string;
-  ago: number;
-  status?: "sent" | "delivered" | "read";
-  tools?: Array<{ tool: string; summary: string }>;
-};
+type Line = SeedInboxLine;
 
 async function conversation(
   db: Db,
@@ -104,110 +98,20 @@ async function conversation(
   return conv!.id;
 }
 
-export async function seedInbox(db: Db, options: { now: Date }): Promise<void> {
-  const { now } = options;
-  await db.insert(quickReplies).values([
-    {
-      title: "Viewing times",
-      body: "We show homes every day from 9 am to 7 pm. Which day and time suit you?",
-      sortOrder: 0,
-    },
-    {
-      title: "Documents to rent",
-      body: "To rent you will need a passport copy, visa and Emirates ID, and the first cheque or transfer.",
-      sortOrder: 1,
-    },
-    {
-      title: "Service charges",
-      body: "Service charges are set by the building each year. I will send you this year's figure with the listing.",
-      sortOrder: 2,
-    },
-    {
-      title: "Payment plans",
-      body: "Most of our off-plan projects take 10 to 20% on booking and the rest in stages. Shall I send the plan?",
-      sortOrder: 3,
-    },
-  ]);
-
-  await conversation(db, now, {
-    channel: "whatsapp",
-    who: { name: "Amira Haddad", phone: "+971501230001" },
-    status: "human",
-    lines: [
-      {
-        dir: "in",
-        sender: "customer",
-        body: "Hi, is the two bed at Marina Gate still available?",
-        ago: 130,
-      },
-      {
-        dir: "out",
-        sender: "admin",
-        body: "Hello Amira, yes it is. Would you like to see it this week?",
-        ago: 118,
-        status: "read",
-      },
-      { dir: "in", sender: "customer", body: "Saturday morning works for me.", ago: 32 },
-    ],
-  });
-  await conversation(db, now, {
-    channel: "web_chat",
-    who: { name: "Priya Nair", email: "priya.nair@example.com" },
-    status: "needs_human",
-    lines: [
-      {
-        dir: "in",
-        sender: "customer",
-        body: "Do you have family villas with a garden under 5M?",
-        ago: 12,
-      },
-    ],
-  });
-  await conversation(db, now, {
-    channel: "email",
-    who: { name: "James Carter", email: "james.carter@example.com" },
-    status: "human",
-    subject: "Service charges for the Linden Residences",
-    lines: [
-      {
-        dir: "in",
-        sender: "customer",
-        body: "Could you tell me the service charge per square metre?",
-        ago: 60 * 26,
-      },
-      {
-        dir: "out",
-        sender: "admin",
-        body: "Hello James, this year's charge is in the attached note; I have also sent the payment plan.",
-        ago: 60 * 25,
-      },
-    ],
-  });
-  const negotiating = await conversation(db, now, {
-    channel: "whatsapp",
-    who: { name: "Omar Saeed", phone: "+971501230002" },
-    status: "ai",
-    lines: [
-      {
-        dir: "in",
-        sender: "customer",
-        body: "Would the owner take 2.3M for the townhouse?",
-        ago: 8,
-      },
-      {
-        dir: "out",
-        sender: "ai",
-        body: "Thanks Omar. I have asked the agent about the price; they will reply shortly.",
-        ago: 7,
-        tools: [{ tool: "search_listings", summary: "Found the townhouse he asked about" }],
-      },
-    ],
-  });
-  await db.insert(approvalQueue).values({
-    conversationId: negotiating,
-    draftReply:
-      "The owner has accepted offers near the asking price before; 2.3M may be considered with a quick transfer.",
-    reason: "price negotiation",
-    createdAt: new Date(now.getTime() - 6 * MIN),
-  });
+export async function seedInbox(db: Db, options: { now: Date; inbox: SeedInbox }): Promise<void> {
+  const { now, inbox } = options;
+  if (inbox.quickReplies.length)
+    await db
+      .insert(quickReplies)
+      .values(inbox.quickReplies.map((q, sortOrder) => ({ ...q, sortOrder })));
+  for (const c of inbox.conversations) {
+    const id = await conversation(db, now, c);
+    if (c.approval)
+      await db.insert(approvalQueue).values({
+        conversationId: id,
+        draftReply: c.approval.draftReply,
+        reason: c.approval.reason,
+        createdAt: new Date(now.getTime() - c.approval.ago * MIN),
+      });
+  }
 }

@@ -10,30 +10,20 @@ import { saveHome } from "@/features/account/store";
 import { filtersToStored, polygonOf } from "@/features/account/searches";
 import { parseSearch } from "@/features/search/params";
 import { newId } from "@/lib/ids";
+import type { SeedPreset } from "./types";
 
 /**
  * Demo customers (16 §1 "3 demo customers with saved homes, saved searches and past tours"),
  * fictional people with sign-in passwords printed once by the seed command.
  */
-const people = [
-  { email: "mina@demo.keyline", name: "Mina Park", phone: "+971502220001" },
-  { email: "omar.customer@demo.keyline", name: "Omar Haddad", phone: "+971502220002" },
-  { email: "lucy@demo.keyline", name: "Lucy Grant", phone: "+447700900321" },
-];
-
-const searches = [
-  { name: "Two-bed homes in Dubai Marina", query: "loc=dubai-marina&beds=2", frequency: "daily" },
-  { name: "Villas to rent", query: "purpose=rent&type=villas", frequency: "weekly" },
-  {
-    name: "Off-plan with a payment plan",
-    query: "completion=off_plan&plan=any",
-    frequency: "instant",
-  },
-] as const;
-
 export async function seedCustomers(
   db: Db,
-  input: { now: Date; passwords?: Record<string, string>; generatePassword: () => string },
+  input: {
+    now: Date;
+    customers: SeedPreset["customers"];
+    passwords?: Record<string, string>;
+    generatePassword: () => string;
+  },
 ): Promise<Array<{ email: string; password: string }>> {
   const auth = createAuth(db, { nextCookies: false });
   const ctx = await auth.$context;
@@ -46,7 +36,7 @@ export async function seedCustomers(
   const rent = live.filter((p) => p.purpose === "rent").map((p) => p.id);
   const out: Array<{ email: string; password: string }> = [];
 
-  for (const [i, p] of people.entries()) {
+  for (const [i, p] of input.customers.entries()) {
     const password = input.passwords?.[p.email] ?? input.generatePassword();
     const id = newId();
     await db.delete(users).where(eq(users.email, p.email));
@@ -78,7 +68,7 @@ export async function seedCustomers(
       await saveHome(db, id, { propertyId: sale[10], listId: own!.id });
     }
 
-    const s = searches[i]!;
+    const s = p.search;
     const f = parseSearch(new URLSearchParams(s.query));
     await db.insert(savedSearches).values({
       userId: id,

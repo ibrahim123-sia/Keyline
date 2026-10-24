@@ -35,7 +35,7 @@ import { newId } from "@/lib/ids";
 import { renderRichText, type RichDoc } from "@/lib/rich-text";
 import { slugify } from "@/lib/slug";
 import { getStorage } from "@/lib/storage";
-import { areaToSqm, type AreaUnit } from "@/lib/units";
+import { areaToSqm, perAreaToSqm, type AreaUnit } from "@/lib/units";
 import {
   bedroom,
   floorPlan,
@@ -255,6 +255,24 @@ export async function seedPreset(
   const decimals = preset.settings.market.baseCurrency?.decimals ?? 2;
   const currency = preset.settings.market.baseCurrency?.code ?? "USD";
   const minor = (major: number) => Math.round(major * 10 ** decimals);
+  // Listing habits follow the preset's market settings (16 §2 "same code, only settings").
+  const market = preset.settings.market;
+  const rentPeriod = market.rentPeriod ?? "month";
+  const rentOptions = (market.rentPaymentOptions ?? []).filter((n) => n <= 4).slice(0, 3);
+  const permits = market.permit?.enabled ?? false;
+  const ownership = market.ownershipTypes?.[0] ?? null;
+  const furnishings = market.furnishingOptions ?? ["Unfurnished", "Furnished"];
+  const habits = preset.listingDefaults;
+  const shapeOf = new Map(
+    preset.propertyTypes.map((t) => [
+      t.key,
+      t.shape ??
+        ({ villa: "house", townhouse: "house", office: "commercial", shop: "shop", plot: "plot" }[
+          t.key
+        ] as "house" | "commercial" | "shop" | "plot" | undefined) ??
+        "apartment",
+    ]),
+  );
 
   // Admins --------------------------------------------------------------------------------
   progress("Admins");
@@ -461,7 +479,10 @@ export async function seedPreset(
     }
   >();
   for (const p of preset.projects) {
-    const template = builtInTemplates.find((t) => t.key === p.plan) ?? builtInTemplates[1]!;
+    const template =
+      typeof p.plan === "string"
+        ? (builtInTemplates.find((t) => t.key === p.plan) ?? builtInTemplates[1]!)
+        : p.plan;
     const planId = await db.transaction((tx) =>
       writePlan(tx, {
         id: null,
@@ -570,22 +591,23 @@ export async function seedPreset(
       : index % 6 === 5
         ? null
         : 1 + ((index * 5) % 18);
-    const villaLike = typeKey === "villa" || typeKey === "townhouse";
-    const commercial = typeKey === "office" || typeKey === "shop";
-    const kinds: Array<Shot["kind"]> =
-      typeKey === "plot"
-        ? ["villa", "pool"]
-        : villaLike
-          ? ["villa", "living", "bedroom", "kitchen", "pool"]
-          : commercial
-            ? ["tower", "living"]
-            : ["tower", "living", "bedroom", "kitchen", "pool"];
+    const shape = shapeOf.get(typeKey) ?? "apartment";
+    const villaLike = shape === "house";
+    const commercial = shape === "commercial" || shape === "shop";
+    const plot = shape === "plot";
+    const kinds: Array<Shot["kind"]> = plot
+      ? ["villa", "pool"]
+      : villaLike
+        ? ["villa", "living", "bedroom", "kitchen", "pool"]
+        : commercial
+          ? ["tower", "living"]
+          : ["tower", "living", "bedroom", "kitchen", "pool"];
     const photoIds = r.some(
       shots.filter((s) => kinds.includes(s.kind)).map((s) => s.id),
-      typeKey === "plot" ? 6 : 6,
-      typeKey === "plot" ? 7 : 12,
+      plot ? 6 : 6,
+      plot ? 7 : 12,
     );
-    const facilityPick = typeKey === "plot" ? [] : r.some(facilityIds, 5, 9);
+    const facilityPick = plot ? [] : r.some(facilityIds, 5, 9);
     const description = listingDescription(
       title,
       loc,
@@ -610,48 +632,46 @@ export async function seedPreset(
           projectId: project?.id ?? null,
           projectUnitTypeId: unit?.id ?? null,
           buildingName: extras.building ?? project?.spec.name ?? null,
-          addressLine: `${extras.building ?? project?.spec.name ?? loc.name}, ${loc.name}`,
-          unitNumber: typeKey === "plot" ? null : String(100 + index * 7),
-          floor: villaLike || typeKey === "plot" ? null : String(2 + (index % 30)),
+          addressLine: extras.address
+            ? `${extras.address}, ${loc.name}`
+            : `${extras.building ?? project?.spec.name ?? loc.name}, ${loc.name}`,
+          unitNumber: plot ? null : String(100 + index * 7),
+          floor: villaLike || plot ? null : String(2 + (index % 30)),
           point,
           mapPinExact: !villaLike && index % 2 === 0,
           price,
           currency,
-          pricePeriod: purpose === "rent" ? "year" : null,
+          pricePeriod: purpose === "rent" ? rentPeriod : null,
           originalPrice: reducedFrom ?? price,
           serviceChargePerArea:
-            commercial || typeKey === "plot"
+            commercial || plot || !habits.serviceCharge
               ? null
-              : Math.round(minor(16 + (index % 9)) / 0.09290304),
-          rentPaymentOptions: purpose === "rent" ? [1, 2, 4] : [],
-          monthlyPaymentAvailable: purpose === "rent" && index % 3 === 0,
-          depositAmount: purpose === "rent" ? Math.round(price * 0.05) : null,
-          agencyFeeText: purpose === "rent" ? "5% of the yearly rent" : "2% + VAT",
-          beds: typeKey === "plot" || commercial ? null : beds,
-          baths: typeKey === "plot" ? null : baths,
+              : Math.round(
+                  perAreaToSqm(
+                    minor(habits.serviceCharge[0] + (index % habits.serviceCharge[1])),
+                    areaUnit,
+                  ),
+                ),
+          rentPaymentOptions: purpose === "rent" ? rentOptions : [],
+          monthlyPaymentAvailable:
+            purpose === "rent" && (market.monthlyPaymentAvailable ?? false) && index % 3 === 0,
+          depositAmount: purpose === "rent" ? Math.round(price * habits.depositShare) : null,
+          agencyFeeText: purpose === "rent" ? habits.agencyFeeRent : habits.agencyFeeSale,
+          beds: plot || commercial ? null : beds,
+          baths: plot ? null : baths,
           size: areaToSqm(sizeUnit, areaUnit),
           plotSize: villaLike
             ? areaToSqm(Math.round(sizeUnit * 1.6), areaUnit)
-            : typeKey === "plot"
+            : plot
               ? areaToSqm(sizeUnit, areaUnit)
               : null,
           yearBuilt: project ? null : 2008 + (index % 16),
-          parkingSpaces: typeKey === "plot" ? null : villaLike ? 2 : 1,
-          furnishing:
-            typeKey === "plot" || typeKey === "shop"
-              ? null
-              : r.pick(["Unfurnished", "Semi-furnished", "Furnished"]),
-          ownership: "Freehold",
-          view:
-            locKey === "palm" || locKey === "jbr"
-              ? ["Sea"]
-              : locKey === "marina"
-                ? ["Marina"]
-                : locKey === "downtown"
-                  ? ["City"]
-                  : [],
+          parkingSpaces: plot ? null : villaLike ? 2 : 1,
+          furnishing: plot || shape === "shop" ? null : r.pick(furnishings),
+          ownership,
+          view: habits.views[locKey] ?? [],
           floorCount: villaLike ? 2 : null,
-          maidRoom: (beds ?? 0) >= 3,
+          maidRoom: habits.maidRooms && (beds ?? 0) >= 3,
           study: (beds ?? 0) >= 4,
           handoverDate: project ? project.spec.handover : null,
           handoverText: project ? project.spec.handoverText : null,
@@ -661,7 +681,7 @@ export async function seedPreset(
           description,
           descriptionHtml: renderRichText(description),
           highlights: facilityPick.slice(0, 3).map((f) => f.name),
-          permitNumber: `${71000000 + index * 137}`,
+          permitNumber: permits ? `${71000000 + index * 137}` : null,
           isVerified: verifiedDaysAgo !== null,
           lastVerifiedAt:
             verifiedDaysAgo !== null ? new Date(now.getTime() - verifiedDaysAgo * DAY) : null,
@@ -736,7 +756,7 @@ export async function seedPreset(
         type: "hero_search",
         props: {
           ...preset.home.hero,
-          tabs: ["buy", "rent", "off_plan"],
+          tabs: preset.home.tabs ?? ["buy", "rent", "off_plan"],
           defaultTab: "buy",
           imageId: heroImage,
           floatingBadge: true,
@@ -760,18 +780,22 @@ export async function seedPreset(
         },
         style: { background: "sand" },
       },
-      {
-        id: "projects",
-        type: "projects_showcase",
-        props: {
-          ...preset.home.projects,
-          source: "featured",
-          count: 4,
-          dark: true,
-          viewAll: { label: preset.home.projects.viewAllLabel, href: "/projects" },
-        },
-        style: { background: "ink" },
-      },
+      ...(preset.home.projects
+        ? [
+            {
+              id: "projects",
+              type: "projects_showcase",
+              props: {
+                ...preset.home.projects,
+                source: "featured",
+                count: 4,
+                dark: true,
+                viewAll: { label: preset.home.projects.viewAllLabel, href: "/projects" },
+              },
+              style: { background: "ink" },
+            },
+          ]
+        : []),
       {
         id: "areas",
         type: "areas_grid",
@@ -789,7 +813,7 @@ export async function seedPreset(
   });
 
   progress("Pages");
-  await seedPages(db, preset.key, {
+  await seedPages(db, preset.pages, {
     images: {
       living: ofKind("living")[0],
       villa: ofKind("villa")[1] ?? ofKind("villa")[0],
@@ -817,11 +841,12 @@ export async function seedPreset(
   await seedCrm(db, {
     now,
     agentIds: agentIds.map((a) => a.id),
-    phoneCode: preset.settings.market.phoneCountryCode ?? null,
+    phone: preset.crm.phone,
+    leads: preset.crm.leads,
   });
   // After the leads, so conversations join their open leads.
   progress("Inbox");
-  await seedInbox(db, { now });
+  await seedInbox(db, { now, inbox: preset.inbox });
   progress("Newsletter");
   await seedNewsletter(db, { now });
   progress("Viewings");
@@ -833,6 +858,7 @@ export async function seedPreset(
   progress("Customers");
   const customers = await seedCustomers(db, {
     now,
+    customers: preset.customers,
     passwords: options.passwords,
     generatePassword,
   });
