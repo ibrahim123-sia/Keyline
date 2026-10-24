@@ -37,6 +37,9 @@ vi.mock("next/headers", () => ({
   headers: async () => new Headers(),
 }));
 
+// Tests never reach Google Fonts: the PDF uses fallback fonts.
+process.env.BROCHURE_WEB_FONTS = "off";
+
 const actor = { type: "admin" as const, id: testAdmin.id };
 const AGENCY = "Harbour Lane Homes";
 const ACCENT = "#2F6FA9";
@@ -239,6 +242,7 @@ describe("branded PDF brochure (11 §4)", () => {
     expect(html).toContain('<a class="qr" href="https://wa.me/971501112233?text='); // QR + link
     expect(html).toMatch(/<svg[^>]+viewBox="0 0 600 600"/); // the location plot
     expect(html).toContain("data:image/png;base64,"); // pictures inlined outside Workers
+    expect(html).not.toContain("fonts.googleapis.com");
     expect(html.match(/<section class="page"/g)).toHaveLength(4);
 
     const file = (await brochureFile(w.db, "property", id))!;

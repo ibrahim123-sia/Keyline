@@ -353,15 +353,27 @@ function pageLocation(d: BrochureData, src: ImageSource): string {
 </section>`;
 }
 
-/** The whole document. `src` turns an image into what the browser loads (absolute URL or data URI). */
-export function brochureHtml(d: BrochureData, src: ImageSource): string {
+/**
+ * The whole document. `src` turns an image into what the browser loads (absolute URL or data
+ * URI). `webFonts: false` leaves out the Google Fonts stylesheet (tests never reach the network;
+ * the fallback fonts are used).
+ */
+export function brochureHtml(
+  d: BrochureData,
+  src: ImageSource,
+  options: { webFonts?: boolean } = {},
+): string {
+  const fonts =
+    options.webFonts === false
+      ? ""
+      : `<link rel="stylesheet" href="${esc(fontsHref(d.branding.fontDisplay, d.branding.fontBody))}">`;
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>${esc(d.reference ? `${d.reference} · ${d.title}` : d.title)}</title>
 <meta name="author" content="${esc(d.agency.name)}">
-<link rel="stylesheet" href="${esc(fontsHref(d.branding.fontDisplay, d.branding.fontBody))}">
+${fonts}
 <style>${styles(d)}</style>
 </head>
 <body data-agency="${esc(d.agency.name)}">

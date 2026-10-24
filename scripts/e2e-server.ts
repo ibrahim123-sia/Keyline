@@ -35,6 +35,8 @@ const env: NodeJS.ProcessEnv = {
   RATE_LIMITS: "off",
   TURNSTILE_SECRET_KEY: "off",
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: "off",
+  // Brochure PDFs use fallback fonts: tests never reach Google Fonts.
+  BROCHURE_WEB_FONTS: "off",
   NEXT_DIST_DIR: ".next-e2e",
   NEXT_TELEMETRY_DISABLED: "1",
 };

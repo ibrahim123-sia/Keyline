@@ -60,7 +60,10 @@ async function imageSource(d: BrochureData): Promise<ImageSource> {
 
 /** The brochure HTML with its pictures resolved (the integration tests read it too). */
 export async function brochureDocument(d: BrochureData): Promise<string> {
-  return brochureHtml(d, await imageSource(d));
+  // BROCHURE_WEB_FONTS=off (tests, the e2e server): no request to Google Fonts.
+  return brochureHtml(d, await imageSource(d), {
+    webFonts: process.env.BROCHURE_WEB_FONTS !== "off",
+  });
 }
 
 export type GeneratedBrochure = {
