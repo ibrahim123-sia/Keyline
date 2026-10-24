@@ -152,11 +152,15 @@ describe("page builder sections: forms and content", () => {
     const mails = await db.select().from(emailLog);
     expect(mails.filter((m) => m.template.startsWith("page-form"))).toEqual([]);
     const toAgency = mails.filter((m) => m.to === "hello@agency.example");
-    expect(toAgency.map((m) => m.template)).toEqual([
+    // Owner requests get their own notice (features/valuation/notify.ts) instead of "lead.new".
+    expect(toAgency.map((m) => m.template).sort()).toEqual([
       "lead.new",
       "lead.new",
-      "lead.new",
-      "lead.new",
+      "listing_request.new",
+      "valuation.new",
+    ]);
+    expect(mails.filter((m) => m.to === "omar@example.com").map((m) => m.template)).toEqual([
+      "valuation.received",
     ]);
     const message = toAgency.find((m) => (m.text ?? "").includes("Do you manage rentals?"))!;
     expect(message.text).toContain("Sent from: Sell with us");

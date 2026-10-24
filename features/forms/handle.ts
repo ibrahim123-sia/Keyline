@@ -8,6 +8,8 @@ import { locations, propertyTypes } from "@/db/schema/master-data";
 import { captureLead, type LeadCapture } from "@/features/leads/capture";
 import { subscribeNewsletter } from "@/features/newsletter/subscribe";
 import { loadSettings } from "@/features/settings/queries";
+import { OWNER_REQUEST_NOTIFY_JOB } from "@/features/valuation/notify";
+import { enqueue } from "@/jobs/enqueue";
 import type { PageForm } from "./schema";
 
 type FormInput = Omit<PageForm, "consent" | "website" | "captchaToken">;
@@ -171,16 +173,30 @@ export async function handlePageForm(
       beds,
       notes: notes || null,
     };
-    if (input.formType === "valuation") await db.insert(valuationRequests).values(row);
-    else {
-      const market = await loadSettings("market", db);
-      const amount = parseAmount(input.expectedPrice);
-      await db.insert(listingRequests).values({
-        ...row,
-        askingPrice:
-          amount === null ? null : Math.round(amount * 10 ** market.baseCurrency.decimals),
-      });
-    }
+    const market = await loadSettings("market", db);
+    const kind = input.formType === "valuation" ? ("valuation" as const) : ("listing" as const);
+    const amount = parseAmount(input.expectedPrice);
+    const [saved] =
+      kind === "valuation"
+        ? await db
+            .insert(valuationRequests)
+            .values({ ...row, currency: market.baseCurrency.code })
+            .returning({ id: valuationRequests.id })
+        : await db
+            .insert(listingRequests)
+            .values({
+              ...row,
+              currency: market.baseCurrency.code,
+              askingPrice:
+                amount === null ? null : Math.round(amount * 10 ** market.baseCurrency.decimals),
+            })
+            .returning({ id: listingRequests.id });
+    // The owner's confirmation and the team's notice (features/valuation/notify.ts).
+    await enqueue(
+      OWNER_REQUEST_NOTIFY_JOB,
+      { kind, requestId: saved!.id },
+      { db, dedupeKey: `${OWNER_REQUEST_NOTIFY_JOB}:${saved!.id}` },
+    );
   }
   return { kind: "lead", leadId: lead.leadId };
 }

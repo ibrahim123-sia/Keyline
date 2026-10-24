@@ -119,4 +119,9 @@ export const sampleValues: Record<string, string> = {
   summary:
     "Gross yield 7% · Net yield 4.7% · Net cash flow AED 98,000 a year · IRR 4.4% over 10 years",
   days: "30",
+  area: "Dubai Marina",
+  home: "2-bed apartment, 1,280 sq ft, Marina Gate, Dubai Marina",
+  estimate:
+    "Our first estimate is AED 2,350,000 – AED 2,600,000, based on 6 similar homes in Dubai Marina. It comes from homes we have listed and is not a formal valuation.",
+  purpose: "sell",
 };
