@@ -363,6 +363,28 @@ export function MarketSettingsForm({
                   />
                 ))}
               </div>
+              <ListField
+                label={`Monthly income bands (${value.baseCurrency.code})`}
+                description="The limits between the bands people choose from when they ask for a mortgage pre-approval: 15000 and 30000 give under 15,000, 15,000 to 30,000, and 30,000 or more."
+                placeholder="Add a limit, e.g. 15000"
+                max={8}
+                value={value.mortgage.incomeBands.map((minor) => String(minor / minorPerMajor))}
+                onChange={(limits) =>
+                  set({
+                    mortgage: {
+                      ...value.mortgage,
+                      incomeBands: [
+                        ...new Set(
+                          limits
+                            .map((v) => Math.round(Number(v.replace(/[\s,]/g, "")) * minorPerMajor))
+                            .filter((v) => Number.isFinite(v) && v > 0),
+                        ),
+                      ].sort((a, b) => a - b),
+                    },
+                  })
+                }
+                error={errorFor("mortgage.incomeBands")}
+              />
             </FormSection>
 
             <FormSection title="ROI simulator defaults">

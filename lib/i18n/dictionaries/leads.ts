@@ -47,6 +47,11 @@ export const leads = {
     propertyType: "Type",
     beds: "Bedrooms",
     expectedPrice: "Expected price",
+    calculation: "Calculation",
+    monthlyIncome: "Monthly income",
+    employment: "Employment",
+    downPaymentReady: "Down payment ready",
+    report: "Report",
   },
   noInterest: "General enquiry",
   score: {

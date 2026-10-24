@@ -63,6 +63,30 @@ export const havenDune: SeedPreset = {
       phoneCountryCode: "+971",
       mapCenter: { lng: 55.22, lat: 25.13 },
       mapZoom: 11,
+      // Sample calculator defaults for the demo, not advice: registration 4%, agency 2%.
+      mortgage: {
+        downPaymentPct: 20,
+        interestRatePct: 5,
+        years: 25,
+        maxLtvPct: 80,
+        maxYears: 25,
+        registrationFeePct: 4,
+        agencyFeePct: 2,
+        arrangementFeePct: 1,
+        // AED 15,000 / 30,000 / 50,000 / 80,000 a month.
+        incomeBands: [1_500_000, 3_000_000, 5_000_000, 8_000_000],
+      },
+      roi: {
+        // AED 15 per sq ft a year.
+        serviceChargePerArea: 1_500,
+        managementFeePct: 20,
+        occupancyPct: 70,
+        purchaseCostsPct: 7,
+        maintenancePct: 1,
+        vacancyPct: 5,
+        rentGrowthPct: 2,
+        priceGrowthPct: 3,
+      },
     },
     contact: {
       phone: "+971 4 000 0000",

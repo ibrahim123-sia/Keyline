@@ -115,4 +115,7 @@ export const sampleValues: Record<string, string> = {
   price: "AED 2,350,000",
   drop: "AED 100,000",
   status: "reserved",
+  summary:
+    "Gross yield 7% · Net yield 4.7% · Net cash flow AED 98,000 a year · IRR 4.4% over 10 years",
+  days: "30",
 };

@@ -153,6 +153,9 @@ export const visitorCurrencySchema = currencySchema.extend({
   isExample: z.boolean().default(false),
 });
 
+/** 5,000 / 10,000 / 20,000 / 35,000 a month in the base currency (two decimals). */
+const defaultIncomeBands = [500_000, 1_000_000, 2_000_000, 3_500_000];
+
 export const marketSchema = z.object({
   baseCurrency: currencySchema.default({
     code: "USD",
@@ -207,6 +210,16 @@ export const marketSchema = z.object({
       registrationFeePct: z.number().min(0).max(20),
       agencyFeePct: z.number().min(0).max(20),
       arrangementFeePct: z.number().min(0).max(20),
+      /**
+       * Monthly income bands on the pre-approval form (11 §1): the limits between bands in
+       * minor units of the base currency ([5000, 10000] gives "under 5,000", "5,000 to
+       * 10,000" and "10,000 or more").
+       */
+      incomeBands: z
+        .array(z.number().int().positive())
+        .max(8)
+        .transform((limits) => [...new Set(limits)].sort((a, b) => a - b))
+        .default(defaultIncomeBands),
     })
     .default({
       downPaymentPct: 20,
@@ -217,6 +230,7 @@ export const marketSchema = z.object({
       registrationFeePct: 0,
       agencyFeePct: 0,
       arrangementFeePct: 0,
+      incomeBands: defaultIncomeBands,
     }),
   roi: z
     .object({

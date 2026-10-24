@@ -216,6 +216,16 @@ export const templateDefaults = {
     },
     whatsapp: { body: "A home you saved is now {{status}}: {{title}} {{url}}" },
   },
+  "tools.roi_report": {
+    audience: "customer",
+    label: "Rental return report (ROI simulator)",
+    variables: ["name", "agency", "agent", "summary", "days", "url"],
+    email: {
+      subject: "Your rental return report from {{agency}}",
+      body: "Hello {{name}},\n\nHere is the report you asked for from our rental return simulator.\n\n{{summary}}\n\nThe download link works for {{days}} days. Want to talk it through? Reply to this email and {{agent}} will help.",
+      button: "Download the report (PDF)",
+    },
+  },
   "newsletter.confirm": {
     audience: "customer",
     label: "Confirm a newsletter signup (double opt-in)",
