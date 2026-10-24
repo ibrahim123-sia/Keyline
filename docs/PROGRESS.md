@@ -10,8 +10,8 @@ Spec: [`docs/spec/`](spec/README.md) (README + `01..16`).
 | 1     | Foundation               | done (staging deploy waits for credentials) |
 | 2     | Settings and master data | done (staging deploy waits for credentials) |
 | 3     | Properties and projects  | done (staging deploy waits for credentials) |
-| 4     | Public site core         | in progress (Lighthouse LCP check open)     |
-| 5     | CMS and SEO              | in progress                                 |
+| 4     | Public site core         | done except LCP (Phase 10 performance pass) |
+| 5     | CMS and SEO              | done                                        |
 | 6     | Leads and CRM            | built; e2e in CI                            |
 | 7     | Customer area            | built; e2e in CI                            |
 | 8     | Tools                    | not started                                 |
@@ -87,9 +87,9 @@ Done-when checklist:
 
 Done-when checklist (from `15-build-phases.md`):
 
-- [ ] All public routes render server-side with real seed data
-- [ ] Filters, sort and paging work and are shareable via URL
-- [ ] Phone layouts work (map toggle, filter sheet, bottom contact bar)
+- [x] All public routes render server-side with real seed data — `tests/e2e/public-smoke.spec.ts` "every public route renders with the demo data" (production build in CI)
+- [x] Filters, sort and paging work and are shareable via URL — `tests/e2e/search.spec.ts` "search: landing pages, filters in the URL, sort, paging, map and autocomplete"
+- [x] Phone layouts work (map toggle, filter sheet, bottom contact bar) — `tests/e2e/search.spec.ts` "search on a phone…", `tests/e2e/property-page.spec.ts` "property page @phone: contact options stay at the bottom", `tests/e2e/site-chrome.spec.ts` "phone: the menu holds the button and the currency choice"
 - [ ] Core Web Vitals targets met on the property page in a Lighthouse mobile run — CLS 0 and TBT under 200 ms pass; LCP about 3.5 s in the lab run (target 2.5 s), see decision 62
 
 ## Phase 5 — CMS and SEO (plan)
@@ -101,9 +101,9 @@ Done-when checklist (from `15-build-phases.md`):
 
 Done-when checklist (from `15-build-phases.md`):
 
-- [ ] Admin can build a new page from sections, publish it and add it to the header menu without code
-- [ ] Changing a slug creates a 301
-- [ ] Sitemap, robots and JSON-LD validate (Google Rich Results test passes for a property page)
+- [x] Admin can build a new page from sections, publish it and add it to the header menu without code — `tests/e2e/page-builder.spec.ts` "page builder: build a page from sections, publish it, move it with a redirect", `tests/e2e/seo.spec.ts` "admin builds the header menu with a dropdown; the site shows it"
+- [x] Changing a slug creates a 301 — `tests/integration/pages.test.ts` "a slug change on a published page adds a 301…", `tests/integration/blog.test.ts`, `tests/integration/developers.test.ts`, `tests/integration/agents.test.ts`; served as a real 301 by the middleware (`tests/e2e/seo.spec.ts` "a missing address shows in the 404 monitor and one click redirects it")
+- [x] Sitemap, robots and JSON-LD validate — `tests/e2e/seo.spec.ts` "robots.txt, the sitemap index and listing structured data", `tests/unit/structured-data.test.ts`, `tests/unit/json-ld.test.ts` (required schema.org fields per type). Google's Rich Results test needs a public URL: run it against staging at launch (Phase 10 launch list).
 
 ## Phase 6 — Leads and CRM (plan)
 

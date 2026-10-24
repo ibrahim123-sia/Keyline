@@ -18,11 +18,6 @@ an AI assistant for visitors and another for the team.
 
 ---
 
-> **Repository name:** the product is now called Keyline. Links in this repository point to
-> `github.com/ibrahim123-sia/Keyline`; the GitHub repository itself still has to be renamed from
-> Lintel to Keyline by its owner (Settings → General → Repository name). GitHub redirects the old
-> URL afterwards.
-
 ## Contents
 
 - [Features](#features)
