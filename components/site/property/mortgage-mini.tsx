@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { useId, useState } from "react";
-import { monthlyPayment } from "@/features/listings/finance";
+import { monthlyPayment } from "@/features/tools/math";
 import { displayPrice, type Rates } from "@/lib/currency-display";
 import { format } from "@/lib/i18n";
 import { property as t } from "@/lib/i18n/dictionaries/property";
@@ -50,8 +50,8 @@ function Field({
 }
 
 /**
- * Monthly payment mini calculator (06 §5.11) with the market's mortgage defaults; the full
- * calculator lives at /tools/mortgage.
+ * Monthly payment mini calculator (06 §5.11) with the market's mortgage defaults and the tools'
+ * maths; "Open the mortgage calculator" carries the price and what was typed here.
  */
 export function MortgageMini({
   price,
@@ -59,7 +59,10 @@ export function MortgageMini({
   visitorCurrency,
   rates,
   defaults,
+  calculatorHref,
 }: {
+  /** /tools/mortgage with this listing's price (base currency) and reference. */
+  calculatorHref: string | null;
   price: number;
   currency: string;
   visitorCurrency: string;
@@ -113,7 +116,11 @@ export function MortgageMini({
       <div className="flex flex-wrap items-center justify-between gap-2 text-[13px] text-text-muted">
         <span>{t.mortgage.disclaimer}</span>
         <Link
-          href="/tools/mortgage"
+          href={
+            calculatorHref
+              ? `${calculatorHref}&${new URLSearchParams({ down: String(down), rate: String(rate), years: String(years) })}`
+              : "/tools/mortgage"
+          }
           prefetch={false}
           className="inline-flex items-center gap-1 font-semibold text-accent hover:underline"
         >

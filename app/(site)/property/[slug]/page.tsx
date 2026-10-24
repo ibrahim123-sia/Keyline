@@ -37,7 +37,9 @@ import { similarListings } from "@/features/listings/similar";
 import { listingStructuredData, listingTitle } from "@/features/seo/entity-seo";
 import { getSettings } from "@/features/settings/queries";
 import { visitorCurrency } from "@/features/site/currency";
-import { displayPrice } from "@/lib/currency-display";
+import { mortgageLinkFor, roiLinkFor } from "@/features/tools/calculator-params";
+import { displayPrice, toBaseMinor } from "@/lib/currency-display";
+import { areaFromSqm, perAreaFromSqm } from "@/lib/units";
 import { format } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 import { property as t } from "@/lib/i18n/dictionaries/property";
@@ -142,6 +144,31 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
   const listedFormat =
     l.currency === rates.base.code ? rates.base : rates.others.find((c) => c.code === l.currency);
   const mapStyle = resolveMapStyle(integrations.googleMaps);
+  // The calculators work in the base currency and the market's area unit (11 §1, §2).
+  const toBase = (v: number | null) => (v == null ? null : toBaseMinor(v, l.currency, rates));
+  const basePrice = toBase(l.price);
+  const decimals = rates.base.decimals;
+  const mortgageHref =
+    basePrice != null
+      ? mortgageLinkFor({ price: basePrice, reference: l.reference }, decimals)
+      : null;
+  const roiHref =
+    basePrice != null
+      ? roiLinkFor(
+          {
+            price: basePrice,
+            reference: l.reference,
+            rentYearly: toBase(l.expectedRentYearly),
+            size: l.size != null ? areaFromSqm(l.size, market.areaUnit) : null,
+            serviceChargePerArea: toBase(
+              l.serviceChargePerArea != null
+                ? perAreaFromSqm(l.serviceChargePerArea, market.areaUnit)
+                : null,
+            ),
+          },
+          decimals,
+        )
+      : null;
 
   const similarSection = (
     <Section id="similar" title={t.similar.title}>
@@ -243,6 +270,7 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
                   visitorCurrency={code}
                   rates={rates}
                   defaults={market.mortgage}
+                  calculatorHref={mortgageHref}
                 />
               </Section>
             )}
@@ -266,7 +294,7 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
                 </Link>
               </p>
             )}
-            <Investment listing={l} ctx={ctx} roi={market.roi} />
+            <Investment listing={l} ctx={ctx} roi={market.roi} simulatorHref={roiHref} />
             <PriceHistory listing={l} ctx={ctx} />
             <ProjectBlock listing={l} />
           </div>

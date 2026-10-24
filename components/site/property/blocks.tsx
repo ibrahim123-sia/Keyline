@@ -3,7 +3,8 @@ import { ArrowRightIcon, BadgeCheckIcon, Building2Icon, InfoIcon } from "lucide-
 import { cn } from "cn";
 import { handoverLabel } from "@/components/site/listings/listing-card";
 import { PriceTag } from "@/components/site/price-tag";
-import { yields, type RoiDefaults } from "@/features/listings/finance";
+import type { MarketSettings } from "@/features/settings/schema";
+import { rentalReturns, roundTo } from "@/features/tools/math";
 import type { PublicListing } from "@/features/listings/public";
 import { displayPrice, type Rates } from "@/lib/currency-display";
 import { Icon } from "@/lib/icons";
@@ -284,28 +285,55 @@ export function Investment({
   listing: l,
   ctx,
   roi,
+  simulatorHref,
 }: {
   listing: PublicListing;
   ctx: PageContext;
-  roi: RoiDefaults;
+  roi: MarketSettings["roi"];
+  /** /tools/rental-returns filled in from this listing (null when it cannot be). */
+  simulatorHref: string | null;
 }) {
-  if (l.purpose !== "sale" || !l.price || !l.expectedRentYearly) return null;
-  const y = yields(
-    {
-      price: l.price,
-      rentYearly: l.expectedRentYearly,
-      serviceChargePerArea: l.serviceChargePerArea,
-      size: l.size,
-    },
-    roi,
+  if (l.purpose !== "sale" || !l.price) return null;
+  const link = (
+    <Link
+      href={simulatorHref ?? "/tools/rental-returns"}
+      prefetch={false}
+      className="inline-flex items-center gap-1 text-[14.5px] font-semibold text-accent hover:underline"
+    >
+      {l.expectedRentYearly ? t.investment.simulator : t.investment.simulatorNoRent}{" "}
+      <ArrowRightIcon className="size-4 rtl:rotate-180" aria-hidden />
+    </Link>
   );
+  if (!l.expectedRentYearly) return <p className="text-[14.5px] text-text">{link}</p>;
+  // The simulator's numbers with the market's defaults, bought with cash (11 §2).
+  const r = rentalReturns({
+    price: l.price,
+    purchaseCostsPct: roi.purchaseCostsPct,
+    mode: "long",
+    rentYearly: l.expectedRentYearly,
+    nightlyHigh: 0,
+    nightlyLow: 0,
+    highSeasonMonths: 0,
+    occupancyPct: 0,
+    managementFeePct: 0,
+    // Per m² × m²: the same yearly charge in any unit.
+    serviceChargePerArea: l.serviceChargePerArea ?? 0,
+    size: l.size ?? 0,
+    maintenancePct: roi.maintenancePct,
+    vacancyPct: roi.vacancyPct,
+    mortgage: null,
+    rentGrowthPct: roi.rentGrowthPct,
+    priceGrowthPct: roi.priceGrowthPct,
+  });
+  const tenYears = r.years[9]!;
   return (
     <Section id="investment" title={t.investment.title}>
-      <dl className="grid gap-3 sm:grid-cols-3">
+      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           [t.investment.expectedRent, money(l.expectedRentYearly, l, ctx)],
-          [t.investment.gross, `${y.gross}%`],
-          [t.investment.net, `${y.net}%`],
+          [t.investment.gross, `${roundTo(r.grossYieldPct, 1)}%`],
+          [t.investment.net, `${roundTo(r.netYieldPct, 1)}%`],
+          [t.investment.tenYears, money(tenYears.totalReturn, l, ctx)],
         ].map(([k, v]) => (
           <div key={k} className="rounded-[16px] bg-surface p-4 shadow-soft">
             <dt className="text-meta text-text-muted">{k}</dt>
@@ -313,14 +341,13 @@ export function Investment({
           </div>
         ))}
       </dl>
-      <p className="text-[13px] text-text-muted">{t.investment.netNote}</p>
-      <Link
-        href="/tools/rental-returns"
-        prefetch={false}
-        className="inline-flex items-center gap-1 text-[14.5px] font-semibold text-accent hover:underline"
-      >
-        {t.investment.simulator} <ArrowRightIcon className="size-4 rtl:rotate-180" aria-hidden />
-      </Link>
+      <p className="text-[13px] text-text-muted">
+        {format(t.investment.netNote2, {
+          growth: roundTo(roi.priceGrowthPct, 1),
+          rentGrowth: roundTo(roi.rentGrowthPct, 1),
+        })}
+      </p>
+      {link}
     </Section>
   );
 }

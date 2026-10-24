@@ -128,7 +128,11 @@ export const property = {
     gross: "Gross yield",
     net: "Estimated net yield",
     netNote: "After service charges, maintenance, a vacancy allowance and purchase costs.",
+    netNote2:
+      "Net yield is after service charges, maintenance, a vacancy allowance and purchase costs. The 10-year return assumes a cash purchase, rents rising {rentGrowth}% and the value {growth}% a year, and a sale at the end.",
+    tenYears: "10-year return",
     simulator: "Open the ROI simulator",
+    simulatorNoRent: "Work out what this home could earn as a rental",
   },
   history: {
     title: "Price history",
