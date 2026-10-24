@@ -37,7 +37,7 @@ export async function requireAdmin(check: AdminCheck = {}): Promise<AdminContext
 /** Path of the current request (set by middleware.ts) for "come back here after sign-in". */
 export async function currentPath(): Promise<string> {
   const h = await headers();
-  return h.get("x-lintel-path") ?? "/admin";
+  return h.get("x-keyline-path") ?? "/admin";
 }
 
 /** For admin pages and layouts: redirects instead of throwing. */

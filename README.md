@@ -1,10 +1,10 @@
 <div align="center">
 
-# Lintel
+# Keyline
 
-**The website, CRM and lead engine for real estate agencies — in one app.**
+**The website, CRM and lead engine for real estate agencies, in one app.**
 
-[![CI](https://github.com/ibrahim123-sia/Lintel/actions/workflows/ci.yml/badge.svg)](https://github.com/ibrahim123-sia/Lintel/actions/workflows/ci.yml)
+[![CI](https://github.com/ibrahim123-sia/Keyline/actions/workflows/ci.yml/badge.svg)](https://github.com/ibrahim123-sia/Keyline/actions/workflows/ci.yml)
 ![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![Cloudflare Workers](https://img.shields.io/badge/runs%20on-Cloudflare%20Workers-f38020?logo=cloudflare&logoColor=white)
@@ -12,11 +12,16 @@
 
 </div>
 
-One agency installs Lintel and runs its whole business from it: listings and projects, the public
+One agency installs Keyline and runs its whole business from it: listings and projects, the public
 website and blog, SEO, leads from every channel, viewings, the customer area and buyer tools, with
 an AI assistant for visitors and another for the team.
 
 ---
+
+> **Repository name:** the product is now called Keyline. Links in this repository point to
+> `github.com/ibrahim123-sia/Keyline`; the GitHub repository itself still has to be renamed from
+> Lintel to Keyline by its owner (Settings → General → Repository name). GitHub redirects the old
+> URL afterwards.
 
 ## Contents
 
@@ -80,7 +85,7 @@ compiled to WebAssembly (PGlite), with the same extensions as production.
 ```bash
 pnpm install
 cp .env.example .env.local      # fill BETTER_AUTH_SECRET, SECRETS_ENCRYPTION_KEY, INTERNAL_JOB_SECRET
-pnpm db:start                   # terminal 1: database on 127.0.0.1:5433 (data in ~/.lintel/pglite)
+pnpm db:start                   # terminal 1: database on 127.0.0.1:5433 (data in ~/.keyline/pglite)
 pnpm db:migrate
 pnpm db:seed                    # optional: the demo agency (see below)
 pnpm dev                        # terminal 2: http://localhost:3000
@@ -109,14 +114,14 @@ sign up at `/sign-up`. In development no email leaves the machine: messages are 
 agents, pages, blog posts, leads, viewings, campaign data and customers. Passwords are generated
 and printed once at the end of the run; two-step verification is off for the demo accounts.
 
-| Account                     | Role            |
-| --------------------------- | --------------- |
-| `admin@demo.lintel`         | Admin (owner)   |
-| `staff@demo.lintel`         | Admin           |
-| `viewer@demo.lintel`        | Read-only admin |
-| `mina@demo.lintel`          | Customer        |
-| `omar.customer@demo.lintel` | Customer        |
-| `lucy@demo.lintel`          | Customer        |
+| Account                      | Role            |
+| ---------------------------- | --------------- |
+| `admin@demo.keyline`         | Admin (owner)   |
+| `staff@demo.keyline`         | Admin           |
+| `viewer@demo.keyline`        | Read-only admin |
+| `mina@demo.keyline`          | Customer        |
+| `omar.customer@demo.keyline` | Customer        |
+| `lucy@demo.keyline`          | Customer        |
 
 Each demo customer has saved homes, a saved search and a past tour.
 
@@ -169,8 +174,8 @@ only allows in Developer Mode.
 
 1. Create a Neon project (PostgreSQL 16 or newer). The first migration enables the PostGIS,
    pgvector, pg_trgm and unaccent extensions.
-2. In Cloudflare, create the R2 buckets (`lintel-cache`, `lintel-media`, plus `-staging`
-   variants), the queues (`lintel-jobs`, `lintel-jobs-dlq`, plus `-staging` variants) and a
+2. In Cloudflare, create the R2 buckets (`keyline-cache`, `keyline-media`, plus `-staging`
+   variants), the queues (`keyline-jobs`, `keyline-jobs-dlq`, plus `-staging` variants) and a
    Hyperdrive configuration pointing at Neon (`wrangler hyperdrive create`).
 3. Set the Worker secrets for each environment, for example
    `wrangler secret put BETTER_AUTH_SECRET --env staging`, and likewise `SECRETS_ENCRYPTION_KEY`,
@@ -225,4 +230,4 @@ docs/         product specification and build progress
 
 - How to set up, branch, commit and open a pull request: [`CONTRIBUTING.md`](.github/CONTRIBUTING.md).
 - To report a vulnerability privately: [`SECURITY.md`](.github/SECURITY.md).
-- Lintel is proprietary software. See [`LICENSE`](LICENSE).
+- Keyline is proprietary software. See [`LICENSE`](LICENSE).

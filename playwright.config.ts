@@ -23,7 +23,7 @@ export default defineConfig({
     storageState: {
       cookies: [
         {
-          name: "lintel_consent",
+          name: "keyline_consent",
           value: "v1.a0.m0.1760000000",
           domain: "localhost",
           path: "/",

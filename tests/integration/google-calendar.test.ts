@@ -51,7 +51,7 @@ function fakeApi(calls: Call[], busy: Awaited<ReturnType<CalendarApi["busy"]>> =
     },
     async refresh(input) {
       calls.push({ op: "refresh", args: [input.refreshToken] });
-      if (input.refreshToken === "lintel-connection-test")
+      if (input.refreshToken === "keyline-connection-test")
         throw new CalendarApiError("Google answered 400: invalid_grant", 400);
       return { accessToken: `access-${calls.length}`, expiresIn: 3600, scope: null };
     },

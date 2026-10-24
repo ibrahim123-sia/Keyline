@@ -90,7 +90,7 @@ Admin has **light and dark mode** (user preference, saved per admin user). Dark:
 - **Search results:** filter bar at top, list left (flex 999) and map right (sticky on desktop). Phone: list with a floating "Map" button that switches to a full map view.
 - **Property page:** breadcrumb, badges + title + address, gallery (1 big + 4 small), then two columns: content left, sticky contact card right. On phone the contact card becomes a bottom bar with "Book a tour" and "WhatsApp".
 - **Project page:** hero image, key facts (developer, handover, starting price, payment plan), progress bar, units table, payment plan, amenities, location, brochure, contact card.
-- **Footer:** dark ink, logo + short text, link columns from settings, legal links, licence number, "Powered by Lintel".
+- **Footer:** dark ink, logo + short text, link columns from settings, legal links, licence number, "Powered by Keyline".
 
 ## 6. States every screen needs
 

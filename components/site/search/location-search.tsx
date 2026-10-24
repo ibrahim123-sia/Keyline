@@ -17,7 +17,7 @@ import type { Suggestion } from "@/features/search/suggest";
 import { format } from "@/lib/i18n";
 import { search as t } from "@/lib/i18n/dictionaries/search";
 
-const RECENT_KEY = "lintel.search.recent";
+const RECENT_KEY = "keyline.search.recent";
 const kinds = ["location", "building", "project", "developer", "listing"] as const;
 const icons = {
   location: MapPinIcon,

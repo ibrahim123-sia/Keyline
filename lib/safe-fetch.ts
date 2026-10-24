@@ -178,7 +178,7 @@ export async function safeFetch(
       res = await doFetch(url, {
         redirect: "manual",
         signal,
-        headers: { accept: "image/*", "user-agent": "LintelImport/1.0" },
+        headers: { accept: "image/*", "user-agent": "KeylineImport/1.0" },
       });
     } catch (err) {
       const timedOut = (err as Error).name === "TimeoutError" || signal.aborted;

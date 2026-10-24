@@ -8,10 +8,10 @@ import { assertKey, assertPrefix, type ObjectMeta, type StorageDriver } from "./
 
 /**
  * Local disk driver for development and the e2e server. Files live outside the project
- * (default ~/.lintel/media) so the dev server's file watcher never sees them. The content
+ * (default ~/.keyline/media) so the dev server's file watcher never sees them. The content
  * type comes from the extension: every public key has one, staging keys are never served.
  */
-export function fsStorage(root = path.join(homedir(), ".lintel", "media")): StorageDriver {
+export function fsStorage(root = path.join(homedir(), ".keyline", "media")): StorageDriver {
   const file = (key: string) => {
     assertKey(key);
     return path.join(root, ...key.split("/"));

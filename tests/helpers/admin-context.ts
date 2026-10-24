@@ -9,7 +9,7 @@ import type { SessionUser } from "@/lib/permissions";
 export const testAdmin: SessionUser = {
   id: newId(),
   name: "Test Admin",
-  email: "admin@test.lintel",
+  email: "admin@test.keyline",
   emailVerified: true,
   image: null,
   role: "admin",

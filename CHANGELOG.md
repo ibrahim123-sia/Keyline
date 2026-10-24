@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Lintel. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+All notable changes to Keyline. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 

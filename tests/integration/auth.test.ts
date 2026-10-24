@@ -119,7 +119,7 @@ describe("customer sign-up and verification", () => {
       password: "a-long-passphrase-2",
     });
     expect(ok.status).toBe(200);
-    expect(ok.cookies).toContain("lintel.session_token=");
+    expect(ok.cookies).toContain("keyline.session_token=");
   });
 });
 
@@ -266,7 +266,7 @@ describe("admins", () => {
       new Headers({ cookie: second.cookies }),
     );
     expect(done.status).toBe(200);
-    expect(done.cookies).toContain("lintel.session_token=");
+    expect(done.cookies).toContain("keyline.session_token=");
     const count = await db
       .select({ n: sql<number>`count(*)::int` })
       .from(sessions)

@@ -349,7 +349,7 @@ function ApiTokens({
   return (
     <FormSection
       title="API tokens"
-      description="For connecting Claude or other MCP clients to Lintel. Changes they propose wait for an admin to confirm them here."
+      description="For connecting Claude or other MCP clients to Keyline. Changes they propose wait for an admin to confirm them here."
       actions={
         !readOnly && (
           <Button
@@ -518,7 +518,7 @@ function ApiTokens({
                 onChange={(access) => setCreating((c) => c && { ...c, access })}
                 options={[
                   { value: "read", label: "Read only" },
-                  { value: "propose", label: "Read and propose changes (confirmed in Lintel)" },
+                  { value: "propose", label: "Read and propose changes (confirmed in Keyline)" },
                 ]}
               />
               <SelectField

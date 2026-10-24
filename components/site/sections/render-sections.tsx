@@ -487,7 +487,7 @@ export async function RenderSections({
             key={s.id}
             data-section-id={s.id}
             data-section-label={sectionCatalog[s.type].label}
-            className="lintel-preview-section"
+            className="keyline-preview-section"
           >
             {node}
           </div>

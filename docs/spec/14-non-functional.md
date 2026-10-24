@@ -67,6 +67,6 @@
 **AI evals:** `10-ai.md` §6.
 
 ## 7. Documentation
-- `README.md`: what Lintel is, screenshots, features list, stack, local setup, env vars, deploy to Cloudflare, seed data, demo logins, MCP setup
+- `README.md`: what Keyline is, screenshots, features list, stack, local setup, env vars, deploy to Cloudflare, seed data, demo logins, MCP setup
 - `docs/` kept updated when behaviour changes
 - `PROGRESS.md` and a `CHANGELOG.md`

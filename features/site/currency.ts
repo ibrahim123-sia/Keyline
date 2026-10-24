@@ -4,7 +4,7 @@ import { getSettings } from "@/features/settings/queries";
 import type { Rates } from "@/lib/currency-display";
 
 /** The visitor's display currency (06 §2): a cookie set by the currency switcher. */
-export const CURRENCY_COOKIE = "lintel_currency";
+export const CURRENCY_COOKIE = "keyline_currency";
 
 /** Rates from Settings -> Market (cached with the settings). */
 export async function siteRates(): Promise<Rates> {

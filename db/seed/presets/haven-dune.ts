@@ -79,9 +79,9 @@ export const havenDune: SeedPreset = {
     },
   },
   admins: [
-    { email: "admin@demo.lintel", name: "Demo Owner" },
-    { email: "staff@demo.lintel", name: "Demo Staff" },
-    { email: "viewer@demo.lintel", name: "Demo Viewer", readOnly: true },
+    { email: "admin@demo.keyline", name: "Demo Owner" },
+    { email: "staff@demo.keyline", name: "Demo Staff" },
+    { email: "viewer@demo.keyline", name: "Demo Viewer", readOnly: true },
   ],
   propertyTypes: [
     {

@@ -3,7 +3,7 @@ import { base64UrlToBytes } from "@/lib/crypto";
 
 /**
  * Google Calendar and Google OAuth (13 §1), behind an interface so tests use a fake. Only the
- * calls Lintel needs: the OAuth code exchange and refresh, the agent's events (for busy times)
+ * calls Keyline needs: the OAuth code exchange and refresh, the agent's events (for busy times)
  * and creating, updating and deleting a viewing's event.
  */
 export type TokenResponse = {
@@ -118,7 +118,7 @@ const eventBody = (e: CalendarEvent) => ({
   location: e.location,
   start: { dateTime: e.start.toISOString() },
   end: { dateTime: e.end.toISOString() },
-  extendedProperties: { private: { lintelViewingId: e.viewingId } },
+  extendedProperties: { private: { keylineViewingId: e.viewingId } },
 });
 
 export const googleCalendarApi: CalendarApi = {
@@ -184,7 +184,7 @@ export const googleCalendarApi: CalendarApi = {
       };
       for (const item of body.items ?? []) {
         if (item.status === "cancelled" || item.transparency === "transparent") continue;
-        if (item.extendedProperties?.private?.lintelViewingId) continue;
+        if (item.extendedProperties?.private?.keylineViewingId) continue;
         if (item.attendees?.some((a) => a.self && a.responseStatus === "declined")) continue;
         if (item.start?.dateTime && item.end?.dateTime)
           out.push({ start: new Date(item.start.dateTime), end: new Date(item.end.dateTime) });

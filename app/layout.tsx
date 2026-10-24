@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
       other: seo.bingVerification ? { "msvalidate.01": seo.bingVerification } : undefined,
     },
     robots:
-      seo.allowIndexing && process.env.LINTEL_ENV !== "staging"
+      seo.allowIndexing && process.env.KEYLINE_ENV !== "staging"
         ? undefined
         : { index: false, follow: false },
   };
@@ -53,7 +53,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         {/* Design tokens from Settings -> Branding (validated values only, see lib/tokens.ts). */}
-        <style id="lintel-tokens" dangerouslySetInnerHTML={{ __html: brandingCss(branding) }} />
+        <style id="keyline-tokens" dangerouslySetInnerHTML={{ __html: brandingCss(branding) }} />
       </head>
       <body>
         <TooltipProvider delayDuration={200}>{children}</TooltipProvider>

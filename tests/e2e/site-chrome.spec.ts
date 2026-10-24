@@ -39,7 +39,7 @@ test("cookie banner: first visit, necessary only, reopened from the footer", asy
   await banner.getByRole("checkbox", { name: "Analytics" }).check();
   await banner.getByRole("button", { name: "Save choices" }).click();
   await expect(banner).toBeHidden();
-  const cookie = (await context.cookies()).find((c) => c.name === "lintel_consent");
+  const cookie = (await context.cookies()).find((c) => c.name === "keyline_consent");
   expect(cookie?.value).toMatch(/^v1\.a1\.m0\.\d+$/);
   await context.close();
 });
@@ -85,7 +85,7 @@ test("header: the primary button and the currency switcher come from settings", 
   await header.getByRole("button", { name: "Currency: AED" }).click();
   await page.getByRole("menuitemradio", { name: "USD · example rate" }).click();
   await expect(header.getByRole("button", { name: "Currency: USD" })).toBeVisible();
-  const cookie = (await page.context().cookies()).find((c) => c.name === "lintel_currency");
+  const cookie = (await page.context().cookies()).find((c) => c.name === "keyline_currency");
   expect(cookie?.value).toBe("USD");
 });
 
@@ -104,7 +104,8 @@ test("phone: the menu holds the button and the currency choice @phone", async ({
   await sheet.getByText("USD · example rate").click();
   await expect
     .poll(
-      async () => (await page.context().cookies()).find((c) => c.name === "lintel_currency")?.value,
+      async () =>
+        (await page.context().cookies()).find((c) => c.name === "keyline_currency")?.value,
     )
     .toBe("USD");
   await expect(sheet.getByRole("radio", { name: "USD · example rate" })).toBeChecked();

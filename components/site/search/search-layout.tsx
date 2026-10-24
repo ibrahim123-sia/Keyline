@@ -16,8 +16,8 @@ import type { SearchFilters } from "@/features/search/params";
 import { search as t } from "@/lib/i18n/dictionaries/search";
 import { SearchMap } from "./search-map";
 
-const LIST_ONLY_KEY = "lintel.search.listOnly";
-const STORAGE_EVENT = "lintel:storage";
+const LIST_ONLY_KEY = "keyline.search.listOnly";
+const STORAGE_EVENT = "keyline:storage";
 
 /** A boolean remembered in this browser (false on the server and in private mode). */
 function useStoredFlag(key: string): [boolean, (value: boolean) => void] {

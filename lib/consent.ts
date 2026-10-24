@@ -3,11 +3,11 @@
  * the visitor agrees. Stored in one small cookie the server and the browser can both read.
  * Client-safe.
  */
-export const CONSENT_COOKIE = "lintel_consent";
+export const CONSENT_COOKIE = "keyline_consent";
 /** Fired on window when the visitor saves a choice. */
-export const CONSENT_EVENT = "lintel:consent";
+export const CONSENT_EVENT = "keyline:consent";
 /** Fired to reopen the banner (the footer's "Cookie settings" link). */
-export const COOKIE_SETTINGS_EVENT = "lintel:cookie-settings";
+export const COOKIE_SETTINGS_EVENT = "keyline:cookie-settings";
 /** Ask again after six months. */
 export const CONSENT_MAX_AGE = 60 * 60 * 24 * 182;
 

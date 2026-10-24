@@ -5,13 +5,13 @@ import { useEffect, useRef, useState, useTransition } from "react";
 
 /** Messages between the page builder (parent window) and its preview (this frame). */
 export type PreviewMessage =
-  | { source: "lintel-preview"; type: "ready" }
-  | { source: "lintel-preview"; type: "select"; id: string }
-  | { source: "lintel-preview"; type: "refreshed" };
+  | { source: "keyline-preview"; type: "ready" }
+  | { source: "keyline-preview"; type: "select"; id: string }
+  | { source: "keyline-preview"; type: "refreshed" };
 
 export type EditorMessage =
-  | { source: "lintel-editor"; type: "refresh" }
-  | { source: "lintel-editor"; type: "focus"; id: string | null; scroll: boolean };
+  | { source: "keyline-editor"; type: "refresh" }
+  | { source: "keyline-editor"; type: "focus"; id: string | null; scroll: boolean };
 
 const SELECTED = "data-selected";
 
@@ -40,7 +40,7 @@ export function PreviewBridge({ emptyLabel }: { emptyLabel: string }) {
       e.stopPropagation();
       if (section)
         post({
-          source: "lintel-preview",
+          source: "keyline-preview",
           type: "select",
           id: section.getAttribute("data-section-id")!,
         });
@@ -49,7 +49,7 @@ export function PreviewBridge({ emptyLabel }: { emptyLabel: string }) {
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== origin || e.source !== window.parent) return;
       const msg = e.data as EditorMessage | null;
-      if (!msg || msg.source !== "lintel-editor") return;
+      if (!msg || msg.source !== "keyline-editor") return;
       if (msg.type === "refresh") startTransition(() => router.refresh());
       if (msg.type === "focus") {
         setSelected(msg.id);
@@ -62,7 +62,7 @@ export function PreviewBridge({ emptyLabel }: { emptyLabel: string }) {
     document.addEventListener("click", onClick, true);
     document.addEventListener("submit", onSubmit, true);
     window.addEventListener("message", onMessage);
-    post({ source: "lintel-preview", type: "ready" });
+    post({ source: "keyline-preview", type: "ready" });
     return () => {
       document.removeEventListener("click", onClick, true);
       document.removeEventListener("submit", onSubmit, true);
@@ -79,7 +79,7 @@ export function PreviewBridge({ emptyLabel }: { emptyLabel: string }) {
         ?.setAttribute(SELECTED, "");
     if (wasPending.current && !pending && window.parent !== window)
       window.parent.postMessage(
-        { source: "lintel-preview", type: "refreshed" } satisfies PreviewMessage,
+        { source: "keyline-preview", type: "refreshed" } satisfies PreviewMessage,
         window.location.origin,
       );
     wasPending.current = pending;
@@ -91,11 +91,11 @@ export function PreviewBridge({ emptyLabel }: { emptyLabel: string }) {
     <style
       dangerouslySetInnerHTML={{
         __html: `
-.lintel-preview-section { position: relative; cursor: pointer; }
-.lintel-preview-section:hover { outline: 2px dashed var(--color-accent); outline-offset: -2px; }
-.lintel-preview-section[${SELECTED}] { outline: 3px solid var(--color-accent); outline-offset: -3px; }
-.lintel-preview-section:empty { display: flex; min-height: 96px; margin: 8px; align-items: center; justify-content: center; border: 2px dashed var(--color-border); border-radius: 12px; }
-.lintel-preview-section:empty::before { content: attr(data-section-label) " · ${label}"; color: var(--color-text-muted); font-size: 14px; }`,
+.keyline-preview-section { position: relative; cursor: pointer; }
+.keyline-preview-section:hover { outline: 2px dashed var(--color-accent); outline-offset: -2px; }
+.keyline-preview-section[${SELECTED}] { outline: 3px solid var(--color-accent); outline-offset: -3px; }
+.keyline-preview-section:empty { display: flex; min-height: 96px; margin: 8px; align-items: center; justify-content: center; border: 2px dashed var(--color-border); border-radius: 12px; }
+.keyline-preview-section:empty::before { content: attr(data-section-label) " · ${label}"; color: var(--color-text-muted); font-size: 14px; }`,
       }}
     />
   );

@@ -1,6 +1,6 @@
-# Contributing to Lintel
+# Contributing to Keyline
 
-Thanks for working on Lintel. This guide covers how changes are made, checked and merged.
+Thanks for working on Keyline. This guide covers how changes are made, checked and merged.
 For local setup, see the [README](../README.md#getting-started).
 
 ## Ground rules

@@ -9,7 +9,7 @@ export type PendingAction =
   | { kind: "save-home"; propertyId?: string; projectId?: string }
   | { kind: "save-search"; query: string; name: string };
 
-const KEY = "lintel.pending";
+const KEY = "keyline.pending";
 const DAY = 86_400_000;
 
 export function setPending(action: PendingAction) {

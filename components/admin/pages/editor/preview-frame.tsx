@@ -45,8 +45,8 @@ export function PreviewFrame({
     frame.current?.contentWindow?.postMessage(msg, window.location.origin);
 
   useImperativeHandle(ref, () => ({
-    refresh: () => post({ source: "lintel-editor", type: "refresh" }),
-    focus: (id, scroll) => post({ source: "lintel-editor", type: "focus", id, scroll }),
+    refresh: () => post({ source: "keyline-editor", type: "refresh" }),
+    focus: (id, scroll) => post({ source: "keyline-editor", type: "focus", id, scroll }),
   }));
 
   useEffect(() => {
@@ -64,11 +64,11 @@ export function PreviewFrame({
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== window.location.origin || e.source !== frame.current?.contentWindow) return;
       const msg = e.data as PreviewMessage | null;
-      if (!msg || msg.source !== "lintel-preview") return;
+      if (!msg || msg.source !== "keyline-preview") return;
       if (msg.type === "select") onSelectRef.current(msg.id);
       if (msg.type === "ready") {
         setLoading(false);
-        post({ source: "lintel-editor", type: "focus", id: selectedRef.current, scroll: false });
+        post({ source: "keyline-editor", type: "focus", id: selectedRef.current, scroll: false });
       }
     };
     window.addEventListener("message", onMessage);

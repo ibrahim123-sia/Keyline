@@ -4,7 +4,7 @@
  */
 export const site = {
   meta: {
-    poweredBy: "Powered by Lintel",
+    poweredBy: "Powered by Keyline",
   },
   a11y: {
     skipToContent: "Skip to content",

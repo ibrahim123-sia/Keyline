@@ -15,7 +15,7 @@ export default async function MessageTemplatesPage() {
     <>
       <PageHeader
         title="Message templates"
-        description="The emails and WhatsApp messages Lintel sends to visitors and to your team. Change the wording, turn a message off, or go back to the built-in text at any time."
+        description="The emails and WhatsApp messages Keyline sends to visitors and to your team. Change the wording, turn a message off, or go back to the built-in text at any time."
         breadcrumb={[
           { label: "Settings", href: "/admin/settings" },
           { label: "Message templates" },

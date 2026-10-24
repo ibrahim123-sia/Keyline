@@ -14,7 +14,7 @@ export function db(): Pool {
 }
 
 export function uniqueEmail(prefix: string): string {
-  return `${prefix}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6)}@e2e.lintel`;
+  return `${prefix}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6)}@e2e.keyline`;
 }
 
 /** Runs the real setup command (`pnpm admin:create`) against the e2e database. */
@@ -167,7 +167,7 @@ export async function clearListings(): Promise<void> {
 export const decidedCookies = {
   cookies: [
     {
-      name: "lintel_consent",
+      name: "keyline_consent",
       value: "v1.a0.m0.1760000000",
       domain: "localhost",
       path: "/",
@@ -240,7 +240,7 @@ export async function seedDemo(request: APIRequestContext): Promise<void> {
           APP_URL: appUrl,
           SECRETS_ENCRYPTION_KEY:
             process.env.SECRETS_ENCRYPTION_KEY ?? "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
-          LINTEL_ENV: "development",
+          KEYLINE_ENV: "development",
           JOBS_DRIVER: "manual",
         },
       },

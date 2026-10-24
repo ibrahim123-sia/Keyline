@@ -20,7 +20,7 @@ describe("cookie consent", () => {
 
   it("finds the cookie among others and answers per category", () => {
     const c = consentFromCookieString(
-      "a=1; lintel_consent=v1.a0.m1.1760000000; lintel_currency=USD",
+      "a=1; keyline_consent=v1.a0.m1.1760000000; keyline_currency=USD",
     );
     expect(c).toMatchObject({ analytics: false, marketing: true });
     expect(allows(c, "marketing")).toBe(true);

@@ -56,7 +56,7 @@ Home, About, Contact, Sell with us, Off-plan guide, Privacy policy, Terms, Cooki
 
 ## 2. Menus and footer
 - **Menus:** header, mobile, footer columns 1–3. Items: label, link type (page, URL, search preset, area, project, blog category), open in new tab, children (one level for header dropdowns). Drag and drop tree.
-- **Footer:** short text, logo, columns (each tied to a menu), social links (from Contact settings), legal line, licence number, newsletter on/off, "Powered by Lintel" (cannot be removed in the demo build).
+- **Footer:** short text, logo, columns (each tied to a menu), social links (from Contact settings), legal line, licence number, newsletter on/off, "Powered by Keyline" (cannot be removed in the demo build).
 - **Announcement bar:** optional top bar text + link + date range.
 
 ## 3. Blog (Admin → Website → Blog)

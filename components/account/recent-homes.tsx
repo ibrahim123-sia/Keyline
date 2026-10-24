@@ -6,7 +6,7 @@ import { RecentlyViewedCards } from "@/components/site/property/recently-viewed-
 
 const read = () => {
   try {
-    const raw = JSON.parse(localStorage.getItem("lintel.recent") ?? "[]");
+    const raw = JSON.parse(localStorage.getItem("keyline.recent") ?? "[]");
     return Array.isArray(raw)
       ? (raw.filter((x) => typeof x === "string").slice(0, 6) as string[])
       : [];
@@ -16,7 +16,7 @@ const read = () => {
 };
 let cache: { raw: string | null; ids: string[] } = { raw: null, ids: [] };
 const snapshot = () => {
-  const raw = typeof localStorage === "undefined" ? null : localStorage.getItem("lintel.recent");
+  const raw = typeof localStorage === "undefined" ? null : localStorage.getItem("keyline.recent");
   if (raw !== cache.raw) cache = { raw, ids: read() };
   return cache.ids;
 };

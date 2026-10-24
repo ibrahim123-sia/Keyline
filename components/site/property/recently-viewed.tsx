@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { CardContext } from "@/components/site/listings/listing-card";
 import { useHydrated } from "@/lib/use-hydrated";
 
-const KEY = "lintel.recent";
+const KEY = "keyline.recent";
 const MAX = 12;
 
 // The cards (and the listing card code) load only when the section is about to be seen.

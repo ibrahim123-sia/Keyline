@@ -29,7 +29,7 @@ type FetchHandler = { fetch(req: Request, env: Env, ctx: Ctx): Promise<Response>
 const app = handler as FetchHandler;
 
 function internalRequest(path: string, env: Env, body: unknown): Request {
-  return new Request(`https://lintel.internal${path}`, {
+  return new Request(`https://keyline.internal${path}`, {
     method: "POST",
     headers: {
       "content-type": "application/json",

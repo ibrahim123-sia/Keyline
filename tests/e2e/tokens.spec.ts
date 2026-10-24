@@ -39,7 +39,7 @@ test("changing a colour token in the database restyles the site after revalidati
   request,
 }) => {
   await page.goto("/");
-  const before = await page.locator("#lintel-tokens").textContent();
+  const before = await page.locator("#keyline-tokens").textContent();
   expect(before).toContain("--color-accent:#A9502F");
 
   await setAccent("#2F6FA9");
@@ -52,7 +52,7 @@ test("changing a colour token in the database restyles the site after revalidati
   await page.goto("/");
   // A <style> element has no rendered text, so read textContent.
   await expect
-    .poll(() => page.locator("#lintel-tokens").textContent())
+    .poll(() => page.locator("#keyline-tokens").textContent())
     .toContain("--color-accent:#2F6FA9");
   const accent = await page.evaluate(() =>
     getComputedStyle(document.documentElement).getPropertyValue("--color-accent").trim(),

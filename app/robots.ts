@@ -9,7 +9,7 @@ import { env } from "@/lib/env";
  */
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const seo = await getSettings("seo");
-  if (!seo.allowIndexing || env().LINTEL_ENV === "staging")
+  if (!seo.allowIndexing || env().KEYLINE_ENV === "staging")
     return { rules: { userAgent: "*", disallow: "/" } };
   return {
     rules: {

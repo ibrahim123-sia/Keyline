@@ -162,7 +162,7 @@ export async function integrationStatus(db?: DbOrTx): Promise<IntegrationState[]
 export function runtimeInfo() {
   const e = env();
   return {
-    environment: e.LINTEL_ENV,
+    environment: e.KEYLINE_ENV,
     storage: e.STORAGE_DRIVER === "r2" ? "Cloudflare R2" : "Local disk",
     jobs:
       e.JOBS_DRIVER === "queue"

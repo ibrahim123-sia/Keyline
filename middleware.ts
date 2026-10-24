@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
   );
 
   if ((isAdmin && !isPublicAdmin) || isAccount) {
-    const hasSession = Boolean(getSessionCookie(request, { cookiePrefix: "lintel" }));
+    const hasSession = Boolean(getSessionCookie(request, { cookiePrefix: "keyline" }));
     if (!hasSession) {
       const url = request.nextUrl.clone();
       url.pathname = isAdmin ? "/admin/sign-in" : "/sign-in";
@@ -44,7 +44,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
   }
 
   const headers = new Headers(request.headers);
-  headers.set("x-lintel-path", pathname + search);
+  headers.set("x-keyline-path", pathname + search);
   const response = NextResponse.next({ request: { headers } });
   if (!isAdmin) {
     const consent = parseConsent(request.cookies.get(CONSENT_COOKIE)?.value);

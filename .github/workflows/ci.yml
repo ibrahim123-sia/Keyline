@@ -123,7 +123,7 @@ jobs:
       DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
       APP_URL: ${{ vars.STAGING_APP_URL }}
       BETTER_AUTH_URL: ${{ vars.STAGING_APP_URL }}
-      LINTEL_ENV: staging
+      KEYLINE_ENV: staging
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
     steps:
       - uses: actions/checkout@v5

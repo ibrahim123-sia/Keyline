@@ -89,7 +89,7 @@ export function DataTable<T>({
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(`lintel.table.${tableId}.columns`);
+      const saved = localStorage.getItem(`keyline.table.${tableId}.columns`);
       if (saved) setVisibility(JSON.parse(saved) as VisibilityState);
     } catch {
       /* private mode: use defaults */
@@ -134,7 +134,7 @@ export function DataTable<T>({
       setVisibility((prev) => {
         const next = typeof updater === "function" ? updater(prev) : updater;
         try {
-          localStorage.setItem(`lintel.table.${tableId}.columns`, JSON.stringify(next));
+          localStorage.setItem(`keyline.table.${tableId}.columns`, JSON.stringify(next));
         } catch {
           /* ignore */
         }

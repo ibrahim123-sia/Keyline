@@ -1,6 +1,6 @@
 /** Admin portal strings. */
 export const admin = {
-  brand: "Lintel",
+  brand: "Keyline",
   nav: {
     dashboard: "Dashboard",
     inbox: "Inbox",

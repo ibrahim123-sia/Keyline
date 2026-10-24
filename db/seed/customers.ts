@@ -16,9 +16,9 @@ import { newId } from "@/lib/ids";
  * fictional people with sign-in passwords printed once by the seed command.
  */
 const people = [
-  { email: "mina@demo.lintel", name: "Mina Park", phone: "+971502220001" },
-  { email: "omar.customer@demo.lintel", name: "Omar Haddad", phone: "+971502220002" },
-  { email: "lucy@demo.lintel", name: "Lucy Grant", phone: "+447700900321" },
+  { email: "mina@demo.keyline", name: "Mina Park", phone: "+971502220001" },
+  { email: "omar.customer@demo.keyline", name: "Omar Haddad", phone: "+971502220002" },
+  { email: "lucy@demo.keyline", name: "Lucy Grant", phone: "+447700900321" },
 ];
 
 const searches = [
