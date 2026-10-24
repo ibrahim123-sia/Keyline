@@ -18,6 +18,7 @@ import { loadSettings } from "@/features/settings/queries";
 import { queueViewingReminders } from "@/features/viewings/notify";
 import { refreshCalendarBusy } from "@/features/integrations/google-calendar/calendar";
 import { newId } from "@/lib/ids";
+import { log } from "@/lib/log";
 import { purgeExpired } from "@/lib/rate-limit";
 import { computeLastMonthPriceStats } from "@/features/price-trends/compute";
 import { cleanupOwnerPhotos } from "@/features/valuation/photos";
@@ -253,7 +254,7 @@ export async function runCron(
       results.push({ task: task.name, ok: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error(JSON.stringify({ level: "error", cron: task.name, error: message }));
+      log("error", "cron.failed", { cron: task.name, error: message });
       if (logged) {
         await db
           .update(jobRuns)

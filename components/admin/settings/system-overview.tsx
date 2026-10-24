@@ -66,7 +66,7 @@ export function SystemOverview({
   jobNames,
   readOnly,
 }: {
-  runtime: { environment: string; storage: string; jobs: string };
+  runtime: { environment: string; release: string | null; storage: string; jobs: string };
   summary: {
     queued: number;
     running: number;
@@ -74,6 +74,8 @@ export function SystemOverview({
     failedDay: number;
     succeededDay: number;
     retrying: number;
+    overdue: number;
+    stuck: number;
   };
   integrations: IntegrationState[];
   ai: { spentCents: number; limitCents: number };
@@ -81,6 +83,7 @@ export function SystemOverview({
     name: string;
     schedule: string;
     lastRunAt: string | null;
+    late: boolean;
     lastStatus: JobStatus | null;
     lastError: string | null;
   }>;
@@ -183,7 +186,25 @@ export function SystemOverview({
           <dt className="text-text-muted">Background jobs</dt>
           <dd className="font-semibold text-ink">{runtime.jobs}</dd>
         </div>
+        {runtime.release && (
+          <div className="flex gap-1.5">
+            <dt className="text-text-muted">Release</dt>
+            <dd className="font-mono font-semibold text-ink">{runtime.release}</dd>
+          </div>
+        )}
       </dl>
+
+      {(summary.overdue > 0 || summary.stuck > 0) && (
+        <p
+          role="alert"
+          className="rounded-lg border border-danger/40 bg-surface p-3 text-[13px] text-danger"
+        >
+          {summary.overdue > 0 &&
+            `${summary.overdue} job${summary.overdue === 1 ? " has" : "s have"} waited more than 5 minutes past its time: check that the every-minute trigger is running. `}
+          {summary.stuck > 0 &&
+            `${summary.stuck} job${summary.stuck === 1 ? " has" : "s have"} been running for more than 15 minutes.`}
+        </p>
+      )}
 
       <section
         aria-label="Job queue"
@@ -286,6 +307,11 @@ export function SystemOverview({
               <span className="flex items-center gap-2 text-text-muted">
                 {t.lastRunAt ? when.format(new Date(t.lastRunAt)) : "Not run yet"}
                 {t.lastStatus && <StatusPill status={t.lastStatus} />}
+                {t.late && (
+                  <span className="rounded-full bg-danger/10 px-2 py-0.5 text-[11.5px] font-semibold text-danger">
+                    Late
+                  </span>
+                )}
               </span>
               {t.lastError && <span className="w-full text-[12px] text-danger">{t.lastError}</span>}
             </li>

@@ -170,7 +170,7 @@ describe("structured logs (14 §5)", () => {
       requestId: "r1",
       email: "[redacted]",
       contact: { phone: "[redacted]", lastName: "[redacted]", stage: "new" },
-      error: { name: "Error", message: "boom" },
+      error: expect.objectContaining({ name: "Error", message: "boom" }),
     });
   });
 });

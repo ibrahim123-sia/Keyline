@@ -1,4 +1,5 @@
 import "server-only";
+import { log } from "@/lib/log";
 import { unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 import { AuthError, type AdminCheck, type AdminContext } from "@/lib/permissions";
@@ -35,7 +36,7 @@ export function toActionError(err: unknown): ActionResult<never> {
   if (err instanceof ActionError) {
     return { ok: false, error: err.message, code: err.code, fieldErrors: err.fieldErrors };
   }
-  console.error("[action] unexpected error", err);
+  log("error", "action.unexpected_error", { error: err instanceof Error ? err : String(err) });
   return { ok: false, error: "Something went wrong. Please try again.", code: "INTERNAL" };
 }
 

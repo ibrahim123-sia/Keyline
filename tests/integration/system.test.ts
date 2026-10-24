@@ -9,6 +9,8 @@ import { recordSecretTest } from "@/features/settings/secrets";
 import { retryJobRuns } from "@/features/system/actions";
 import {
   cronStatus,
+  isCronLate,
+  scheduleMinutes,
   integrationStatus,
   jobSortable,
   jobSummary,
@@ -72,6 +74,32 @@ describe("system page", () => {
     const [row] = await db.select().from(jobRuns).where(eq(jobRuns.id, dead));
     expect(row).toMatchObject({ status: "queued" });
     expect(row!.maxAttempts).toBeGreaterThan(row!.attempts);
+  });
+
+  it("flags jobs nobody picked up, jobs stuck running and scheduled tasks that are late", async () => {
+    const db = await getDb();
+    const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000);
+    await db.insert(jobRuns).values([
+      { name: "email.send", status: "queued", attempts: 0, runAfter: ago(12) },
+      { name: "email.send", status: "queued", attempts: 0, runAfter: ago(1) },
+      { name: "media.process", status: "running", attempts: 1, startedAt: ago(40) },
+      // The hourly listing task last ran three hours ago; the daily one an hour ago.
+      { name: "cron:listings.daily", status: "succeeded", attempts: 1, finishedAt: ago(60) },
+    ]);
+    expect(await jobSummary()).toMatchObject({ queued: 2, overdue: 1, running: 1, stuck: 1 });
+    const cron = await cronStatus();
+    expect(cron.every((t) => typeof t.late === "boolean")).toBe(true);
+    expect(cron.find((t) => t.name === "listings.daily")?.late ?? false).toBe(false);
+    expect(isCronLate("every hour", ago(180), new Date())).toBe(true);
+    expect(isCronLate("every hour", ago(30), new Date())).toBe(false);
+    expect(isCronLate("daily at 06:00", ago(26 * 60), new Date())).toBe(false);
+    expect(isCronLate("daily at 06:00", ago(50 * 60), new Date())).toBe(true);
+    expect(isCronLate("daily at 06:00", null, new Date())).toBe(false);
+    expect(
+      ["every minute", "every 15 minutes", "Mondays at 06:00", "monthly on the 1st at 04:00"].map(
+        scheduleMinutes,
+      ),
+    ).toEqual([1, 15, 7 * 24 * 60, 31 * 24 * 60]);
   });
 
   it("reports each integration as off, missing a key, untested, failing or working", async () => {

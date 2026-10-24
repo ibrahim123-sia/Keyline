@@ -26,6 +26,10 @@ export async function jobSummary(db?: DbOrTx) {
       failedDay: sql<number>`count(*) filter (where ${jobRuns.status} = 'failed' and ${jobRuns.updatedAt} >= ${dayAgo})::int`,
       succeededDay: sql<number>`count(*) filter (where ${jobRuns.status} = 'succeeded' and ${jobRuns.finishedAt} >= ${dayAgo})::int`,
       retrying: sql<number>`count(*) filter (where ${jobRuns.status} = 'queued' and ${jobRuns.lastError} is not null)::int`,
+      // Due for more than 5 minutes and not picked up: the every-minute trigger is not running.
+      overdue: sql<number>`count(*) filter (where ${jobRuns.status} = 'queued' and ${jobRuns.runAfter} < ${new Date(Date.now() - 5 * 60_000)})::int`,
+      // Running for more than 15 minutes: a worker died mid-job (the runner re-queues them).
+      stuck: sql<number>`count(*) filter (where ${jobRuns.status} = 'running' and ${jobRuns.startedAt} < ${new Date(Date.now() - 15 * 60_000)})::int`,
     })
     .from(jobRuns)
     .where(eq(jobRuns.agencyId, currentAgencyId()));
@@ -97,6 +101,27 @@ export async function listJobRuns(
   };
 }
 
+/** Minutes between runs, read from a task's schedule text ("every 15 minutes", "daily at 06:00"). */
+export function scheduleMinutes(schedule: string): number | null {
+  const s = schedule.toLowerCase();
+  const every = s.match(/every (\d+) minutes/);
+  if (every) return Number(every[1]);
+  if (s.includes("every minute")) return 1;
+  if (s.includes("every hour")) return 60;
+  if (s.startsWith("daily")) return 24 * 60;
+  if (s.startsWith("weekly") || /^(mon|tues|wednes|thurs|fri|satur|sun)days/.test(s))
+    return 7 * 24 * 60;
+  if (s.startsWith("monthly")) return 31 * 24 * 60;
+  return null;
+}
+
+/** Late: no run for twice the task's interval (plus 5 minutes' grace) since its last run. */
+export function isCronLate(schedule: string, lastRunAt: Date | null, now: Date): boolean {
+  const minutes = scheduleMinutes(schedule);
+  if (minutes == null || !lastRunAt) return false;
+  return now.getTime() - lastRunAt.getTime() > (2 * minutes + 5) * 60_000;
+}
+
 /** Each scheduled task and its latest logged run (the every-minute runner is not logged). */
 export async function cronStatus(db?: DbOrTx) {
   const conn = db ?? (await getDb());
@@ -114,12 +139,15 @@ export async function cronStatus(db?: DbOrTx) {
     .where(and(eq(jobRuns.agencyId, currentAgencyId()), inArray(jobRuns.name, names)))
     .orderBy(jobRuns.name, desc(jobRuns.createdAt));
   const byName = new Map(latest.map((r) => [r.name, r]));
+  const now = new Date();
   return tasks.map((t) => {
     const last = byName.get(`cron:${t.name}`);
+    const lastAt = last ? (last.finishedAt ?? last.createdAt) : null;
     return {
       name: t.name,
       schedule: t.schedule,
-      lastRunAt: last ? (last.finishedAt ?? last.createdAt).toISOString() : null,
+      lastRunAt: lastAt?.toISOString() ?? null,
+      late: !t.quiet && isCronLate(t.schedule, lastAt, now),
       lastStatus: last?.status ?? null,
       lastError: last?.lastError ?? null,
     };
@@ -165,6 +193,8 @@ export function runtimeInfo() {
   const e = env();
   return {
     environment: e.KEYLINE_ENV,
+    /** Release tag of this deploy (also on every log line, lib/log.ts). */
+    release: process.env.KEYLINE_RELEASE || null,
     storage: e.STORAGE_DRIVER === "r2" ? "Cloudflare R2" : "Local disk",
     jobs:
       e.JOBS_DRIVER === "queue"

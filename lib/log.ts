@@ -2,7 +2,7 @@
  * Structured logs (14 §5): one JSON line per event, with the request id when there is one,
  * read by Cloudflare's Workers logs (or the terminal locally). No personal data: fields whose
  * names look personal or secret are replaced before the line is written, and errors keep only
- * their name and message.
+ * their name, message and stack.
  */
 export type LogLevel = "info" | "warn" | "error";
 
@@ -12,7 +12,12 @@ const SENSITIVE =
   /email|phone|password|token|secret|authorization|cookie|^ip$|^address$|^(first|last|full|contact)name$/i;
 
 function clean(value: unknown, depth = 0): unknown {
-  if (value instanceof Error) return { name: value.name, message: value.message.slice(0, 1000) };
+  if (value instanceof Error)
+    return {
+      name: value.name,
+      message: value.message.slice(0, 1000),
+      ...(value.stack ? { stack: value.stack.slice(0, 2000) } : {}),
+    };
   if (typeof value === "string") return value.slice(0, 1000);
   if (value === null || typeof value !== "object") return value;
   if (depth >= 3) return "[object]";
