@@ -25,7 +25,16 @@ import { useAction } from "@/lib/use-action";
 
 type Editing = { id: string | null; shortCode: string | null; data: UtmLinkInput };
 
-const pageSuggestions = ["/", "/buy", "/rent", "/off-plan", "/projects", "/agents"];
+const pageSuggestions = [
+  "/",
+  "/buy",
+  "/rent",
+  "/off-plan",
+  "/projects",
+  "/agents",
+  "/tools/mortgage",
+  "/tools/rental-returns",
+];
 
 async function copy(text: string) {
   try {

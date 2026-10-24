@@ -168,7 +168,15 @@ describe("sitemap and robots", () => {
       { name: "Sara Khan", slug: "sara-khan", email: "sara@agency.example" },
       { name: "Left", slug: "left", email: "left@agency.example", isActive: false },
     ]);
-    expect(await paths("pages")).toEqual(["/", "/about", "/projects", "/developers", "/agents"]);
+    expect(await paths("pages")).toEqual([
+      "/",
+      "/about",
+      "/projects",
+      "/developers",
+      "/agents",
+      "/tools/mortgage",
+      "/tools/rental-returns",
+    ]);
     expect(await paths("projects")).toEqual(["/projects/pier-seven"]);
     expect(await paths("posts")).toEqual([
       "/insights",

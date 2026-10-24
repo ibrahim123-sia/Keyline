@@ -26,6 +26,9 @@ export type SitemapSection = (typeof sitemapSections)[number];
 
 export type SitemapUrl = { path: string; lastModified: string | null };
 
+/** Public calculator pages, listed in the sitemap's pages section. */
+export const toolPaths = ["/tools/mortgage", "/tools/rental-returns"] as const;
+
 /** Google's limit per sitemap file. */
 export const SITEMAP_CHUNK = 50_000;
 
@@ -165,6 +168,8 @@ async function pageUrls(db: DbOrTx, rules: SitemapRules, origin: string): Promis
   if (any?.projects) hubs.push({ path: "/projects", lastModified: null });
   if (any?.developers) hubs.push({ path: "/developers", lastModified: null });
   if (any?.agents) hubs.push({ path: "/agents", lastModified: null });
+  // The buyer and investor tools (11 §1, §2) are always there.
+  for (const path of toolPaths) hubs.push({ path, lastModified: null });
 
   // The home page is always listed, with its own date when it is a builder page.
   const home = own.find((u) => u.path === "/");

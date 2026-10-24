@@ -110,6 +110,8 @@ export function landingText(path: string): string {
   if (path.startsWith("/agents")) return "on an agent's page";
   if (path.startsWith("/developers")) return "on a developer's page";
   if (path.startsWith("/s/")) return "on a shortlist we sent";
+  if (path.startsWith("/tools/mortgage")) return "on the mortgage calculator";
+  if (path.startsWith("/tools/rental-returns")) return "on the rental return simulator";
   return `on ${path}`;
 }
 
