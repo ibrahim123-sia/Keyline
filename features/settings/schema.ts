@@ -609,6 +609,19 @@ export const notificationsSchema = z.object({
   admins: objectOf(notificationEvents, channelToggle).default(channelDefaults(true, false)),
   agents: objectOf(notificationEvents, channelToggle).default(channelDefaults(true, true)),
   dailySummaryTime: hhmm.default("08:00"),
+  /**
+   * The weekly report email (09 §7, 13 §2 "Weekly (Mon): weekly report email"): the overview
+   * of the 7 days before, on `weekday` (0 = Sunday) at `hour` agency time. No recipients means
+   * every active admin.
+   */
+  weeklyReport: z
+    .object({
+      enabled: z.boolean(),
+      weekday: z.number().int().min(0).max(6),
+      hour: z.number().int().min(0).max(23),
+      recipients: z.array(z.email()).max(20),
+    })
+    .default({ enabled: false, weekday: 1, hour: 8, recipients: [] }),
 });
 
 /* 11. Legal and privacy ------------------------------------------------------ */

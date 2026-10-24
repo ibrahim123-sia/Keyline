@@ -11,6 +11,7 @@ import { refreshStalePois, refreshStaleProjectPois } from "@/features/pois/dista
 import { dailyListingMaintenance } from "@/features/properties/maintenance";
 import { CRAWL_JOB } from "@/features/seo/crawl-job";
 import { pruneNotFound } from "@/features/seo/not-found-log";
+import { queueWeeklyReport } from "@/features/reports/weekly";
 import { enqueue } from "./enqueue";
 import { loadSettings } from "@/features/settings/queries";
 import { queueViewingReminders } from "@/features/viewings/notify";
@@ -145,6 +146,15 @@ export const cronTasks: CronTask[] = [
     run: async () => ({
       queued: (await enqueue(CRAWL_JOB, {}, { dedupeKey: CRAWL_JOB, maxAttempts: 2 })) !== null,
     }),
+  },
+  // Weekly report email (09 §7): checked hourly, sent on the day and hour in Settings ->
+  // Notifications, once per week (the job records each week it sent).
+  {
+    name: "reports.weekly",
+    schedule: "hourly (sends on the day and hour in Settings -> Notifications)",
+    due: (t) => t.minute === 0,
+    run: async () => queueWeeklyReport(await getDb()),
+    quiet: true,
   },
   // Monthly: distances to nearby places older than 90 days are measured again (07 §4.7).
   {

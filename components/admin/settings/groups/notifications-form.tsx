@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminField } from "@/components/admin/fields";
+import { AdminField, ListField, SelectField, SwitchField } from "@/components/admin/fields";
 import { FormSection } from "@/components/admin/page-header";
 import { Input } from "@/components/ui/input";
 import {
@@ -8,7 +8,14 @@ import {
   type NotificationEvent,
   type SettingsOf,
 } from "@/features/settings/schema";
+import { reports as rt } from "@/lib/i18n/dictionaries/reports";
 import { SettingsForm } from "../settings-form";
+
+const weekdayOptions = rt.settings.weekdays.map((label, i) => ({ value: String(i), label }));
+const hourOptions = Array.from({ length: 24 }, (_, h) => ({
+  value: String(h),
+  label: `${String(h).padStart(2, "0")}:00`,
+}));
 
 const eventLabels: Record<NotificationEvent, string> = {
   newLead: "New lead",
@@ -109,6 +116,44 @@ export function NotificationsSettingsForm({
                 onChange={(e) => set({ dailySummaryTime: e.target.value })}
               />
             </AdminField>
+          </FormSection>
+
+          <FormSection title={rt.settings.title} description={rt.settings.description}>
+            <SwitchField
+              label={rt.settings.enabled}
+              checked={value.weeklyReport.enabled}
+              onChange={(enabled) => set({ weeklyReport: { ...value.weeklyReport, enabled } })}
+              error={errorFor("weeklyReport.enabled")}
+            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SelectField
+                label={rt.settings.weekday}
+                value={String(value.weeklyReport.weekday)}
+                options={weekdayOptions}
+                onChange={(v) =>
+                  set({ weeklyReport: { ...value.weeklyReport, weekday: Number(v) } })
+                }
+                error={errorFor("weeklyReport.weekday")}
+              />
+              <SelectField
+                label={rt.settings.hour}
+                value={String(value.weeklyReport.hour)}
+                options={hourOptions}
+                onChange={(v) => set({ weeklyReport: { ...value.weeklyReport, hour: Number(v) } })}
+                error={errorFor("weeklyReport.hour")}
+              />
+            </div>
+            <ListField
+              label={rt.settings.recipients}
+              description={rt.settings.recipientsHint}
+              placeholder="name@example.com, then Enter"
+              max={20}
+              value={value.weeklyReport.recipients}
+              onChange={(recipients) =>
+                set({ weeklyReport: { ...value.weeklyReport, recipients } })
+              }
+              error={errorFor("weeklyReport.recipients")}
+            />
           </FormSection>
         </>
       )}

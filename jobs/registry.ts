@@ -13,6 +13,7 @@ import { calendarSyncJob } from "@/features/integrations/google-calendar/calenda
 import { viewingNotifyJob } from "@/features/viewings/notify";
 import { seoCrawlJob } from "@/features/seo/crawl-job";
 import { roiReportJob } from "@/features/tools/roi-report";
+import { weeklyReportJob } from "@/features/reports/weekly";
 import type { JobDefinition } from "./types";
 
 /** Every queue job by name (13-integrations-and-jobs.md §2). */
@@ -33,6 +34,7 @@ const jobs: JobDefinition[] = [
   calendarSyncJob as JobDefinition,
   seoCrawlJob as JobDefinition,
   roiReportJob as JobDefinition,
+  weeklyReportJob as JobDefinition,
 ];
 
 const byName = new Map(jobs.map((j) => [j.name, j]));
