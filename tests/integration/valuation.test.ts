@@ -20,6 +20,9 @@ import {
   PhotoRefused,
   receiveOwnerPhoto,
 } from "@/features/valuation/photos";
+import { createDraftFromListingRequest } from "@/features/valuation/admin-actions";
+import { loadOwnerRequests } from "@/features/valuation/admin";
+import { auditLog } from "@/db/schema/system";
 import { runDueJobs } from "@/jobs/runner";
 import { newId } from "@/lib/ids";
 import { memoryStorage, setStorage } from "@/lib/storage";
@@ -100,6 +103,7 @@ describe("owner tools: valuation and list your property", () => {
       "email_log",
       "job_runs",
       "rate_limits",
+      "audit_log",
       "settings",
     );
     const db = await getDb();
@@ -322,5 +326,49 @@ describe("owner tools: valuation and list your property", () => {
     const tomorrow = new Date(Date.now() + 25 * 3600_000);
     expect(await cleanupOwnerPhotos(db, tomorrow)).toEqual({ removed: 2 });
     expect((await db.select().from(media).where(eq(media.id, id))).length).toBe(1);
+  });
+  it("admin: a listing request becomes a draft listing in one click, once, audited", async () => {
+    const db = await getDb();
+    const res = await sendListingRequest({ ...owner, askingPrice: 2_400_000 });
+    expect(res.ok).toBe(true);
+    const [request] = await db.select().from(listingRequests);
+    const [lead] = await db.select().from(leads);
+    const cards = await loadOwnerRequests(db, lead!.id);
+    expect(cards).toMatchObject([
+      { kind: "listing", askingPrice: "AED 2,400,000", draft: null, upgrades: ["New kitchen"] },
+    ]);
+    expect(cards[0]!.home).toContain("2-bed apartment");
+
+    const first = await createDraftFromListingRequest({ id: request!.id });
+    expect(first).toMatchObject({ ok: true, data: { created: true } });
+    if (!first.ok) return;
+    const [draft] = await db.select().from(properties).where(eq(properties.id, first.data.id));
+    expect(draft).toMatchObject({
+      status: "draft",
+      purpose: "sale",
+      propertyTypeId: ids.apt,
+      locationId: ids.marina,
+      buildingName: "Marina Gate 1",
+      beds: 2,
+      baths: 2,
+      price: 240_000_000,
+      currency: "AED",
+      agentId,
+    });
+    const [linked] = await db.select().from(listingRequests);
+    expect(linked!.propertyId).toBe(first.data.id);
+    expect(await createDraftFromListingRequest({ id: request!.id })).toMatchObject({
+      ok: true,
+      data: { id: first.data.id, created: false },
+    });
+    expect((await db.select().from(properties)).length).toBe(1);
+    const actions = (await db.select({ action: auditLog.action }).from(auditLog)).map(
+      (a) => a.action,
+    );
+    expect(actions.filter((a) => !a.startsWith("settings")).sort()).toEqual([
+      "listing_request.convert",
+      "property.create",
+    ]);
+    expect((await loadOwnerRequests(db, lead!.id))[0]!.draft?.id).toBe(first.data.id);
   });
 });

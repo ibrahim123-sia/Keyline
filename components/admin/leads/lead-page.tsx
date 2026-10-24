@@ -234,12 +234,15 @@ export function LeadPage({
   readOnly,
   sendHomes,
   shortlists,
+  ownerRequests,
 }: {
   data: Data;
   readOnly?: boolean;
   /** "Send to lead" for matching homes (shortlists). */
   sendHomes?: ReactNode;
   shortlists?: ReactNode;
+  /** Valuation and list-your-property requests (features/valuation). */
+  ownerRequests?: ReactNode;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<"note" | "call" | "email">("note");
@@ -484,6 +487,7 @@ export function LeadPage({
             </dl>
             {r.notes && <p className="text-[12.5px] text-text-muted">{r.notes}</p>}
           </Box>
+          {ownerRequests}
           <Box title="Interested in">
             {data.interest.length === 0 && data.projects.length === 0 && (
               <p className="text-text-muted">No listing or project yet.</p>

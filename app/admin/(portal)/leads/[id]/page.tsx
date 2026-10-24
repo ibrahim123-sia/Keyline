@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import { LeadPage } from "@/components/admin/leads/lead-page";
+import { OwnerRequests } from "@/components/admin/leads/owner-requests";
 import { SendHomes, Shortlists } from "@/components/admin/leads/send-homes";
 import { PageHeader } from "@/components/admin/page-header";
 import { getDb } from "@/db/client";
 import { loadLeadPage } from "@/features/leads/page-data";
+import { loadOwnerRequests } from "@/features/valuation/admin";
 import { requireAdminPage } from "@/lib/auth/guards";
 import { leads as t } from "@/lib/i18n/dictionaries/leads";
 
@@ -16,8 +18,10 @@ export default async function LeadDetailPage(props: PageProps<"/admin/leads/[id]
   const { user } = await requireAdminPage();
   const { id } = await props.params;
   if (!UUID.test(id)) notFound();
-  const data = await loadLeadPage(await getDb(), id);
+  const db = await getDb();
+  const data = await loadLeadPage(db, id);
   if (!data) notFound();
+  const ownerRequests = await loadOwnerRequests(db, id);
   const merged = data.lead.mergedIntoId;
   return (
     <>
@@ -49,6 +53,9 @@ export default async function LeadDetailPage(props: PageProps<"/admin/leads/[id]
           />
         }
         shortlists={<Shortlists items={data.shortlists} now={data.now} />}
+        ownerRequests={
+          <OwnerRequests items={ownerRequests} readOnly={user.readOnly || Boolean(merged)} />
+        }
       />
     </>
   );
