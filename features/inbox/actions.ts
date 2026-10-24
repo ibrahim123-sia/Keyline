@@ -4,6 +4,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { approvalQueue, conversations, quickReplies } from "@/db/schema/crm";
+import { signedBrochurePath } from "@/features/brochure/links";
 import {
   fillTemplate,
   isTemplateKey,
@@ -128,8 +129,9 @@ export const sendListingMessage = adminAction(
     let text: string;
     let image: { link: string; caption: string } | null = null;
     if (input.kind === "brochure") {
-      if (!files.brochureUrl) throw new ActionError("This listing has no brochure.", "VALIDATION");
-      text = `Brochure for ${listing.reference}, ${listing.title}: ${siteUrl(files.brochureUrl)}`;
+      // The uploaded PDF or the generated one (11 §4), through a link that passes the email gate.
+      const link = siteUrl(await signedBrochurePath("property", listing.id));
+      text = `Brochure for ${listing.reference}, ${listing.title}: ${link}`;
     } else {
       text = `${listing.title}\n${priceLabel(listing, formats)}\n${url}`;
       const [conv] = await db

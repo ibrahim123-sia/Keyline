@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarCheckIcon, DownloadIcon, MessageCircleIcon, PhoneIcon } from "lucide-react";
+import { CalendarCheckIcon, MessageCircleIcon, PhoneIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import type { InquiryKind } from "@/features/inquiries/schema";
 import { property as t } from "@/lib/i18n/dictionaries/property";
+import { BrochureButton } from "../brochure/brochure-button";
 import { TrackedContactLink } from "../tracked-contact-link";
 import { InquiryForm } from "./inquiry-form";
 
@@ -27,7 +28,10 @@ export type ContactInfo = {
   /** wa.me link with the reference and page address already in the message, or null. */
   whatsappHref: string | null;
   phone: string | null;
+  /** The brochure download (uploaded or generated, 11 §4) and whether it asks for an email. */
   brochureUrl: string | null;
+  brochureGated?: boolean;
+  title?: string;
   /** Who meets the visitor: the agent's first name, or the agency. */
   agentName: string;
 };
@@ -114,14 +118,15 @@ export function ContactActions({ info }: { info: ContactInfo }) {
           {t.contact.callback}
         </button>
         {info.brochureUrl && (
-          <a
+          <BrochureButton
+            kind="property"
+            id={info.propertyId}
             href={info.brochureUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+            gated={Boolean(info.brochureGated)}
+            label={t.contact.brochure}
+            subject={info.title ? `${info.reference} · ${info.title}` : info.reference}
             className="inline-flex items-center gap-1 font-semibold text-ink underline-offset-4 hover:underline"
-          >
-            <DownloadIcon className="size-4" aria-hidden /> {t.contact.brochure}
-          </a>
+          />
         )}
       </div>
       {dialog}

@@ -7,6 +7,7 @@ import { currentAgencyId } from "@/db/schema/_common";
 import { developers, locations } from "@/db/schema/master-data";
 import { projects } from "@/db/schema/projects";
 import { properties } from "@/db/schema/properties";
+import { queueBrochureRender } from "@/features/brochure/jobs";
 import { syncMediaUsage } from "@/features/media/usage";
 import { deletePlan } from "@/features/payment-plans/store";
 import { planProblem } from "@/features/payment-plans/schema";
@@ -87,6 +88,7 @@ export const saveProject = adminAction(
       saveProjectRecord(tx, { id, data, expectedUpdatedAt, actor: ctx.actor, userId: ctx.user.id }),
     );
     revalidateProject(id);
+    await queueBrochureRender("project", [id]);
     return { updatedAt: result.updatedAt, slug: result.slug };
   },
 );
@@ -136,6 +138,7 @@ export const setProjectPublished = adminAction(
       return { updatedAt: after!.updatedAt.toISOString(), firstPublish };
     });
     revalidateProject(id);
+    if (published) await queueBrochureRender("project", [id]);
     return { published, ...res };
   },
 );

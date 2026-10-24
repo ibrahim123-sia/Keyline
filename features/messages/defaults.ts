@@ -172,6 +172,16 @@ export const templateDefaults = {
     },
     whatsapp: { body: "Hello {{name}}, {{homes}} picked for you: {{url}}" },
   },
+  "brochure.link": {
+    audience: "customer",
+    label: "Brochure link (when Settings -> Leads asks for an email first)",
+    variables: ["name", "title", "agency", "url"],
+    email: {
+      subject: "Your brochure: {{title}}",
+      body: "Hello {{name}},\n\nHere is the brochure for {{title}}. The button below downloads the PDF; the link works for 30 days.\n\nReply to this email if you have any questions or would like to see it in person.\n\n{{agency}}",
+      button: "Download the brochure",
+    },
+  },
   "alerts.new_match": {
     audience: "customer",
     label: "New homes for a saved search, at once (alerts)",

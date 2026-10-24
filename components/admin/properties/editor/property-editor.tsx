@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { FormSection } from "@/components/admin/page-header";
 import type { PropertyStatus } from "@/db/schema/properties";
+import { adminBrochurePath } from "@/features/brochure/paths";
 import { getMediaStatuses } from "@/features/media/actions";
 import type { MediaItem } from "@/features/media/queries";
 import { planProblem } from "@/features/payment-plans/schema";
@@ -327,6 +328,7 @@ export function PropertyEditor({
           busy={busy}
           readOnly={readOnly}
           publicPath={`/property/${saved.slug}`}
+          brochurePath={adminBrochurePath("property", id)}
           onSave={() => void save("manual")}
           onStatus={(next) => void changeStatus(next)}
         />

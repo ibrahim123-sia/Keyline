@@ -1,11 +1,12 @@
 "use client";
 
-import { ExternalLinkIcon } from "lucide-react";
+import { ExternalLinkIcon, FileTextIcon } from "lucide-react";
 import { cn } from "cn";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import type { SaveState } from "@/components/admin/properties/editor/editor-panel";
 import { Button } from "@/components/ui/button";
 import type { ProjectProblem } from "@/features/projects/schema";
+import { brochure as tb } from "@/lib/i18n/dictionaries/brochure";
 import { PublishedPill } from "../projects-manager";
 
 const timeFormat = new Intl.DateTimeFormat("en", { hour: "2-digit", minute: "2-digit" });
@@ -19,6 +20,7 @@ export function ProjectPanel({
   busy,
   readOnly,
   publicPath,
+  brochurePath,
   canDelete,
   onSave,
   onPublish,
@@ -31,6 +33,8 @@ export function ProjectPanel({
   busy: boolean;
   readOnly: boolean;
   publicPath: string;
+  /** The generated brochure (11 §4), for published projects. */
+  brochurePath?: string;
   canDelete: boolean;
   onSave: () => void;
   onPublish: (published: boolean) => void;
@@ -73,6 +77,18 @@ export function ProjectPanel({
             className="inline-flex items-center gap-1 text-[13px] text-ink underline-offset-2 hover:underline"
           >
             View on site <ExternalLinkIcon className="size-3.5" aria-hidden />
+            <span className="sr-only">(opens in a new tab)</span>
+          </a>
+        )}
+        {published && brochurePath && (
+          <a
+            href={brochurePath}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={tb.admin.hint}
+            className="inline-flex items-center gap-1 text-[13px] text-ink underline-offset-2 hover:underline"
+          >
+            <FileTextIcon className="size-3.5" aria-hidden /> {tb.admin.action}
             <span className="sr-only">(opens in a new tab)</span>
           </a>
         )}

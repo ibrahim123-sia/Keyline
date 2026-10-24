@@ -7,6 +7,7 @@ import {
   CopyIcon,
   DownloadIcon,
   ExternalLinkIcon,
+  FileTextIcon,
   LinkIcon,
   MoreHorizontalIcon,
   PencilIcon,
@@ -34,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { propertyStatuses, type PropertyStatus } from "@/db/schema/properties";
+import { adminBrochurePath } from "@/features/brochure/paths";
 import {
   bulkUpdateProperties,
   duplicateProperty,
@@ -43,6 +45,7 @@ import { bedsLabel, priceLabel } from "@/features/properties/format";
 import type { PropertyRow } from "@/features/properties/queries";
 import { isLiveStatus, statusLabels } from "@/features/properties/status";
 import type { SavedView } from "@/features/saved-views/schema";
+import { brochure as tb } from "@/lib/i18n/dictionaries/brochure";
 import type { CurrencyFormat } from "@/lib/money";
 import { NewPropertyDialog } from "./new-property-dialog";
 import { StatusPill } from "./status-pill";
@@ -622,6 +625,15 @@ function RowActions({
                 }}
               >
                 <LinkIcon /> Copy link
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a
+                  href={adminBrochurePath("property", row.id)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <FileTextIcon /> {tb.admin.action}
+                </a>
               </DropdownMenuItem>
             </>
           )}

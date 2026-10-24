@@ -277,10 +277,18 @@ async function whatsappAutoReply(
 }
 
 /**
- * Sources where the visitor did not just write to us: no automatic reply. An ROI report
- * request gets the report email instead (tools.roi_report).
+ * Sources where the visitor did not just write to us: no automatic reply. An ROI report or a
+ * brochure request already gets its own email (the report, the brochure link), so no second one.
  */
-const noAutoReply = new Set(["manual", "import", "newsletter", "signup", "saved_search", "roi"]);
+const noAutoReply = new Set([
+  "manual",
+  "import",
+  "newsletter",
+  "signup",
+  "saved_search",
+  "roi",
+  "brochure",
+]);
 
 /** 09 §3.7: the instant "thanks, [agent] will reach out" email. */
 async function autoReply(db: DbOrTx, ctx: NonNullable<LeadContext>): Promise<boolean> {

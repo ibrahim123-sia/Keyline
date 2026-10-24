@@ -7,6 +7,8 @@ import { Breadcrumb } from "@/components/site/breadcrumb";
 import { JsonLd } from "@/components/site/json-ld";
 import { ContactCard } from "@/components/site/contact-card";
 import { BookTourButton } from "@/components/site/viewings/book-tour-button";
+import { BrochureButton } from "@/components/site/brochure/brochure-button";
+import { brochurePath } from "@/features/brochure/paths";
 import { ListingCard, handoverLabel } from "@/components/site/listings/listing-card";
 import { PlaceMap } from "@/components/site/maps/place-map";
 import { MediaImage } from "@/components/site/media-image";
@@ -96,11 +98,12 @@ export default async function ProjectPage(props: PageProps<"/projects/[slug]">) 
     notFound();
   }
   const t = pages.projects;
-  const [{ code, rates }, market, contact, integrations] = await Promise.all([
+  const [{ code, rates }, market, contact, integrations, leadSettings] = await Promise.all([
     visitorCurrency(),
     getSettings("market"),
     getSettings("contact"),
     getSettings("integrations"),
+    getSettings("leads"),
   ]);
   const ctx = {
     visitorCurrency: code,
@@ -488,47 +491,44 @@ export default async function ProjectPage(props: PageProps<"/projects/[slug]">) 
             </section>
           )}
 
-          {(p.brochure || p.videoUrl || p.tourUrl) && (
-            <ul className="flex flex-wrap gap-3">
-              {p.brochure && (
-                <li>
-                  <a
-                    href={p.brochure.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download={p.brochure.fileName}
-                    className="inline-flex h-11 items-center rounded-button bg-ink px-5 text-[15px] font-semibold text-surface"
-                  >
-                    {t.brochure}
-                  </a>
-                </li>
-              )}
-              {p.videoUrl && (
-                <li>
-                  <a
-                    href={p.videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-11 items-center rounded-button border border-ink/20 px-5 text-[15px] font-semibold text-ink"
-                  >
-                    {t.video}
-                  </a>
-                </li>
-              )}
-              {p.tourUrl && (
-                <li>
-                  <a
-                    href={p.tourUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-11 items-center rounded-button border border-ink/20 px-5 text-[15px] font-semibold text-ink"
-                  >
-                    {t.tour}
-                  </a>
-                </li>
-              )}
-            </ul>
-          )}
+          <ul className="flex flex-wrap gap-3 print:hidden">
+            <li>
+              {/* The uploaded brochure, else one made from the project (11 §4). */}
+              <BrochureButton
+                kind="project"
+                id={p.id}
+                href={brochurePath("project", p.id)}
+                gated={leadSettings.brochureEmailGate}
+                label={t.brochure}
+                subject={p.name}
+                className="inline-flex h-11 items-center gap-2 rounded-button bg-ink px-5 text-[15px] font-semibold text-surface"
+              />
+            </li>
+            {p.videoUrl && (
+              <li>
+                <a
+                  href={p.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-11 items-center rounded-button border border-ink/20 px-5 text-[15px] font-semibold text-ink"
+                >
+                  {t.video}
+                </a>
+              </li>
+            )}
+            {p.tourUrl && (
+              <li>
+                <a
+                  href={p.tourUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-11 items-center rounded-button border border-ink/20 px-5 text-[15px] font-semibold text-ink"
+                >
+                  {t.tour}
+                </a>
+              </li>
+            )}
+          </ul>
 
           {p.developer && (
             <section

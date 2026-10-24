@@ -32,6 +32,7 @@ import { TrackListingView } from "@/components/site/visitor-tracker";
 import { CompareButton } from "@/components/site/account/compare-button";
 import { SaveHomeButton } from "@/components/site/account/save-home-button";
 import { SharePrint } from "@/components/site/property/share-print";
+import { brochurePath } from "@/features/brochure/paths";
 import { getPublicListing, listingRedirect, type PublicListing } from "@/features/listings/public";
 import { similarListings } from "@/features/listings/similar";
 import { listingStructuredData, listingTitle } from "@/features/seo/entity-seo";
@@ -98,13 +99,16 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
     notFound();
   }
   const l = listing;
-  const [{ code, rates }, market, contact, general, integrations] = await Promise.all([
-    visitorCurrency(),
-    getSettings("market"),
-    getSettings("contact"),
-    getSettings("general"),
-    getSettings("integrations"),
-  ]);
+  const [{ code, rates }, market, contact, general, integrations, leadSettings] = await Promise.all(
+    [
+      visitorCurrency(),
+      getSettings("market"),
+      getSettings("contact"),
+      getSettings("general"),
+      getSettings("integrations"),
+      getSettings("leads"),
+    ],
+  );
   const ctx: PageContext = {
     visitorCurrency: code,
     rates,
@@ -127,7 +131,10 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
       ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(format(t.contact.whatsappText, { ref: l.reference, url }))}`
       : null,
     phone: l.agent?.phone || contact.phone || null,
-    brochureUrl: l.brochure?.url ?? null,
+    // Every live listing has a brochure: the uploaded one, else one made from the listing.
+    brochureUrl: brochurePath("property", l.id),
+    brochureGated: leadSettings.brochureEmailGate,
+    title: l.title,
     agentName: l.agent?.name.split(/\s+/)[0] ?? general.agencyName,
   };
   const similar = await similarListings(l);

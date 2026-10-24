@@ -8,6 +8,7 @@ import { FormSection } from "@/components/admin/page-header";
 import { NearbyPlaces, type NearbyActions } from "@/components/admin/properties/nearby-places";
 import type { SaveState } from "@/components/admin/properties/editor/editor-panel";
 import { useUnsavedGuard } from "@/components/admin/properties/editor/use-unsaved-guard";
+import { adminBrochurePath } from "@/features/brochure/paths";
 import { getMediaStatuses } from "@/features/media/actions";
 import type { MediaItem } from "@/features/media/queries";
 import { planProblem } from "@/features/payment-plans/schema";
@@ -304,6 +305,7 @@ export function ProjectEditor({
           busy={busy}
           readOnly={readOnly}
           publicPath={`/projects/${saved.slug}`}
+          brochurePath={adminBrochurePath("project", id)}
           canDelete={!published && activity.listings.length === 0}
           onSave={() => void save("manual")}
           onPublish={(next) => void changePublished(next)}

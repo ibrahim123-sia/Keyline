@@ -4,6 +4,7 @@ import { updateTag } from "next/cache";
 import type { Tx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { properties } from "@/db/schema/properties";
+import { queueBrochureRender } from "@/features/brochure/jobs";
 import { tags } from "@/lib/cache-tags";
 import { uniqueSlug } from "@/lib/slug";
 
@@ -25,7 +26,10 @@ export async function propertySlug(tx: Tx, base: string, exceptId: string | null
   });
 }
 
-/** Expires what shows these listings: their pages, search, the sitemap and their projects. */
+/**
+ * Expires what shows these listings: their pages, search, the sitemap and their projects; and
+ * queues a fresh brochure for each (11 §4 "regenerated when the listing changes").
+ */
 export async function revalidateListings(
   ids: string[],
   projectIds: Array<string | null> = [],
@@ -35,4 +39,5 @@ export async function revalidateListings(
   updateTag(tags.listings);
   updateTag(tags.search);
   updateTag(tags.sitemap);
+  await queueBrochureRender("property", ids);
 }

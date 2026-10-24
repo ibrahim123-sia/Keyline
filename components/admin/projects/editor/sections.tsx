@@ -371,7 +371,7 @@ export function ProjectMediaSection({
         />
         <MediaPicker
           label="Brochure"
-          description="A PDF visitors can download."
+          description="A PDF visitors can download (the developer's own, for example). A branded brochure is generated from the project when you leave this empty."
           type="document"
           value={data.brochureId}
           disabled={readOnly}

@@ -1,11 +1,12 @@
 "use client";
 
-import { CheckCircle2Icon, CircleIcon, ExternalLinkIcon } from "lucide-react";
+import { CheckCircle2Icon, CircleIcon, ExternalLinkIcon, FileTextIcon } from "lucide-react";
 import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import { propertyStatuses, type PropertyStatus } from "@/db/schema/properties";
 import type { CompletenessItem, Problem } from "@/features/properties/schema";
 import { isLiveStatus, statusLabels } from "@/features/properties/status";
+import { brochure as tb } from "@/lib/i18n/dictionaries/brochure";
 import { StatusPill } from "../status-pill";
 
 export type SaveState =
@@ -28,6 +29,7 @@ export function EditorPanel({
   busy,
   readOnly,
   publicPath,
+  brochurePath,
   onSave,
   onStatus,
 }: {
@@ -40,6 +42,8 @@ export function EditorPanel({
   busy: boolean;
   readOnly: boolean;
   publicPath: string;
+  /** The generated brochure (11 §4), for live listings. */
+  brochurePath?: string;
   onSave: () => void;
   onStatus: (next: PropertyStatus) => void;
 }) {
@@ -100,6 +104,18 @@ export function EditorPanel({
             className="inline-flex items-center gap-1 text-[13px] text-ink underline-offset-2 hover:underline"
           >
             View on site <ExternalLinkIcon className="size-3.5" aria-hidden />
+            <span className="sr-only">(opens in a new tab)</span>
+          </a>
+        )}
+        {live && brochurePath && (
+          <a
+            href={brochurePath}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={tb.admin.hint}
+            className="inline-flex items-center gap-1 text-[13px] text-ink underline-offset-2 hover:underline"
+          >
+            <FileTextIcon className="size-3.5" aria-hidden /> {tb.admin.action}
             <span className="sr-only">(opens in a new tab)</span>
           </a>
         )}
