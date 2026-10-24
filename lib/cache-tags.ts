@@ -32,4 +32,6 @@ export const tags = {
   testimonials: "testimonials",
   redirects: "redirects",
   sitemap: "sitemap",
+  /** Price trend charts (area_price_stats, 11 §7). */
+  priceStats: "price-stats",
 } as const;

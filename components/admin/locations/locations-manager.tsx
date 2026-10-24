@@ -23,6 +23,7 @@ import { FormSection } from "@/components/admin/page-header";
 import { SeoFields } from "@/components/admin/seo-fields";
 import { PinPicker } from "@/components/maps/pin-picker";
 import { PolygonEditor } from "@/components/maps/polygon-editor";
+import { PriceFigures, type PriceFigureOptions } from "./price-figures";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { LocationLevel } from "@/db/schema/master-data";
@@ -72,6 +73,7 @@ export function LocationsManager({
   mapZoom,
   siteName,
   readOnly,
+  priceOptions,
 }: {
   nodes: LocationNode[];
   styleUrl: string;
@@ -79,6 +81,8 @@ export function LocationsManager({
   mapZoom: number;
   siteName: string;
   readOnly?: boolean;
+  /** Price trend figures for the chosen location (11 §7). */
+  priceOptions: PriceFigureOptions;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -333,168 +337,179 @@ export function LocationsManager({
           icon={<MapPinIcon className="size-5" />}
         />
       ) : (
-        <form
-          className="flex flex-col gap-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const { id, usage: _usage, ...data } = draft;
-            void save.run({ id, data });
-          }}
-        >
-          <FormSection
-            title={draft.id ? `Edit ${draft.name || "location"}` : "New location"}
-            actions={
-              !readOnly &&
-              draft.id && (
-                <ConfirmDialog
-                  title={`Delete ${draft.name}?`}
-                  description={
-                    draft.usage && draft.usage.total > 0
-                      ? "It still has sub-locations or agent profiles, so it cannot be deleted yet."
-                      : "This cannot be undone."
-                  }
-                  confirmLabel="Delete"
-                  destructive
-                  onConfirm={async () => {
-                    const res = await deleteLocation({ id: draft.id! });
-                    if (res.ok) {
-                      toast.success("Location deleted");
-                      setDraft(null);
-                      router.refresh();
-                    } else toast.error(res.error);
-                  }}
-                  trigger={
-                    <Button type="button" variant="ghost" size="sm">
-                      <Trash2Icon /> Delete
-                    </Button>
-                  }
+        <div className="flex flex-col gap-4">
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const { id, usage: _usage, ...data } = draft;
+              void save.run({ id, data });
+            }}
+          >
+            <FormSection
+              title={draft.id ? `Edit ${draft.name || "location"}` : "New location"}
+              actions={
+                !readOnly &&
+                draft.id && (
+                  <ConfirmDialog
+                    title={`Delete ${draft.name}?`}
+                    description={
+                      draft.usage && draft.usage.total > 0
+                        ? "It still has sub-locations or agent profiles, so it cannot be deleted yet."
+                        : "This cannot be undone."
+                    }
+                    confirmLabel="Delete"
+                    destructive
+                    onConfirm={async () => {
+                      const res = await deleteLocation({ id: draft.id! });
+                      if (res.ok) {
+                        toast.success("Location deleted");
+                        setDraft(null);
+                        router.refresh();
+                      } else toast.error(res.error);
+                    }}
+                    trigger={
+                      <Button type="button" variant="ghost" size="sm">
+                        <Trash2Icon /> Delete
+                      </Button>
+                    }
+                  />
+                )
+              }
+            >
+              <div className="grid gap-4 md:grid-cols-2">
+                <SelectField
+                  label="Level"
+                  value={draft.level}
+                  onChange={(v) => set({ level: v })}
+                  error={save.errorFor("level")}
+                  options={(Object.keys(levelLabels) as LocationLevel[]).map((l) => ({
+                    value: l,
+                    label: levelLabels[l],
+                  }))}
                 />
-              )
-            }
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              <SelectField
-                label="Level"
-                value={draft.level}
-                onChange={(v) => set({ level: v })}
-                error={save.errorFor("level")}
-                options={(Object.keys(levelLabels) as LocationLevel[]).map((l) => ({
-                  value: l,
-                  label: levelLabels[l],
-                }))}
+                <SelectField
+                  label="Inside"
+                  value={draft.parentId ?? "__root"}
+                  onChange={(v) => set({ parentId: v === "__root" ? null : v })}
+                  error={save.errorFor("parentId")}
+                  options={[{ value: "__root", label: "Nothing (top level)" }, ...parentOptions]}
+                />
+                <TextInputField
+                  label="Name"
+                  required
+                  value={draft.name}
+                  onChange={(v) => set({ name: v })}
+                  error={save.errorFor("name")}
+                />
+                <SwitchField
+                  label="Featured"
+                  description="Shown in area lists and the home page."
+                  checked={draft.isFeatured}
+                  onChange={(v) => set({ isFeatured: v })}
+                />
+              </div>
+              <TextareaField
+                label="Short description"
+                description="Used as the intro on search landing pages when there is no area guide."
+                rows={3}
+                maxLength={2000}
+                value={draft.description ?? ""}
+                onChange={(v) => set({ description: v || null })}
               />
-              <SelectField
-                label="Inside"
-                value={draft.parentId ?? "__root"}
-                onChange={(v) => set({ parentId: v === "__root" ? null : v })}
-                error={save.errorFor("parentId")}
-                options={[{ value: "__root", label: "Nothing (top level)" }, ...parentOptions]}
-              />
-              <TextInputField
-                label="Name"
-                required
-                value={draft.name}
-                onChange={(v) => set({ name: v })}
-                error={save.errorFor("name")}
-              />
-              <SwitchField
-                label="Featured"
-                description="Shown in area lists and the home page."
-                checked={draft.isFeatured}
-                onChange={(v) => set({ isFeatured: v })}
-              />
-            </div>
-            <TextareaField
-              label="Short description"
-              description="Used as the intro on search landing pages when there is no area guide."
-              rows={3}
-              maxLength={2000}
-              value={draft.description ?? ""}
-              onChange={(v) => set({ description: v || null })}
-            />
-          </FormSection>
+            </FormSection>
 
-          <FormSection
-            title="Map point"
-            description="Centre of the area, or the building's entrance."
-          >
-            <PinPicker
-              value={draft.center}
-              onChange={(p) => set({ center: p })}
-              styleUrl={styleUrl}
-              fallbackCenter={draft.center ?? (draft.parentId ? mapCenter : mapCenter)}
-              zoom={draft.center ? 14 : mapZoom}
-              onSearch={async (query) => {
-                const res = await geocodeAddress(query);
-                return res.ok ? res.data : { error: res.error };
-              }}
-            />
-          </FormSection>
-
-          <FormSection
-            title="Boundary"
-            description="Optional. Draw the area's outline for map search and area pages."
-            actions={
-              !showBoundary && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowBoundary(true)}
-                >
-                  Draw boundary
-                </Button>
-              )
-            }
-          >
-            {showBoundary ? (
-              <PolygonEditor
-                value={draft.geom}
-                onChange={(g) => set({ geom: g })}
+            <FormSection
+              title="Map point"
+              description="Centre of the area, or the building's entrance."
+            >
+              <PinPicker
+                value={draft.center}
+                onChange={(p) => set({ center: p })}
                 styleUrl={styleUrl}
-                center={draft.center ?? mapCenter}
-                zoom={draft.center ? 13 : mapZoom}
+                fallbackCenter={draft.center ?? (draft.parentId ? mapCenter : mapCenter)}
+                zoom={draft.center ? 14 : mapZoom}
+                onSearch={async (query) => {
+                  const res = await geocodeAddress(query);
+                  return res.ok ? res.data : { error: res.error };
+                }}
               />
-            ) : (
-              <p className="text-[13px] text-text-muted">
-                {draft.geom ? "A boundary is set." : "No boundary yet."}
-              </p>
+            </FormSection>
+
+            <FormSection
+              title="Boundary"
+              description="Optional. Draw the area's outline for map search and area pages."
+              actions={
+                !showBoundary && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowBoundary(true)}
+                  >
+                    Draw boundary
+                  </Button>
+                )
+              }
+            >
+              {showBoundary ? (
+                <PolygonEditor
+                  value={draft.geom}
+                  onChange={(g) => set({ geom: g })}
+                  styleUrl={styleUrl}
+                  center={draft.center ?? mapCenter}
+                  zoom={draft.center ? 13 : mapZoom}
+                />
+              ) : (
+                <p className="text-[13px] text-text-muted">
+                  {draft.geom ? "A boundary is set." : "No boundary yet."}
+                </p>
+              )}
+            </FormSection>
+
+            <FormSection
+              title="SEO"
+              description={`Landing pages: ${parentPrefix}${draft.slug || "…"} and /rent/${draft.slug || "…"}`}
+            >
+              <SeoFields
+                values={{
+                  slug: draft.slug,
+                  seoTitle: draft.seoTitle,
+                  seoDescription: draft.seoDescription,
+                  canonicalUrl: draft.canonicalUrl,
+                  noindex: draft.noindex,
+                  ogImageId: draft.ogImageId,
+                }}
+                onChange={(patch) => set(patch)}
+                urlPrefix={parentPrefix}
+                fallbackTitle={`Homes for sale in ${draft.name || "this area"} | ${siteName}`}
+                fallbackDescription={draft.description ?? undefined}
+                siteName={siteName}
+                errorFor={save.errorFor}
+              />
+            </FormSection>
+
+            {!readOnly && (
+              <div className="sticky bottom-0 -mx-1 flex justify-end gap-2 border-t border-border bg-background/95 px-1 py-3 backdrop-blur">
+                <Button type="button" variant="outline" onClick={() => setDraft(null)}>
+                  Close
+                </Button>
+                <Button type="submit" disabled={save.pending}>
+                  {save.pending ? "Saving…" : "Save location"}
+                </Button>
+              </div>
             )}
-          </FormSection>
-
-          <FormSection
-            title="SEO"
-            description={`Landing pages: ${parentPrefix}${draft.slug || "…"} and /rent/${draft.slug || "…"}`}
-          >
-            <SeoFields
-              values={{
-                slug: draft.slug,
-                seoTitle: draft.seoTitle,
-                seoDescription: draft.seoDescription,
-                canonicalUrl: draft.canonicalUrl,
-                noindex: draft.noindex,
-                ogImageId: draft.ogImageId,
-              }}
-              onChange={(patch) => set(patch)}
-              urlPrefix={parentPrefix}
-              fallbackTitle={`Homes for sale in ${draft.name || "this area"} | ${siteName}`}
-              fallbackDescription={draft.description ?? undefined}
-              siteName={siteName}
-              errorFor={save.errorFor}
+          </form>
+          {draft.id && (
+            <PriceFigures
+              key={draft.id}
+              locationId={draft.id}
+              locationName={draft.name}
+              options={priceOptions}
+              readOnly={readOnly}
             />
-          </FormSection>
-
-          {!readOnly && (
-            <div className="sticky bottom-0 -mx-1 flex justify-end gap-2 border-t border-border bg-background/95 px-1 py-3 backdrop-blur">
-              <Button type="button" variant="outline" onClick={() => setDraft(null)}>
-                Close
-              </Button>
-              <Button type="submit" disabled={save.pending}>
-                {save.pending ? "Saving…" : "Save location"}
-              </Button>
-            </div>
           )}
-        </form>
+        </div>
       )}
     </div>
   );

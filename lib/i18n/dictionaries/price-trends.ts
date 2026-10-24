@@ -1,0 +1,30 @@
+/** Public site strings for price trends on area and property pages (11 §7). */
+export const priceTrends = {
+  title: "Price trends in {area}",
+  sale: "For sale",
+  rent: "To rent",
+  typeNote: "{type} only",
+  allTypes: "All property types",
+  perUnit: "Median price per {unit}",
+  perUnitRent: "Median rent per {unit} per {period}",
+  notEnough: "Not enough data yet",
+  notEnoughHint: "We show a trend once there are at least 5 monthly figures.",
+  sources: {
+    agency_data: "Our listings and closed deals",
+    admin_entered: "Market figures",
+  },
+  sourceNote: "Source: {note}",
+  chartLabel: "{what} in {area}, {from} to {to}. Latest: {latest}.",
+  latest: "Latest ({month})",
+  change: "Change vs 12 months ago",
+  listings: "Listings on the market",
+  daysOnMarket: "Average days on market",
+  days: "{n} days",
+  showFigures: "Show the figures",
+  month: "Month",
+  source: "Source",
+  value: "Median",
+  periods: { year: "year", month: "month" },
+  disclaimer:
+    "Medians of asking prices of homes we listed and prices of deals we closed, plus figures entered by our team with their source. A guide, not a valuation.",
+} as const;

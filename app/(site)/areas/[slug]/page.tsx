@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { resolveMapStyle } from "@/components/maps/map-style";
 import { Breadcrumb } from "@/components/site/breadcrumb";
 import { FaqList } from "@/components/site/content/faq-list";
@@ -9,6 +10,7 @@ import { JsonLd } from "@/components/site/json-ld";
 import { ListingCard } from "@/components/site/listings/listing-card";
 import { PlaceMap } from "@/components/site/maps/place-map";
 import { MediaImage } from "@/components/site/media-image";
+import { PriceTrendsSection } from "@/components/site/price-trends/price-trends";
 import { PriceTag } from "@/components/site/price-tag";
 import { ProjectCard } from "@/components/site/projects/project-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -153,6 +155,10 @@ export default async function AreaGuidePage(props: PageProps<"/areas/[slug]">) {
           </dl>
           <p className="text-[12.5px] text-text-muted">{t.liveCounts}</p>
         </section>
+
+        <Suspense fallback={null}>
+          <PriceTrendsSection locationId={g.location.id} />
+        </Suspense>
 
         {g.highlights.length > 0 && (
           <section aria-labelledby="living-here" className="flex flex-col gap-4">

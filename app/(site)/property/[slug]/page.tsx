@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { Badge } from "@/components/site/badge-chip";
@@ -26,6 +27,7 @@ import { ContactCard } from "@/components/site/property/contact-card";
 import { Gallery } from "@/components/site/property/gallery";
 import { ListingMap } from "@/components/site/property/listing-map";
 import { MortgageMini } from "@/components/site/property/mortgage-mini";
+import { PriceTrendsSection } from "@/components/site/price-trends/price-trends";
 import { NearbyList } from "@/components/site/property/nearby-list";
 import { RecentlyViewed } from "@/components/site/property/recently-viewed";
 import { TrackListingView } from "@/components/site/visitor-tracker";
@@ -303,6 +305,16 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
             )}
             <Investment listing={l} ctx={ctx} roi={market.roi} simulatorHref={roiHref} />
             <PriceHistory listing={l} ctx={ctx} />
+            {l.locationId && (
+              <Suspense fallback={null}>
+                <PriceTrendsSection
+                  locationId={l.locationId}
+                  typeSlug={l.type?.slug ?? null}
+                  only={l.purpose}
+                  small
+                />
+              </Suspense>
+            )}
             <ProjectBlock listing={l} />
           </div>
           <div className="lg:sticky lg:top-24 lg:self-start">

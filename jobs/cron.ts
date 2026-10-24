@@ -18,6 +18,8 @@ import { queueViewingReminders } from "@/features/viewings/notify";
 import { refreshCalendarBusy } from "@/features/integrations/google-calendar/calendar";
 import { newId } from "@/lib/ids";
 import { purgeExpired } from "@/lib/rate-limit";
+import { computeLastMonthPriceStats } from "@/features/price-trends/compute";
+import { cleanupOwnerPhotos } from "@/features/valuation/photos";
 import { requeueStuckJobs, runDueJobs } from "./runner";
 
 /**
@@ -155,6 +157,20 @@ export const cronTasks: CronTask[] = [
     due: (t) => t.minute === 0,
     run: async () => queueWeeklyReport(await getDb()),
     quiet: true,
+  },
+  // Daily: owner photos never attached to a valuation or listing request (11 §5).
+  {
+    name: "owner-photos.cleanup",
+    schedule: "daily at 03:45",
+    due: at(3, 45),
+    run: async () => cleanupOwnerPhotos(await getDb()),
+  },
+  // Monthly (13 §2): last month's price trend figures from the agency's listings and deals (11 §7).
+  {
+    name: "price-stats.monthly",
+    schedule: "monthly on the 1st at 03:00",
+    due: (t) => t.day === 1 && at(3)(t),
+    run: async () => computeLastMonthPriceStats(await getDb()),
   },
   // Monthly: distances to nearby places older than 90 days are measured again (07 §4.7).
   {
