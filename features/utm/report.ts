@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { loadSettings } from "@/features/settings/queries";
+import type { MarketSettings } from "@/features/settings/schema";
 
 /**
  * Campaign report (09 §2): leads, viewings, won deals and deal value by source, medium,
@@ -41,6 +42,26 @@ const keys: Record<ReportDimension, string> = {
   channel: "channel",
 };
 
+/**
+ * A lead's deal value in minor units of the base currency (SQL), converted with the display
+ * rates in Settings -> Market. `alias` is the leads table alias in the query. Also used by
+ * Admin -> Reports.
+ */
+export function dealValueInBase(market: MarketSettings, alias: string): SQL {
+  const base = market.baseCurrency;
+  const value = sql.raw(`${alias}.deal_value`);
+  const currency = sql.raw(`${alias}.deal_currency`);
+  const cases: SQL[] = market.visitorCurrencies
+    .filter((c) => c.code !== base.code)
+    .map(
+      (c) =>
+        sql`when ${c.code} then round(${value}::numeric / ${10 ** c.decimals} / ${c.rate} * ${10 ** base.decimals})`,
+    );
+  return cases.length
+    ? sql`(case ${currency} ${sql.join(cases, sql` `)} else ${value}::numeric end)`
+    : sql`${value}::numeric`;
+}
+
 export async function campaignReport(
   db: DbOrTx,
   params: ReportParams & { from: string; to: string },
@@ -49,15 +70,7 @@ export async function campaignReport(
   const base = market.baseCurrency;
   const touch = params.touch === "first" ? sql.raw("l.first_touch") : sql.raw("l.last_touch");
   const key = keys[params.dimension];
-  const cases: SQL[] = market.visitorCurrencies
-    .filter((c) => c.code !== base.code)
-    .map(
-      (c) =>
-        sql`when ${c.code} then round(l.deal_value::numeric / ${10 ** c.decimals} / ${c.rate} * ${10 ** base.decimals})`,
-    );
-  const dealInBase = cases.length
-    ? sql`(case l.deal_currency ${sql.join(cases, sql` `)} else l.deal_value::numeric end)`
-    : sql`l.deal_value::numeric`;
+  const dealInBase = dealValueInBase(market, "l");
   const res = await db.execute<{
     value: string;
     leads: number;

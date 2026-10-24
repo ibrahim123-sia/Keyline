@@ -75,7 +75,7 @@ export const adminNav: AdminNavGroup[] = [
     ],
   },
   {
-    items: [{ key: "reports", href: "/admin/reports", icon: BarChart3Icon, enabled: false }],
+    items: [{ key: "reports", href: "/admin/reports", icon: BarChart3Icon, enabled: true }],
   },
   {
     label: "setup",
