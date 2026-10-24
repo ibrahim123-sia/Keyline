@@ -284,7 +284,7 @@ export function UtmLinksManager({
             <TextInputField
               label="Page"
               required
-              description="A page or listing on this site: a path like /buy/dubai-marina or its full address."
+              description="A page or listing on this site: a path like /buy or /rent/riverside, or its full address."
               value={data.baseUrl}
               onChange={(baseUrl) => set({ baseUrl })}
               suggestions={pageSuggestions}

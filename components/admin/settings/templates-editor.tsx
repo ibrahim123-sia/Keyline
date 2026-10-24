@@ -17,7 +17,7 @@ import {
   saveWhatsappMapping,
 } from "@/features/messages/actions";
 import { fillTemplate } from "@/features/messages/defaults";
-import { sampleValues } from "@/features/messages/schema";
+import { sampleValues as neutralSamples } from "@/features/messages/schema";
 import { useAction } from "@/lib/use-action";
 
 type Channel = "email" | "whatsapp";
@@ -31,7 +31,15 @@ const draftFor = (row: TemplateRow, channel: Channel): Draft | null => {
 };
 
 /** The preview with example values (a blank line starts a paragraph). */
-function Preview({ subject, body }: { subject?: string; body: string }) {
+function Preview({
+  subject,
+  body,
+  sampleValues,
+}: {
+  subject?: string;
+  body: string;
+  sampleValues: Record<string, string>;
+}) {
   return (
     <section
       aria-label="Preview"
@@ -57,11 +65,13 @@ function ChannelForm({
   channel,
   readOnly,
   onSaved,
+  sampleValues,
 }: {
   row: TemplateRow;
   channel: Channel;
   readOnly?: boolean;
   onSaved: () => void;
+  sampleValues: Record<string, string>;
 }) {
   const [draft, setDraft] = useState<Draft>(() => draftFor(row, channel)!);
   const save = useAction(saveMessageTemplate, { success: "Template saved", onSuccess: onSaved });
@@ -119,7 +129,11 @@ function ChannelForm({
           </button>
         ))}
       </div>
-      <Preview subject={channel === "email" ? draft.subject : undefined} body={draft.body} />
+      <Preview
+        subject={channel === "email" ? draft.subject : undefined}
+        body={draft.body}
+        sampleValues={sampleValues}
+      />
       {!readOnly && (
         <div className="flex flex-wrap justify-between gap-2">
           {state.custom ? (
@@ -244,7 +258,16 @@ const status = (row: TemplateRow) => {
 };
 
 /** Settings -> Message templates (13 §1): every email and WhatsApp message the system sends. */
-export function TemplatesEditor({ rows, readOnly }: { rows: TemplateRow[]; readOnly?: boolean }) {
+export function TemplatesEditor({
+  rows,
+  readOnly,
+  samples = neutralSamples,
+}: {
+  rows: TemplateRow[];
+  readOnly?: boolean;
+  /** Preview values in the agency's market (sampleValuesFor). */
+  samples?: Record<string, string>;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState<TemplateRow | null>(null);
   const groups = [
@@ -304,6 +327,7 @@ export function TemplatesEditor({ rows, readOnly }: { rows: TemplateRow[]; readO
                     channel={c}
                     readOnly={readOnly}
                     onSaved={() => router.refresh()}
+                    sampleValues={samples}
                   />
                   {c === "whatsapp" && <WhatsappMapping row={current} readOnly={readOnly} />}
                 </TabsContent>

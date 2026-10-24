@@ -62,7 +62,7 @@ function PropertyTypeForm({ values, set, errorFor }: FormProps) {
       />
       <TextInputField
         label="Plural name"
-        description='Used in page titles and URLs, e.g. "Apartments for sale in Dubai Marina".'
+        description='Used in page titles and URLs, e.g. "Apartments for sale in Riverside".'
         value={str(values.pluralName)}
         onChange={(v) => set("pluralName", v)}
         error={errorFor("pluralName")}

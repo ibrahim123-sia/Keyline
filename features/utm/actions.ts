@@ -18,7 +18,7 @@ export const saveUtmLink = adminAction(
     const basePath = sitePath(data.baseUrl, siteOrigin());
     if (!basePath)
       throw new ActionError("Please check the highlighted fields.", "VALIDATION", {
-        baseUrl: ["Use a page on this site, for example /buy/dubai-marina or its full address"],
+        baseUrl: ["Use a page on this site, for example /buy or /rent, or its full address"],
       });
     const values = {
       name: data.name,

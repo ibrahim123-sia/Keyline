@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { formatMoney, toMinor, type CurrencyFormat } from "@/lib/money";
 import {
   isTemplateKey,
   templateDefaults,
@@ -82,39 +83,39 @@ export const whatsappMappingSchema = z
   });
 export type WhatsappMappingInput = z.input<typeof whatsappMappingSchema>;
 
-/** Example values for the editor's preview. */
+/** Example values for the editor's preview, market-neutral (sampleValuesFor fills the market). */
 export const sampleValues: Record<string, string> = {
   name: "Sam",
-  agent: "Layla",
-  agency: "Haven & Dune",
-  reference: "HD-2041",
-  url: "https://example.com/property/two-bed-marina",
-  phone: "+971 50 123 4567",
+  agent: "Alex",
+  agency: "Your agency",
+  reference: "REF-2041",
+  url: "https://example.com/property/two-bed-apartment",
+  phone: "+1 555 0100",
   email: "sam@example.com",
   source: "Website form",
-  interest: "HD-2041 · Two bed with a marina view",
+  interest: "REF-2041 · Two bed with a garden view",
   details: "Preferred time: Saturday 10am",
   message: "Is it still available?",
   minutes: "12",
-  what: "HD-2041 · Two bed with a marina view",
+  what: "REF-2041 · Two bed with a garden view",
   when: "Saturday 24 October at 10:00",
   agencyTime: "",
   how: "In person",
   notes: "Parking?",
   change: "moved",
   manageUrl: "https://example.com/viewings/…",
-  bookUrl: "https://example.com/property/two-bed-marina",
+  bookUrl: "https://example.com/property/two-bed-apartment",
   feedbackUrl: "https://example.com/viewings/…/feedback",
   homes: "3 homes",
   list: "Two bed with a marina view\nGarden villa with a pool",
   confirmUrl: "https://example.com/newsletter/confirm/…",
   unsubscribeUrl: "https://example.com/newsletter/unsubscribe?…",
-  search: "2 beds in Dubai Marina",
+  search: "2 beds in the city centre",
   count: "3",
   period: "this week",
-  title: "Two bed with a marina view",
-  price: "AED 2,350,000",
-  drop: "AED 100,000",
+  title: "Two bed with a garden view",
+  price: "2,350,000",
+  drop: "100,000",
   status: "reserved",
   summary:
     "Gross yield 7% · Net yield 4.7% · Net cash flow AED 98,000 a year · IRR 4.4% over 10 years",
@@ -125,3 +126,25 @@ export const sampleValues: Record<string, string> = {
     "Our first estimate is AED 2,350,000 – AED 2,600,000, based on 6 similar homes in Dubai Marina. It comes from homes we have listed and is not a formal valuation.",
   purpose: "sell",
 };
+
+/**
+ * The preview's example values in the agency's own market: its name, reference prefix,
+ * currency and phone format (04 §3), so a US agency sees "$" and a Dubai one "AED".
+ */
+export function sampleValuesFor(ctx: {
+  agency: string;
+  referencePrefix: string;
+  currency: CurrencyFormat;
+  phoneExample: string | null;
+}): Record<string, string> {
+  const ref = `${ctx.referencePrefix}-2041`;
+  const swap = (v: string) => v.replaceAll("REF-2041", ref);
+  return {
+    ...Object.fromEntries(Object.entries(sampleValues).map(([k, v]) => [k, swap(v)])),
+    agency: ctx.agency || sampleValues.agency!,
+    reference: ref,
+    ...(ctx.phoneExample ? { phone: ctx.phoneExample } : {}),
+    price: formatMoney(toMinor(2_350_000, ctx.currency.decimals), ctx.currency),
+    drop: formatMoney(toMinor(100_000, ctx.currency.decimals), ctx.currency),
+  };
+}

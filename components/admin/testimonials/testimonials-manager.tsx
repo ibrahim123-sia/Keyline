@@ -209,7 +209,7 @@ export function TestimonialsManager({
             />
             <TextInputField
               label="Role"
-              placeholder="e.g. Bought a two-bed in Dubai Marina"
+              placeholder="e.g. Bought a two-bed apartment"
               maxLength={120}
               value={data.roleText ?? ""}
               onChange={(v) => set({ roleText: v || null })}
