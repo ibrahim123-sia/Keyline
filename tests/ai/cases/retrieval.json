@@ -1,0 +1,71 @@
+[
+  {
+    "id": "R01",
+    "kind": "retrieval",
+    "question": "apartment with a sea view in the marina",
+    "filters": { "purpose": "sale" },
+    "expect": {
+      "top": "marinaSeaView",
+      "excludes": ["downtownStudio"],
+      "confidence": ["high", "medium"]
+    }
+  },
+  {
+    "id": "R02",
+    "kind": "retrieval",
+    "question": "family villa with a garden near a school",
+    "expect": { "top": "hillsVilla", "confidence": ["high", "medium"] }
+  },
+  {
+    "id": "R03",
+    "kind": "retrieval",
+    "question": "furnished studio close to the metro",
+    "filters": { "purpose": "rent" },
+    "expect": { "top": "downtownStudio", "count": 1, "confidence": ["high", "medium"] }
+  },
+  {
+    "id": "R04",
+    "kind": "retrieval",
+    "question": "home with a private pool",
+    "filters": { "purpose": "sale", "beds": [4] },
+    "expect": { "top": "marinaPenthouse", "excludes": ["marinaSeaView"] }
+  },
+  {
+    "id": "R05",
+    "kind": "retrieval",
+    "question": "secret beachfront villa",
+    "expect": { "excludes": ["draftVilla"] }
+  },
+  {
+    "id": "R06",
+    "kind": "retrieval",
+    "question": "helicopter pad and a vineyard",
+    "expect": { "confidence": ["low"] }
+  },
+  {
+    "id": "R07",
+    "kind": "retrieval",
+    "question": "",
+    "filters": { "purpose": "sale", "loc": ["dubai-hills"], "completion": "off_plan" },
+    "expect": { "top": "hillsTownhouse", "count": 1, "confidence": ["high"] }
+  },
+  {
+    "id": "R08",
+    "kind": "retrieval",
+    "question": "anything",
+    "filters": { "purpose": "sale", "max": 1000 },
+    "expect": { "count": 0, "confidence": ["none"] }
+  },
+  {
+    "id": "K01",
+    "kind": "knowledge",
+    "question": "what fees will I pay as a buyer?",
+    "expect": { "top": "buyerFees", "confidence": ["high", "medium"] }
+  },
+  {
+    "id": "K02",
+    "kind": "knowledge",
+    "question": "can I see a home on the weekend",
+    "expect": { "top": "weekendViewings" }
+  }
+]
