@@ -19,6 +19,7 @@ import { siteUrl } from "@/features/site/url";
 import { enqueue } from "@/jobs/enqueue";
 import { defineJob } from "@/jobs/types";
 import { leads as t } from "@/lib/i18n/dictionaries/leads";
+import { scoreLeadWithAi } from "@/features/ai/scoring";
 import { markFirstResponse } from "./first-response";
 import { reasonsText, scoreLead } from "./score";
 
@@ -380,7 +381,7 @@ export async function refreshLeadScore(db: DbOrTx, leadId: string, now = new Dat
         (select count(*)::int from ${leadEvents} where lead_id = ${leadId} and meta->>'source' = 'mortgage') as mortgage,
         (select count(*)::int from ${viewings} where lead_id = ${leadId}) as viewings`)
   ).rows;
-  const { score, reasons } = scoreLead({
+  const rules = {
     requirements: lead.requirements,
     hasEmail: Boolean(contact?.email),
     hasPhone: Boolean(contact?.phone || contact?.whatsapp),
@@ -388,7 +389,31 @@ export async function refreshLeadScore(db: DbOrTx, leadId: string, now = new Dat
     listingPrices: prices,
     preApproved: lead.source === "mortgage" || (signals?.mortgage ?? 0) > 0,
     hasMessage: (signals?.messages ?? 0) > 0,
-  });
+  };
+  // The AI scores with the same rubric when it is on (Settings -> AI "Lead scoring"); the
+  // rules are the fallback when it is off, over budget or fails.
+  const said = await db
+    .select({ body: leadEvents.body })
+    .from(leadEvents)
+    .where(and(eq(leadEvents.leadId, leadId), eq(leadEvents.actorType, "customer")))
+    .orderBy(sql`${leadEvents.createdAt} desc`)
+    .limit(20);
+  const { score, reasons } = await scoreLeadWithAi(
+    {
+      rules,
+      facts: {
+        type: lead.type,
+        source: lead.source,
+        requirements: lead.requirements,
+        listingPrices: prices,
+      },
+      messages: said
+        .map((m) => m.body)
+        .filter((b): b is string => Boolean(b))
+        .reverse(),
+    },
+    { db, now },
+  ).catch(() => scoreLead(rules));
   await db
     .update(leads)
     .set({ aiScore: score, aiScoreReason: reasonsText(reasons), aiScoredAt: now })

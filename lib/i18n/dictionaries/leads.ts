@@ -63,5 +63,6 @@ export const leads = {
     someContact: "Gave one way to reach them",
     askedViewing: "Asked for a viewing",
     vague: "Only browsing or vague",
+    outsideMarket: "Outside the agency's market",
   },
 };
