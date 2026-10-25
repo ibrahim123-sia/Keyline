@@ -2,6 +2,7 @@
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { updateTag } from "next/cache";
+import { embedAfterChange } from "@/features/ai/embeddings";
 import { z } from "zod";
 import { getDb, type Tx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
@@ -23,6 +24,7 @@ async function findDeveloper(tx: Tx, id: string) {
 }
 
 function revalidate(id: string) {
+  embedAfterChange("developer", [id]);
   updateTag(tags.developers);
   updateTag(tags.developer(id));
   updateTag(tags.redirects);
@@ -184,6 +186,7 @@ export const mergeDeveloper = adminAction(
     });
     revalidate(fromId);
     updateTag(tags.developer(intoId));
+    embedAfterChange("developer", [intoId]);
     return { moved };
   },
 );

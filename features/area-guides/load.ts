@@ -1,6 +1,7 @@
 import "server-only";
 import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { updateTag } from "next/cache";
+import { embedAfterChange } from "@/features/ai/embeddings";
 import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { areaGuideMedia, areaGuides, faqs } from "@/db/schema/content";
@@ -100,6 +101,7 @@ export async function guideSlug(db: DbOrTx, base: string, exceptId: string | nul
 
 /** Expires what shows a guide: its page, /areas, the area's search pages, FAQs, sitemap. */
 export function revalidateGuide(id: string): void {
+  embedAfterChange("area_guide", [id]);
   updateTag(tags.areaGuide(id));
   updateTag(tags.areaGuides);
   updateTag(tags.faqs);

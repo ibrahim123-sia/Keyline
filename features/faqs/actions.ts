@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getDb, type DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { faqGroups, faqs } from "@/db/schema/content";
+import { embedAfterChange } from "@/features/ai/embeddings";
 import { ActionError, adminAction } from "@/lib/actions";
 import { auditChange, writeAudit } from "@/lib/audit";
 import { tags } from "@/lib/cache-tags";
@@ -81,6 +82,7 @@ export const saveFaq = adminAction(
       return created!;
     });
     updateTag(tags.faqs);
+    embedAfterChange("faq", [saved.id]);
     return { id: saved.id };
   },
 );
@@ -106,6 +108,7 @@ export const setFaqPublished = adminAction(
       });
     });
     updateTag(tags.faqs);
+    embedAfterChange("faq", [id]);
     return { id, published };
   },
 );
@@ -158,6 +161,7 @@ export const deleteFaq = adminAction(
       });
     });
     updateTag(tags.faqs);
+    embedAfterChange("faq", [id]);
     return { id };
   },
 );

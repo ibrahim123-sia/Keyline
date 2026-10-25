@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
+import { queueEmbeddingBackfill } from "@/features/ai/embeddings";
 import { runAlertDigest } from "@/features/alerts/jobs";
 import { jobRuns } from "@/db/schema/system";
 import { publishDuePages } from "@/features/cms/schedule";
@@ -133,6 +134,13 @@ export const cronTasks: CronTask[] = [
     schedule: "daily at 03:15",
     due: at(3, 15),
     run: async () => ({ removed: await pruneNotFound(await getDb()) }),
+  },
+  // 10 §1: the assistants' search index catches up with anything changed outside the admin.
+  {
+    name: "ai.embed-reconcile",
+    schedule: "daily at 03:45",
+    due: at(3, 45),
+    run: async () => ({ queued: Boolean(await queueEmbeddingBackfill()) }),
   },
   {
     name: "media.recount",

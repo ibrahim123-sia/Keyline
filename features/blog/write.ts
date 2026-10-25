@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { updateTag } from "next/cache";
 import type { DbOrTx } from "@/db/client";
+import { embedAfterChange } from "@/features/ai/embeddings";
 import { currentAgencyId } from "@/db/schema/_common";
 import { postCategories, posts } from "@/db/schema/content";
 import { tags } from "@/lib/cache-tags";
@@ -47,6 +48,7 @@ export async function categorySlug(
 
 /** Expires what shows posts: the post, lists, category pages, area guides and the sitemap. */
 export function revalidatePost(id: string | null): void {
+  embedAfterChange("post", [id]);
   if (id) updateTag(tags.post(id));
   updateTag(tags.posts);
   updateTag(tags.sitemap);

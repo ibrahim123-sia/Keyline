@@ -1,5 +1,6 @@
 import "../../scripts/_env";
 import { parseArgs } from "node:util";
+import { backfillEmbeddings } from "@/features/ai/embeddings";
 import { closeDb, getDb } from "../client";
 import { havenDune } from "./presets/haven-dune";
 import { seedPreset } from "./run";
@@ -31,6 +32,9 @@ try {
     reset: values.reset,
     onProgress: (step) => console.log(`  ${step}…`),
   });
+  // The assistants' search index (10 §1); test embeddings unless running on Cloudflare.
+  const indexed = await backfillEmbeddings(db);
+  console.log(`  search index: ${indexed.indexed} indexed, ${indexed.unchanged} unchanged`);
   console.log(`Seeded "${preset.key}" in ${Math.round((Date.now() - started) / 1000)} s:`);
   for (const [table, n] of Object.entries(counts)) console.log(`  ${table.padEnd(16)} ${n}`);
   console.log("\nStart (or restart) the app after seeding so it reads the new data.");

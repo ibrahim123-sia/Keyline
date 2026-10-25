@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { updateTag } from "next/cache";
 import type { Tx } from "@/db/client";
+import { embedAfterChange } from "@/features/ai/embeddings";
 import { currentAgencyId } from "@/db/schema/_common";
 import { projects } from "@/db/schema/projects";
 import { tags } from "@/lib/cache-tags";
@@ -27,6 +28,7 @@ export async function projectSlug(tx: Tx, base: string, exceptId: string | null)
 
 /** Expires what shows a project: its page, project lists, search, the sitemap and its listings. */
 export function revalidateProject(id: string): void {
+  embedAfterChange("project", [id]);
   updateTag(tags.project(id));
   updateTag(tags.projects);
   updateTag(tags.listings);

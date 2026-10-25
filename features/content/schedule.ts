@@ -3,6 +3,7 @@ import { and, eq, isNull, lte, sql } from "drizzle-orm";
 import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { areaGuides, posts } from "@/db/schema/content";
+import { queueEmbedding } from "@/features/ai/embeddings";
 import { writeAudit } from "@/lib/audit";
 import { tags } from "@/lib/cache-tags";
 import { expireTags } from "@/lib/expire-tags";
@@ -71,6 +72,16 @@ export async function publishDueContent(
       after: { status: "published", publishedAt: g.publishedAt, reason: "Scheduled time reached" },
     });
 
+  await queueEmbedding(
+    "post",
+    duePosts.map((p) => p.id),
+    { db },
+  );
+  await queueEmbedding(
+    "area_guide",
+    dueGuides.map((g) => g.id),
+    { db },
+  );
   if (duePosts.length) expireTags(tags.posts, ...duePosts.map((p) => tags.post(p.id)));
   if (dueGuides.length) expireTags(tags.areaGuides, ...dueGuides.map((g) => tags.areaGuide(g.id)));
   if (duePosts.length || dueGuides.length) expireTags(tags.sitemap);

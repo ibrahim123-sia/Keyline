@@ -51,6 +51,8 @@
   ],
   "images": { "binding": "IMAGES" },
   "browser": { "binding": "BROWSER" },
+  // Workers AI: embeddings for the assistants' search (Settings -> Integrations -> AI).
+  "ai": { "binding": "AI" },
   "vars": {
     "KEYLINE_ENV": "production",
     "STORAGE_DRIVER": "r2",
@@ -93,6 +95,7 @@
       ],
       "images": { "binding": "IMAGES" },
       "browser": { "binding": "BROWSER" },
+      "ai": { "binding": "AI" },
       "vars": {
         "KEYLINE_ENV": "staging",
         "STORAGE_DRIVER": "r2",

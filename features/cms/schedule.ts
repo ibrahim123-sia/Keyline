@@ -3,6 +3,7 @@ import { and, eq, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { pages } from "@/db/schema/cms";
+import { queueEmbedding } from "@/features/ai/embeddings";
 import { writeAudit } from "@/lib/audit";
 import { tags } from "@/lib/cache-tags";
 import { expireTags } from "@/lib/expire-tags";
@@ -77,6 +78,7 @@ export async function publishDuePages(
       });
     }
   }
+  await queueEmbedding("page", changed, { db });
   if (changed.length)
     expireTags(tags.pages, tags.sitemap, tags.redirects, ...changed.map((id) => tags.page(id)));
   return { published, failed };

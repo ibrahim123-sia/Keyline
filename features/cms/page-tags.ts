@@ -1,5 +1,6 @@
 import "server-only";
 import { updateTag } from "next/cache";
+import { embedAfterChange } from "@/features/ai/embeddings";
 import { tags } from "@/lib/cache-tags";
 
 /**
@@ -11,6 +12,7 @@ export function revalidatePage(
   opts: { redirects?: boolean; draftOnly?: boolean } = {},
 ): void {
   if (opts.draftOnly) return;
+  embedAfterChange("page", [id]);
   updateTag(tags.page(id));
   updateTag(tags.pages);
   updateTag(tags.sitemap);

@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { updateTag } from "next/cache";
 import type { Tx } from "@/db/client";
+import { embedAfterChange } from "@/features/ai/embeddings";
 import { currentAgencyId } from "@/db/schema/_common";
 import { properties } from "@/db/schema/properties";
 import { queueBrochureRender } from "@/features/brochure/jobs";
@@ -35,6 +36,8 @@ export async function revalidateListings(
   projectIds: Array<string | null> = [],
 ): Promise<void> {
   for (const id of ids) updateTag(tags.listing(id));
+  // The assistants' search index follows the change (10 §1).
+  embedAfterChange("property", ids);
   for (const id of new Set(projectIds)) if (id) updateTag(tags.project(id));
   updateTag(tags.listings);
   updateTag(tags.search);
