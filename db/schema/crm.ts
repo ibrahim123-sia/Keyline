@@ -345,21 +345,34 @@ const ownerRequestColumns = () => ({
   baths: integer(),
   /** m² */
   size: numericNumber(),
+  /** One of the condition keys of the form (features/valuation/schema.ts). */
   condition: text(),
+  /** Upgrade keys ticked on the form ("kitchen", "bathrooms", …). */
+  upgrades: text().array().notNull().default([]),
   notes: text(),
+  /** Minor units of `currency` (the base currency when the request came in). */
   aiRangeMin: bigint({ mode: "number" }),
   aiRangeMax: bigint({ mode: "number" }),
+  currency: text(),
   aiComparableIds: uuid().array().notNull().default([]),
   photoIds: uuid().array().notNull().default([]),
 });
 
-export const valuationRequests = pgTable("valuation_requests", ownerRequestColumns());
+export const valuationRequests = pgTable("valuation_requests", ownerRequestColumns(), (t) => [
+  index("valuation_requests_lead_idx").on(t.leadId),
+]);
 
-export const listingRequests = pgTable("listing_requests", {
-  ...ownerRequestColumns(),
-  askingPrice: bigint({ mode: "number" }),
-  availableFrom: date(),
-});
+export const listingRequests = pgTable(
+  "listing_requests",
+  {
+    ...ownerRequestColumns(),
+    askingPrice: bigint({ mode: "number" }),
+    availableFrom: date(),
+    /** The draft listing made from this request ("Create draft listing", 11 §6). */
+    propertyId: uuid().references(() => properties.id, { onDelete: "set null" }),
+  },
+  (t) => [index("listing_requests_lead_idx").on(t.leadId)],
+);
 
 export const viewingStatuses = [
   "requested",
