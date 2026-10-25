@@ -3,9 +3,9 @@ import type { SeedPreset } from "../types";
 /** Demo customers and inbox of the Haven & Dune preset (16 §1); people are fictional. */
 export const havenDuneCustomers: SeedPreset["customers"] = [
   {
-    email: "mina@demo.lintel",
+    email: "mina@demo.keyline",
     name: "Mina Park",
-    phone: "+971502220001",
+    phone: "+971500000201",
     search: {
       name: "Two-bed homes in Dubai Marina",
       query: "loc=dubai-marina&beds=2",
@@ -13,13 +13,13 @@ export const havenDuneCustomers: SeedPreset["customers"] = [
     },
   },
   {
-    email: "omar.customer@demo.lintel",
+    email: "omar.customer@demo.keyline",
     name: "Omar Haddad",
-    phone: "+971502220002",
+    phone: "+971500000202",
     search: { name: "Villas to rent", query: "purpose=rent&type=villas", frequency: "weekly" },
   },
   {
-    email: "lucy@demo.lintel",
+    email: "lucy@demo.keyline",
     name: "Lucy Grant",
     phone: "+447700900321",
     search: {
@@ -52,7 +52,7 @@ export const havenDuneInbox: SeedPreset["inbox"] = {
   conversations: [
     {
       channel: "whatsapp",
-      who: { name: "Amira Haddad", phone: "+971501230001" },
+      who: { name: "Amira Haddad", phone: "+971500000301" },
       status: "human",
       lines: [
         {
@@ -106,7 +106,7 @@ export const havenDuneInbox: SeedPreset["inbox"] = {
     },
     {
       channel: "whatsapp",
-      who: { name: "Omar Saeed", phone: "+971501230002" },
+      who: { name: "Omar Saeed", phone: "+971500000302" },
       status: "ai",
       lines: [
         {
