@@ -14,3 +14,4 @@ export * from "./crm";
 export * from "./customer";
 export * from "./reports";
 export * from "./stats";
+export * from "./ai";
