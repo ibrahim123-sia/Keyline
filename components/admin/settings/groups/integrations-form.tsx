@@ -507,6 +507,27 @@ export function IntegrationsSettingsForm({
                 {value.ai.gatewayAccountId && keyField("ai_gateway_token")}
               </>
             )}
+            <SelectField
+              label="Search embeddings"
+              description="Vectors for the assistants' search. Workers AI runs on Cloudflare; elsewhere the built-in test embeddings are used."
+              value={value.ai.embeddingProvider}
+              onChange={(embeddingProvider) => set({ ai: { ...value.ai, embeddingProvider } })}
+              options={[
+                { value: "workers_ai", label: "Cloudflare Workers AI" },
+                { value: "mock", label: "Built-in test embeddings (no account)" },
+              ]}
+            />
+            {value.ai.embeddingProvider === "workers_ai" && (
+              <TextInputField
+                label="Embedding model"
+                description="Must return 1024 numbers per text (the default @cf/baai/bge-m3 does)."
+                value={value.ai.embeddingModel}
+                onChange={(embeddingModel) =>
+                  set({ ai: { ...value.ai, embeddingModel: embeddingModel.trim() } })
+                }
+                error={errorFor("ai.embeddingModel")}
+              />
+            )}
           </FormSection>
         </>
       )}

@@ -518,6 +518,12 @@ export const integrationsSchema = z.object({
       fastModel: z.string().max(80),
       gatewayAccountId: z.string().max(80),
       gatewayName: z.string().max(80),
+      /**
+       * Vectors for the assistants' search (10 §1): Cloudflare Workers AI (the `AI` binding,
+       * through the gateway when one is set) or the built-in test embeddings.
+       */
+      embeddingProvider: z.enum(["mock", "workers_ai"]).default("mock"),
+      embeddingModel: z.string().trim().max(80).default("@cf/baai/bge-m3"),
     })
     .default({
       enabled: false,
@@ -526,6 +532,8 @@ export const integrationsSchema = z.object({
       fastModel: "claude-haiku-5-5",
       gatewayAccountId: "",
       gatewayName: "",
+      embeddingProvider: "mock",
+      embeddingModel: "@cf/baai/bge-m3",
     }),
 });
 
@@ -581,7 +589,31 @@ export const aiSchema = z.object({
   ),
   /** Monthly spend limit in USD cents; 0 = no limit. */
   monthlySpendLimitCents: z.number().int().min(0).default(5000),
+  /** Daily budget in USD cents; 0 = no daily budget (the monthly limit still applies). */
+  dailySpendLimitCents: z.number().int().min(0).default(500),
   spendAlertPct: z.number().int().min(1).max(100).default(80),
+  /**
+   * One switch per AI feature (the admin assistant uses `adminAssistantEnabled`). A feature
+   * that is off, or over budget, falls back to its plain version: the team answers chats,
+   * leads are scored by the rules, writing helpers are hidden.
+   */
+  features: z
+    .object({
+      customerChat: z.boolean().default(true),
+      whatsapp: z.boolean().default(true),
+      writingHelpers: z.boolean().default(true),
+      leadScoring: z.boolean().default(true),
+      mcp: z.boolean().default(true),
+    })
+    .default({
+      customerChat: true,
+      whatsapp: true,
+      writingHelpers: true,
+      leadScoring: true,
+      mcp: true,
+    }),
+  /** The agency's own rules for the website assistant, added to its instructions. */
+  assistantRules: z.array(z.string().trim().min(1).max(200)).max(20).default([]),
 });
 
 /* 10. Notifications ---------------------------------------------------------- */

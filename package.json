@@ -33,7 +33,10 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
-    "dev:cron": "tsx --import ./scripts/register-server-only.mjs scripts/dev-cron.ts"
+    "dev:cron": "tsx --import ./scripts/register-server-only.mjs scripts/dev-cron.ts",
+    "ai:prompts": "tsx scripts/build-ai-prompts.ts",
+    "ai:eval": "tsx --import ./scripts/register-server-only.mjs scripts/ai-eval.ts",
+    "ai:backfill": "tsx --import ./scripts/register-server-only.mjs scripts/ai-backfill.ts"
   },
   "dependencies": {
     "@cloudflare/puppeteer": "1.4.0",

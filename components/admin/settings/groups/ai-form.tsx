@@ -26,18 +26,56 @@ const actionLabels: Record<(typeof adminAiActions)[number], string> = {
   send_listings_to_lead: "Send listings to a lead",
 };
 
-/** 04 §9 AI: website assistant behaviour, admin assistant permissions, spend limit. */
+export type AiUsageView = {
+  todayCents: number;
+  monthCents: number;
+  days: Array<{ date: string; requests: number; tokens: number; costCents: number }>;
+};
+
+const featureSwitches: Array<{ key: keyof SettingsOf<"ai">["features"]; label: string }> = [
+  { key: "customerChat", label: "Website assistant" },
+  { key: "whatsapp", label: "WhatsApp assistant" },
+  { key: "writingHelpers", label: "Writing helpers (descriptions, SEO, alt text, blog drafts)" },
+  { key: "leadScoring", label: "Lead scoring and conversation summaries" },
+  { key: "mcp", label: "MCP access for AI tools outside Keyline" },
+];
+
+const usd = (cents: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+
+/** 04 §9 AI: switches per feature, assistant behaviour and rules, admin actions, budgets. */
 export function AiSettingsForm({
   initial,
   readOnly,
+  usage,
 }: {
   initial: SettingsOf<"ai">;
   readOnly: boolean;
+  usage?: AiUsageView;
 }) {
   return (
     <SettingsForm group="ai" initial={initial} readOnly={readOnly}>
       {({ value, set, errorFor }) => (
         <>
+          <FormSection
+            title="AI features"
+            description="Turn each AI feature on or off. When one is off or over budget, Keyline falls back: the team answers chats and leads are scored by the rules."
+          >
+            {featureSwitches.map((f) => (
+              <SwitchField
+                key={f.key}
+                label={f.label}
+                checked={value.features[f.key]}
+                onChange={(on) => set({ features: { ...value.features, [f.key]: on } })}
+              />
+            ))}
+            <SwitchField
+              label="Admin assistant"
+              checked={value.adminAssistantEnabled}
+              onChange={(adminAssistantEnabled) => set({ adminAssistantEnabled })}
+            />
+          </FormSection>
+
           <FormSection
             title="Website chat"
             description="A chat button on every page. Messages arrive in the inbox; until the assistant is turned on, the team answers them."
@@ -111,6 +149,14 @@ export function AiSettingsForm({
               onChange={(humanTopics) => set({ humanTopics })}
               error={errorFor("humanTopics")}
             />
+            <ListField
+              label="The agency's own rules"
+              description="Extra instructions the assistant always follows, one per line (for example: always mention that viewings are free)."
+              max={20}
+              value={value.assistantRules}
+              onChange={(assistantRules) => set({ assistantRules })}
+              error={errorFor("assistantRules")}
+            />
             <SelectField
               label="“Talk to a person” button"
               value={value.showHumanButton}
@@ -139,11 +185,6 @@ export function AiSettingsForm({
             title="Admin assistant"
             description="It proposes changes; nothing is changed until an admin confirms."
           >
-            <SwitchField
-              label="Admin assistant on"
-              checked={value.adminAssistantEnabled}
-              onChange={(adminAssistantEnabled) => set({ adminAssistantEnabled })}
-            />
             <CheckboxListField
               label="Actions it may propose"
               columns={2}
@@ -159,7 +200,19 @@ export function AiSettingsForm({
             />
           </FormSection>
 
-          <FormSection title="Spending">
+          <FormSection
+            title="Spending"
+            description="Estimated from the provider's list prices. At a limit, AI features pause and fall back to their plain version."
+          >
+            <NumberField
+              label="Daily budget"
+              suffix="USD (0 = no daily budget)"
+              min={0}
+              step={1}
+              value={value.dailySpendLimitCents / 100}
+              onChange={(v) => set({ dailySpendLimitCents: Math.round((v ?? 0) * 100) })}
+              error={errorFor("dailySpendLimitCents")}
+            />
             <NumberField
               label="Monthly limit"
               suffix="USD (0 = no limit)"
@@ -180,8 +233,61 @@ export function AiSettingsForm({
               error={errorFor("spendAlertPct")}
             />
           </FormSection>
+          {usage && <UsagePanel usage={usage} />}
         </>
       )}
     </SettingsForm>
+  );
+}
+
+function UsagePanel({ usage }: { usage: AiUsageView }) {
+  return (
+    <FormSection
+      title="Usage"
+      description="Requests, tokens and estimated cost per day (agency time)."
+    >
+      <p className="text-sm text-ink">
+        Today {usd(usage.todayCents)} · This month {usd(usage.monthCents)}
+      </p>
+      {usage.days.length === 0 ? (
+        <p className="text-sm text-text-muted">No AI use in the last 14 days.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <caption className="sr-only">AI usage per day</caption>
+            <thead>
+              <tr className="text-left text-text-muted">
+                <th scope="col" className="py-1 pe-4 font-medium">
+                  Day
+                </th>
+                <th scope="col" className="py-1 pe-4 text-end font-medium">
+                  Requests
+                </th>
+                <th scope="col" className="py-1 pe-4 text-end font-medium">
+                  Tokens
+                </th>
+                <th scope="col" className="py-1 text-end font-medium">
+                  Cost
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {usage.days.map((d) => (
+                <tr key={d.date} className="border-t border-border">
+                  <td className="py-1 pe-4">{d.date}</td>
+                  <td className="py-1 pe-4 text-end tabular-nums">
+                    {d.requests.toLocaleString("en-US")}
+                  </td>
+                  <td className="py-1 pe-4 text-end tabular-nums">
+                    {d.tokens.toLocaleString("en-US")}
+                  </td>
+                  <td className="py-1 text-end tabular-nums">{usd(d.costCents)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </FormSection>
   );
 }

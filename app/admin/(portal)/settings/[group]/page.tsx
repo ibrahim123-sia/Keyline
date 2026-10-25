@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { FormSection, PageHeader } from "@/components/admin/page-header";
 import { AiSettingsForm } from "@/components/admin/settings/groups/ai-form";
 import { BrandingSettingsForm } from "@/components/admin/settings/groups/branding-form";
@@ -15,6 +16,8 @@ import { SeoSettingsForm } from "@/components/admin/settings/groups/seo-form";
 import { ViewingsSettingsForm } from "@/components/admin/settings/groups/viewings-form";
 import { resolveMapStyle } from "@/components/maps/map-style";
 import { getDb } from "@/db/client";
+import { microsToCents } from "@/features/ai/pricing";
+import { spendSummary, usageByDay } from "@/features/ai/usage";
 import { listLeadStages } from "@/features/lead-stages/queries";
 import { loadSettings } from "@/features/settings/queries";
 import { listSecretStatus } from "@/features/settings/secrets";
@@ -159,8 +162,31 @@ export default async function SettingsGroupPage(props: PageProps<"/admin/setting
           />
         );
       }
-      case "ai":
-        return <AiSettingsForm initial={await loadSettings("ai", db)} readOnly={readOnly} />;
+      case "ai": {
+        // Usage per day reads the clock: render at request time.
+        await connection();
+        const [value, spend, days] = await Promise.all([
+          loadSettings("ai", db),
+          spendSummary(db),
+          usageByDay(14, db),
+        ]);
+        return (
+          <AiSettingsForm
+            initial={value}
+            readOnly={readOnly}
+            usage={{
+              todayCents: microsToCents(spend.todayMicros),
+              monthCents: microsToCents(spend.monthMicros),
+              days: days.map((d) => ({
+                date: d.date,
+                requests: d.requests,
+                tokens: d.inputTokens + d.outputTokens,
+                costCents: microsToCents(d.costMicros),
+              })),
+            }}
+          />
+        );
+      }
       case "notifications":
         return (
           <NotificationsSettingsForm

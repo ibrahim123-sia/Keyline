@@ -1,5 +1,7 @@
 import { and, desc, eq, ilike, inArray, sql, type SQL } from "drizzle-orm";
 import { getDb, type DbOrTx } from "@/db/client";
+import { microsToCents } from "@/features/ai/pricing";
+import { spendSummary } from "@/features/ai/usage";
 import { currentAgencyId } from "@/db/schema/_common";
 import { jobRuns, jobStatuses } from "@/db/schema/system";
 import { loadSettings } from "@/features/settings/queries";
@@ -173,10 +175,7 @@ export function runtimeInfo() {
   };
 }
 
-/**
- * AI spend this month in USD cents. Usage is recorded per call once the AI features exist
- * (10 §5); until then nothing has been spent.
- */
-export async function aiSpendThisMonthCents(): Promise<number> {
-  return 0;
+/** Estimated AI spend this month in USD cents (`ai_usage`, agency time zone). */
+export async function aiSpendThisMonthCents(db?: DbOrTx): Promise<number> {
+  return microsToCents((await spendSummary(db)).monthMicros);
 }
