@@ -13,6 +13,7 @@ export const ai = {
   customerFallback: "Thanks for your message. Someone from our team will reply here shortly.",
   notSure: "I don't know that yet. I can ask our team to help you.",
   handover: "Good question for our team. I've asked {agent} to reply to you.",
+  personAsked: "I've asked {agent} to reply to you here. You can keep writing in the meantime.",
   stepsExhausted: "I need a moment longer on that one. I've asked our team to help you.",
   budgetEmail: {
     alertSubject: "AI spend has reached {pct}% of this month's limit",

@@ -4,7 +4,11 @@ import type { DbOrTx } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { messages, visitors } from "@/db/schema/crm";
 import { findOpenConversation } from "@/features/inbox/store";
-import type { ChatMessage } from "./schema";
+import { loadListingCards } from "@/features/listings/cards";
+import { bedsLabel, currencyFormats, priceLabel } from "@/features/properties/format";
+import { loadSettings } from "@/features/settings/queries";
+import { formatArea } from "@/lib/units";
+import type { ChatCard, ChatMessage } from "./schema";
 
 /** The visitor behind the cookie, created if the beacon has not seen them yet. */
 export async function chatVisitor(db: DbOrTx, visitorKey: string): Promise<string> {
@@ -38,6 +42,7 @@ export async function chatMessages(
       direction: messages.direction,
       sender: messages.sender,
       body: messages.body,
+      cards: messages.cards,
       createdAt: messages.createdAt,
     })
     .from(messages)
@@ -49,11 +54,40 @@ export async function chatMessages(
     )
     .orderBy(asc(messages.createdAt))
     .limit(200);
+  const cards = await chatCards(db, [...new Set(rows.flatMap((m) => m.cards))]);
   return rows.map((m) => ({
     id: m.id,
     mine: m.direction === "in",
     sender: m.sender,
     body: m.body,
     createdAt: m.createdAt.toISOString(),
+    cards: m.cards.map((id) => cards.get(id)).filter((c): c is ChatCard => Boolean(c)),
   }));
+}
+
+/** Listing cards for the chat, live (price and status as they are now). */
+async function chatCards(db: DbOrTx, ids: string[]): Promise<Map<string, ChatCard>> {
+  if (!ids.length) return new Map();
+  const market = await loadSettings("market", db);
+  const formats = currencyFormats(market);
+  const list = await loadListingCards(db, ids);
+  return new Map(
+    list.map((c) => [
+      c.id,
+      {
+        id: c.id,
+        title: c.title,
+        href: `/property/${c.slug}`,
+        price: priceLabel(c, formats),
+        facts: [
+          c.beds !== null ? (c.beds === 0 ? bedsLabel(0) : `${c.beds} bed`) : null,
+          c.size ? formatArea(c.size, market.areaUnit) : null,
+          c.locationName,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        photo: c.photos[0] ? { url: c.photos[0].url, alt: c.photos[0].alt } : null,
+      },
+    ]),
+  );
 }

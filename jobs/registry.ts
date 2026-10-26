@@ -1,3 +1,4 @@
+import { customerReplyJob } from "@/features/ai/assistant/customer";
 import { embedBackfillJob, embedJob } from "@/features/ai/embeddings";
 import {
   alertsNewListingJob,
@@ -42,6 +43,7 @@ const jobs: JobDefinition[] = [
   ownerRequestNotifyJob as JobDefinition,
   embedJob as JobDefinition,
   embedBackfillJob as JobDefinition,
+  customerReplyJob as JobDefinition,
 ];
 
 const byName = new Map(jobs.map((j) => [j.name, j]));

@@ -8,13 +8,25 @@ export const chatStartSchema = z.object({
   message: z.string().trim().min(1, "Write your message").max(2000, "Use at most 2,000 characters"),
   /** Honeypot: hidden from people, filled in by bots. */
   website: z.string().max(200).default(""),
+  /** The page the chat was opened on (the assistant knows what the visitor is looking at). */
+  page: z.string().max(500).default(""),
 });
 export type ChatStartInput = z.input<typeof chatStartSchema>;
 
 export const chatMessageSchema = z.object({
   text: z.string().trim().min(1, "Write your message").max(2000, "Use at most 2,000 characters"),
   website: z.string().max(200).default(""),
+  page: z.string().max(500).default(""),
 });
+
+export type ChatCard = {
+  id: string;
+  title: string;
+  href: string;
+  price: string;
+  facts: string;
+  photo: { url: string; alt: string } | null;
+};
 
 export type ChatMessage = {
   id: string;
@@ -22,4 +34,6 @@ export type ChatMessage = {
   sender: "customer" | "ai" | "admin" | "system";
   body: string;
   createdAt: string;
+  /** Listings shown under an assistant message, loaded live (unpublished ones are left out). */
+  cards: ChatCard[];
 };

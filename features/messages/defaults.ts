@@ -72,6 +72,19 @@ export const templateDefaults = {
       button: "Open the lead",
     },
   },
+  "chat.handover": {
+    audience: "internal",
+    label: "A chat visitor asked for a person (the assistant handed over)",
+    variables: ["name", "channel", "reason", "agent", "url"],
+    email: {
+      subject: "{{name}} would like a person to reply · {{channel}}",
+      body: "The assistant handed this conversation over to the team.\n\nVisitor: {{name}}\nWhy: {{reason}}\nAgent: {{agent}}",
+      button: "Open the conversation",
+    },
+    whatsapp: {
+      body: "{{name}} would like a person to reply in the {{channel}}: {{reason}}. {{url}}",
+    },
+  },
   "lead.not_answered": {
     audience: "internal",
     label: "Lead not answered in time",

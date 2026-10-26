@@ -42,7 +42,7 @@ const liveIn = (locationId: string): SQL =>
 
 export type LiveCounts = { sale: number; rent: number };
 
-async function liveCounts(db: DbOrTx, locationId: string): Promise<LiveCounts> {
+export async function liveCounts(db: DbOrTx, locationId: string): Promise<LiveCounts> {
   const rows = await db
     .select({ purpose: properties.purpose, n: sql<number>`count(*)::int` })
     .from(properties)

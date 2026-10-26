@@ -1,6 +1,9 @@
 "use server";
 
-import { getDb } from "@/db/client";
+import { getDb, type Db } from "@/db/client";
+import { queueCustomerReply } from "@/features/ai/assistant/customer";
+import { handOver } from "@/features/ai/assistant/handover";
+import { checkAiAvailable, checkAiRate } from "@/features/ai/limits";
 import { currentVisitorKey } from "@/features/attribution/current";
 import { addIncoming, ensureConversation } from "@/features/inbox/store";
 import { captureLead } from "@/features/leads/capture";
@@ -8,6 +11,9 @@ import { loadSettings } from "@/features/settings/queries";
 import { errorsByPath, toActionError, type ActionResult } from "@/lib/actions";
 import { hit, rateLimitRules } from "@/lib/rate-limit";
 import { currentRequestMeta } from "@/lib/request";
+import { ai as aiText } from "@/lib/i18n/dictionaries/ai";
+import { format } from "@/lib/i18n";
+import { sendOutgoing } from "@/features/inbox/store";
 import { chatMessageSchema, chatStartSchema, type ChatStartInput } from "./schema";
 import { chatVisitor, visitorChat } from "./store";
 
@@ -33,10 +39,18 @@ async function limited(visitorKey: string): Promise<Fail | null> {
       };
 }
 
+/** The assistant's per-visitor and per-IP limits (10 §2 Safety), on top of the chat's own. */
+async function aiLimited(db: Db, visitorId: string): Promise<Fail | null> {
+  const ip = (await currentRequestMeta()).ip ?? null;
+  const rate = await checkAiRate({ visitorId, ip }, { db });
+  return rate.allowed ? null : { ok: false, error: rate.message, code: "RATE_LIMITED" };
+}
+
 /**
  * Starts the website chat (09 §1 #3): with name and email or phone it becomes (or joins) a
- * lead with source chat; the conversation waits in the inbox for a person (Phase 9 adds the
- * assistant). Bots that fill the honeypot get a success answer and nothing happens.
+ * lead with source chat. When the assistant is on (Settings -> AI) it answers (status "ai");
+ * otherwise, or when it cannot, the conversation waits in the inbox for a person. Bots that
+ * fill the honeypot get a success answer and nothing happens.
  */
 export async function startChat(
   input: ChatStartInput,
@@ -76,6 +90,11 @@ export async function startChat(
       };
 
     const visitorId = await chatVisitor(db, key);
+    const assistant = (await checkAiAvailable("customer_chat", { db })).ok;
+    if (assistant) {
+      const blockedAi = await aiLimited(db, visitorId);
+      if (blockedAi) return blockedAi;
+    }
     const now = new Date();
     const lead = hasContact
       ? await captureLead(db, {
@@ -97,15 +116,21 @@ export async function startChat(
       leadId: lead?.leadId ?? null,
       visitorId,
       externalId: visitorId,
-      status: "needs_human",
+      status: assistant ? "ai" : "needs_human",
       now,
     });
-    await addIncoming(db, {
+    const messageId = await addIncoming(db, {
       conversationId: conv.id,
       body: data.message,
       at: now,
       leadEvent: !lead,
     });
+    if (conv.status === "ai")
+      await queueCustomerReply(db, {
+        conversationId: conv.id,
+        messageId,
+        page: { path: data.page },
+      });
     return { ok: true, data: { conversationId: conv.id } };
   } catch (err) {
     return toActionError(err);
@@ -116,6 +141,7 @@ export async function startChat(
 export async function sendChatMessage(input: {
   text: string;
   website?: string;
+  page?: string;
 }): Promise<ActionResult<{ ok: true }>> {
   try {
     const parsed = chatMessageSchema.safeParse(input);
@@ -135,10 +161,57 @@ export async function sendChatMessage(input: {
     if (!key) return noVisitor;
     const blocked = await limited(key);
     if (blocked) return blocked;
+    const visitorId = await chatVisitor(db, key);
+    const conv = await visitorChat(db, visitorId);
+    if (!conv)
+      return { ok: false, error: "This chat has ended. Start a new one.", code: "NO_CHAT" };
+    if (conv.status === "ai") {
+      const blockedAi = await aiLimited(db, visitorId);
+      if (blockedAi) return blockedAi;
+    }
+    const messageId = await addIncoming(db, {
+      conversationId: conv.id,
+      body: parsed.data.text,
+      at: new Date(),
+    });
+    if (conv.status === "ai")
+      await queueCustomerReply(db, {
+        conversationId: conv.id,
+        messageId,
+        page: { path: parsed.data.page },
+      });
+    return { ok: true, data: { ok: true } };
+  } catch (err) {
+    return toActionError(err);
+  }
+}
+
+/**
+ * "Talk to a person" (10 §2: the visitor can always hand over): the assistant stops, the team
+ * is told, and the chat says who will reply.
+ */
+export async function askForPerson(): Promise<ActionResult<{ ok: true }>> {
+  try {
+    const db = await getDb();
+    if (!(await loadSettings("ai", db)).webChat.enabled) return off;
+    const key = await currentVisitorKey();
+    if (!key) return noVisitor;
+    const blocked = await limited(key);
+    if (blocked) return blocked;
     const conv = await visitorChat(db, await chatVisitor(db, key));
     if (!conv)
       return { ok: false, error: "This chat has ended. Start a new one.", code: "NO_CHAT" };
-    await addIncoming(db, { conversationId: conv.id, body: parsed.data.text, at: new Date() });
+    if (conv.status !== "ai") return { ok: true, data: { ok: true } };
+    const result = await handOver(db, {
+      conversationId: conv.id,
+      reason: 'The visitor pressed "Talk to a person".',
+    });
+    await sendOutgoing(db, {
+      conversationId: conv.id,
+      text: format(aiText.personAsked, { agent: result.agentName ?? "our team" }),
+      sender: "system",
+      now: new Date(),
+    });
     return { ok: true, data: { ok: true } };
   } catch (err) {
     return toActionError(err);

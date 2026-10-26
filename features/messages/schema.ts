@@ -87,6 +87,8 @@ export type WhatsappMappingInput = z.input<typeof whatsappMappingSchema>;
 export const sampleValues: Record<string, string> = {
   name: "Sam",
   agent: "Alex",
+  channel: "website chat",
+  reason: "Asked about lowering the price",
   agency: "Your agency",
   reference: "REF-2041",
   url: "https://example.com/property/two-bed-apartment",
