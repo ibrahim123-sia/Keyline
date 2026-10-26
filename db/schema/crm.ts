@@ -463,6 +463,8 @@ export const conversations = pgTable(
     lastMessageAt: timestamp({ withTimezone: true }),
     unreadCount: integer().notNull().default(0),
     aiSummary: text(),
+    /** When the summary was written; a newer message means the conversation goes on. */
+    aiSummaryAt: timestamp({ withTimezone: true }),
     /** WhatsApp 24-hour customer service window. */
     waWindowExpiresAt: timestamp({ withTimezone: true }),
   },
@@ -491,6 +493,10 @@ export const messages = pgTable(
       .default([]),
     /** For AI messages: the tools it used, shown as small grey lines (09 §6). */
     toolCalls: jsonb().$type<Array<{ tool: string; summary: string }>>().notNull().default([]),
+    /** Listings shown as cards under the message (web chat), loaded live when shown. */
+    cards: jsonb().$type<string[]>().notNull().default([]),
+    /** For assistant replies: the latest visitor message it answered (so none is skipped). */
+    inReplyTo: uuid(),
     status: text({ enum: ["queued", "sent", "delivered", "read", "failed"] })
       .notNull()
       .default("sent"),

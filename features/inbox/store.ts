@@ -56,7 +56,7 @@ export async function findOpenConversation(
   return row ?? null;
 }
 
-/** The open conversation, or a new one (status "needs_human" until the AI arrives in Phase 9). */
+/** The open conversation, or a new one ("needs_human" unless the caller says the assistant answers). */
 export async function ensureConversation(
   db: DbOrTx,
   input: {
@@ -178,6 +178,10 @@ export async function sendOutgoing(
     template?: OutgoingTemplate | null;
     image?: { link: string; caption: string } | null;
     toolCalls?: Array<{ tool: string; summary: string }>;
+    /** Listing ids shown as cards under the message (web chat). */
+    cards?: string[];
+    /** The assistant's reply: the visitor message it answered. */
+    inReplyTo?: string | null;
     now: Date;
   },
 ): Promise<{ messageId: string; status: "queued" | "sent" }> {
@@ -251,6 +255,8 @@ export async function sendOutgoing(
       body: input.text,
       attachments: input.image ? [{ url: input.image.link, name: "photo", mime: "image/*" }] : [],
       toolCalls: input.toolCalls ?? [],
+      cards: input.cards ?? [],
+      inReplyTo: input.inReplyTo ?? null,
       status,
       externalId,
       createdAt: input.now,

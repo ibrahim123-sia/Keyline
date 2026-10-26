@@ -29,6 +29,8 @@ export type Booking = {
   /** The visitor's own time zone, shown with the agency's in messages. */
   timeZone: string | null;
   visitorKey?: string | null;
+  /** Where it was booked: the site form (default) or the assistant in a chat. */
+  source?: "site" | "chat" | "whatsapp";
   now?: Date;
 };
 
@@ -115,7 +117,7 @@ export async function bookViewing(
 
   const lead = await captureLead(db, {
     source: "tour",
-    sourceDetail: input.type === "video" ? "video booking" : "booking",
+    sourceDetail: `${input.type === "video" ? "video booking" : "booking"}${input.source && input.source !== "site" ? ` (${input.source === "chat" ? "website assistant" : "WhatsApp assistant"})` : ""}`,
     contact: { name: input.name, email: input.email || null, phone: input.phone || null },
     propertyId: target.kind === "property" ? target.id : null,
     projectId: target.kind === "project" ? target.id : null,
@@ -166,7 +168,7 @@ export async function bookViewing(
         notes: input.notes || null,
         visitorTimeZone: input.timeZone,
         manageTokenHash: hash,
-        source: "site",
+        source: input.source ?? "site",
       })
       .returning({ id: viewings.id });
     await tx.insert(leadEvents).values({
