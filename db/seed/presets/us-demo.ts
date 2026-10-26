@@ -53,6 +53,8 @@ export const usDemo: SeedPreset = {
         registrationFeePct: 0,
         agencyFeePct: 0,
         arrangementFeePct: 1,
+        // $4,000 / 7,500 / 12,000 / 20,000 a month.
+        incomeBands: [400_000, 750_000, 1_200_000, 2_000_000],
       },
       roi: {
         serviceChargePerArea: 0,
