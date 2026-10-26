@@ -5,18 +5,18 @@ Spec: [`docs/spec/`](spec/README.md) (README + `01..16`).
 
 ## Status
 
-| Phase | Name                     | Status                                      |
-| ----- | ------------------------ | ------------------------------------------- |
-| 1     | Foundation               | done (staging deploy waits for credentials) |
-| 2     | Settings and master data | done (staging deploy waits for credentials) |
-| 3     | Properties and projects  | done (staging deploy waits for credentials) |
-| 4     | Public site core         | done except LCP (Phase 10 performance pass) |
-| 5     | CMS and SEO              | done                                        |
-| 6     | Leads and CRM            | built; e2e in CI                            |
-| 7     | Customer area            | built; e2e in CI                            |
-| 8     | Tools                    | not started                                 |
-| 9     | AI                       | not started                                 |
-| 10    | Reports, polish, launch  | not started                                 |
+| Phase | Name                     | Status                                                                                |
+| ----- | ------------------------ | ------------------------------------------------------------------------------------- |
+| 1     | Foundation               | done (staging deploy waits for credentials)                                           |
+| 2     | Settings and master data | done (staging deploy waits for credentials)                                           |
+| 3     | Properties and projects  | done (staging deploy waits for credentials)                                           |
+| 4     | Public site core         | done except LCP (Phase 10 performance pass)                                           |
+| 5     | CMS and SEO              | done                                                                                  |
+| 6     | Leads and CRM            | built; e2e in CI                                                                      |
+| 7     | Customer area            | built; e2e in CI                                                                      |
+| 8     | Tools                    | built except commute search and share cards                                           |
+| 9     | AI                       | in progress: service layer, retrieval, scoring and eval harness done; assistants next |
+| 10    | Reports, polish, launch  | in progress: reports, System page, CSP, US preset done                                |
 
 ## Phase 1 — Foundation (plan)
 
@@ -136,6 +136,56 @@ Done-when checklist (from `15-build-phases.md`):
 - [x] Lowering a saved home's price sends a price-drop email — `tests/integration/alerts.test.ts` "price drops: the savers and matching instant searches, once per new price"
 - [x] Data export and account deletion work — `tests/integration/account.test.ts` "exports the customer's data and deletes the account, anonymising what the agency keeps"; in the browser `tests/e2e/account.spec.ts` "a customer downloads their data, then deletes the account"
 
+## Phase 8 — Tools (plan)
+
+1. Mortgage calculator with pre-approval form (income bands from Settings -> Market), rental return simulator with the emailed PDF report; one tested maths module shared with the property page blocks (done).
+2. Compare page at /tools/compare and the compare tray; branded 4-page brochure PDF for listings and projects (done).
+3. Valuation from comparable own listings and /list-your-property, owner requests on the lead page with a one-click draft listing (done).
+4. Price trends: monthly agency figures, admin-entered figures, charts on area and property pages (done).
+5. Draw-your-area search (Phase 4) and the daily "Verified" badge expiry (Phase 3) (done).
+6. Commute time search and dynamic share cards (open).
+
+Done-when checklist (from `15-build-phases.md`):
+
+- [x] Maths unit tests pass (mortgage, ROI, IRR, yields) — `tests/unit/tools-math.test.ts`
+- [x] Brochure renders all 4 pages with branding — `tests/unit/brochure.test.ts`, e2e `tests/e2e/tools-brochure-compare.spec.ts`
+- [ ] Polygon and commute filters return correct results — drawn areas are built (URL encoding in `tests/unit/search-params.test.ts`, matching in `tests/integration/alerts.test.ts`) but the search query has no polygon test yet; commute search not built
+- [ ] Share card shows correctly in the WhatsApp preview checker — share cards not built
+
+## Phase 9 — AI (plan)
+
+1. Service layer: provider interface (Anthropic over fetch with streaming and AI Gateway, a scripted test provider), prompt files bundled at build time, tool registry with hard blocks, agent loop with fenced tool results, `ai_actions` propose/confirm/reject with audit, `ai_usage` with budgets, spend alerts and per-feature switches (done, migration 0015).
+2. Embeddings pipeline (Workers AI bge-m3 or hashing test embeddings) and hybrid search with a confidence signal; `searchKnowledge()` for FAQs and pages (done).
+3. Lead scoring with the shared rubric, rules as the fallback (done).
+4. Eval harness `pnpm ai:eval` with retrieval, knowledge and assistant cases (done; assistant cases pending until the assistant registers in `tests/ai/agents.ts`).
+5. Customer assistant: the 10 §2 tools, the web chat answering with listing cards, booking with confirmation, hand-over, end-of-conversation summary and scoring; eval set to 30+ cases (next).
+6. WhatsApp agent on the same brain (24-hour window, templates outside it, listing cards as image + caption).
+7. Admin assistant: ask (read tools over fixed SQL), suggest (dashboard cards), act (write tools through the confirm flow, AIActionPreview card).
+8. AI helpers in the editors (description, titles, SEO, alt text, blog draft, listing from text) and chat topic clustering.
+9. MCP server with per-admin tokens; write tools stay pending until confirmed.
+
+Done-when checklist (from `15-build-phases.md`):
+
+- [ ] Eval set passes (grounded answers, no invented listings, correct hand-over)
+- [ ] Customer assistant books a real viewing end to end
+- [ ] Every admin AI write action needs confirm and appears in the audit log
+- [ ] MCP server works from an MCP client with a token, and write actions stay pending until confirmed
+
+## Phase 10 — Reports, polish, launch (plan)
+
+1. Dashboard KPIs, Admin -> Reports with charts and CSV/PDF export, the weekly report email (done, migration 0013).
+2. System page: overdue and stuck jobs, late scheduled tasks, release tag, health check covers jobs (done).
+3. Security headers, CSP with a report-only switch, structured logs (done).
+4. Seed: Haven & Dune demo and the US preset (Maple & Main Realty), market-driven seed data, demo logins (done).
+5. Accessibility pass, performance pass (LCP, decision 62), full Playwright suite on staging, README with screenshots, demo video script (open).
+
+Done-when checklist (from `15-build-phases.md`):
+
+- [ ] All e2e flows in `14-non-functional.md` pass on staging — staging needs credentials
+- [ ] Lighthouse: Performance ≥ 90, Accessibility ≥ 95, SEO 100 on home, search and property pages (mobile)
+- [x] Switching to the US preset changes currency, units and labels with no code changes — `tests/e2e/us-preset.spec.ts`, `tests/integration/seed-us.test.ts`
+- [ ] README and demo logins ready — demo logins done; README screenshots open
+
 ## Done
 
 - Read the whole spec. Checked the toolchain on this machine (Node 24, pnpm 12, no Docker/Postgres).
@@ -183,6 +233,9 @@ Done-when checklist (from `15-build-phases.md`):
 - Phase 6 rest: viewings admin (calendar with day, week and agent views, drag to move, status buttons with their emails, new viewings for a lead, days off and other hours), Google Calendar per agent (OAuth, encrypted tokens, busy times every 15 minutes, events follow viewings), "Book a tour" on project pages; message templates editor; page-builder forms as leads (contact, callback, valuation and list-your-property requests with tasks); newsletter with double opt-in and one-click unsubscribe; campaign report by source, medium, campaign and channel (first or last touch); subscribers list.
 - Phase 7 customer area: hearts and compare on cards and listing pages, "Save search" on search pages, a compare tray, and a sign-in prompt that finishes a guest's save afterwards; `/account` with saved homes and lists (shareable by private link), saved searches, tours, inquiries, chats, compare, profile, notifications and privacy (data download as JSON, account deletion that anonymises what the agency keeps); signing in links past inquiries by verified email; 3 demo customers in the seed.
 - Phase 7 alerts: new matches (instant, daily and weekly digests), price drops and status changes for saved homes and searches, never the same listing twice, preferences and WhatsApp opt-in respected, one-click unsubscribe with List-Unsubscribe headers.
+- Phase 8 tools: mortgage calculator and pre-approval, rental return simulator and its emailed PDF, compare page, brochure PDF (HTML to PDF through Cloudflare Browser Rendering, Chromium elsewhere), valuation with comparables and list-your-property, owner requests with a draft listing, price trends (migration 0014). Unit, integration, e2e.
+- Phase 9 foundation: AI service layer, embeddings and hybrid search, lead scoring by the AI with the rules as fallback, eval harness (migration 0015).
+- Phase 10 so far: reports and the weekly email, dashboard KPIs, System page upgrades, security headers and CSP, the US preset (Maple & Main Realty) with market-driven seed data and its e2e.
 - UI foundation: Desert Modern tokens as Tailwind v4 theme variables, injected from Branding settings at runtime (`html:root`), shadcn/ui mapped onto them; admin light/dark scope; type scale and container utilities; 12 self-hosted fonts selectable in Branding; contrast helpers (WCAG); i18n dictionaries (site, account, admin); shells: site header/footer, account (menu/tabs), admin (sidebar, top bar with assistant input, theme toggle).
 
 ## In progress
@@ -191,10 +244,13 @@ Done-when checklist (from `15-build-phases.md`):
 - Phase 5: built and merged; its new e2e specs (page builder, content admin, blog, SEO) run in CI for the first time.
 - Phase 6: built and merged; the new e2e specs (inbox, leads, viewings admin, marketing) run in CI.
 - Phase 7: built and merged (alerts and the customer area); its e2e spec runs in CI.
+- Phase 9: the customer assistant (tools, web chat answers, booking, hand-over, summary and score, eval cases).
 
 ## Next
 
-- Close the Phase 5 checklist once CI is green; finish Phase 6.
+- Phase 9: WhatsApp agent, admin assistant with the confirm flow, AI helpers, MCP server.
+- Phase 8: commute time search and share cards.
+- Phase 10: accessibility and performance passes, README screenshots.
 
 ## Decisions (made by me, per spec 01 §5 "small decisions")
 
