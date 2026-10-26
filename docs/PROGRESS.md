@@ -244,7 +244,7 @@ Done-when checklist (from `15-build-phases.md`):
 - Phase 5: built and merged; its new e2e specs (page builder, content admin, blog, SEO) run in CI for the first time.
 - Phase 6: built and merged; the new e2e specs (inbox, leads, viewings admin, marketing) run in CI.
 - Phase 7: built and merged (alerts and the customer area); its e2e spec runs in CI.
-- Phase 9: the customer assistant (tools, web chat answers, booking, hand-over, summary and score, eval cases).
+- Phase 9: the customer assistant. Done: the 14 customer tools, the `ai.customer_reply` job, web chat wired to it (cards, hand-over, fallback to the team), the eval agent (`pnpm ai:eval` with the test provider: 14 of 16 pass). Open: the chat window UI (cards, typing state, "Talk to a person"), end-of-conversation summary and score, `get_listing` outside Next (the eval script has no `cacheLife`), 30+ eval cases, integration and e2e tests.
 
 ## Next
 
@@ -331,6 +331,10 @@ Done-when checklist (from `15-build-phases.md`):
 75. **Shortlist opens are counted by the browser**, with a beacon sent once the page has loaded, not while it renders: a render can repeat (production rendered the page twice for one visit), and link scanners and chat previews fetch the page without running it.
 76. **Repository layout**: the code keeps the spec's folder structure at the root (`01-rules-and-stack.md` §3: `app`, `components`, `features`, `db`, `lib`, `jobs`, `emails`, `tests`), as usual for a Next.js app, rather than moving into `src/`. Documentation lives in `docs/` (the spec in `docs/spec/`, this file in `docs/`), contributor and security guides in `.github/`. The licence is proprietary (all rights reserved) until the owners choose otherwise; the repository is public, so the code is visible but not licensed for reuse.
 
+77. **The assistant's replies run as a job** (`ai.customer_reply`), not inside the visitor's request: the chat window already polls, a retried job survives a slow or failed model call, and one short lease per conversation keeps two replies from racing. A reply records the visitor message it answered (`messages.in_reply_to`, ids are time-ordered), so a message sent while the model was thinking is answered next instead of skipped.
+78. **Booking, saving contact details and the brochure are `read` tools**, not proposals: they act for the visitor, who confirms in the chat (`book_viewing` needs `visitorConfirmed: true` and the details Settings -> AI asks for). Admin changes stay behind the confirm flow.
+79. **Hand-over** sets the conversation to "needs_human" and emails the lead's agent and the lead inbox once per hand-over (`chat.handover`, the "new lead" row of Settings -> Notifications). When AI is off, over budget or fails, the visitor sees the usual "someone from our team will reply" once and the team answers.
+
 ## Data model changes (vs `05-data-model.md`)
 
 | Table                                        | Change                                                                                    | Why                                                                                 |
@@ -362,6 +366,7 @@ Done-when checklist (from `15-build-phases.md`):
 | conversations                                | + `external_id`, `subject`, `unread_count`; status `needs_human`                          | WhatsApp number or email thread, unread badge, inbox statuses (09 §6)               |
 | messages                                     | + `sender_admin_id`, `error`, status `queued`                                             | Who replied; why a send failed                                                      |
 | message_templates, quick_replies, shortlists | new                                                                                       | Editable templates (13 §1), inbox snippets (09 §6), "send properties" links (09 §4) |
+| messages, conversations                      | + `cards`, `in_reply_to`; + `ai_summary_at` (migration 0016)                              | Listing cards under assistant replies, no skipped messages, end-of-chat summaries   |
 
 ## Open questions
 
