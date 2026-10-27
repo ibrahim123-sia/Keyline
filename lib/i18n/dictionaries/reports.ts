@@ -265,6 +265,7 @@ export const reports = {
     notes: [
       "Conversations handled: conversations where the assistant replied in the period. Handed to the team: of those, the ones a person took over or that wait for a person.",
       "Viewings booked by AI: viewings booked in the period from the website chat or WhatsApp.",
+      "AI cost: the estimated spend of every AI feature in the period (assistants, helpers, scoring, summaries, search index), in US dollars.",
     ],
   },
   weekly: {

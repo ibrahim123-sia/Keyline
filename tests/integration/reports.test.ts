@@ -2,6 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { eq, sql } from "drizzle-orm";
 import { GET as exportReport } from "@/app/api/admin/reports/[report]/route";
 import { getDb } from "@/db/client";
+import { aiUsage } from "@/db/schema/ai";
 import { currentAgencyId } from "@/db/schema/_common";
 import {
   contacts,
@@ -232,6 +233,7 @@ describe("reports (09 §7)", () => {
       "email_log",
       "job_runs",
       "report_deliveries",
+      "ai_usage",
     );
     ({ contactId } = await seed());
   });
@@ -442,6 +444,12 @@ describe("reports (09 §7)", () => {
       source: "chat",
       createdAt: new Date("2026-10-02T06:05:00Z"),
     });
+    // Estimated spend inside the period counts; a day outside it does not.
+    await db.insert(aiUsage).values([
+      { date: "2026-10-02", feature: "customer_chat", model: "m", costEstimateMicros: 1_234_567 },
+      { date: "2026-10-03", feature: "summary", model: "m", costEstimateMicros: 765_433 },
+      { date: "2026-09-20", feature: "customer_chat", model: "m", costEstimateMicros: 9_000_000 },
+    ]);
     const after = await buildReport(db, "ai", week, { now });
     expect(after.data.emptyState).toBeUndefined();
     expect(kpis(after.data)).toMatchObject({
@@ -450,7 +458,7 @@ describe("reports (09 §7)", () => {
       viewings: { value: 1 },
     });
     const cost = after.data.tables[0]!.rows.find((r) => r.key === "cost")!;
-    expect(cost.cells.value).toBe("Not recorded yet");
+    expect(cost.cells.value).toBe("USD 2.00");
   });
 
   it("exports CSV and PDF for admins only, and writes the audit log", async () => {

@@ -12,7 +12,7 @@ export type AiReportNumbers = {
   conversationsHandled: number;
   handedOver: number;
   viewingsBooked: number;
-  /** USD cents; null while AI usage is not recorded (no `ai_usage` table yet). */
+  /** Estimated AI spend in the period (every AI feature), USD cents. */
   costCents: number | null;
 };
 
@@ -21,8 +21,8 @@ export type AiReportNumbers = {
  * - conversations handled: conversations where the assistant replied in the period;
  * - handed over: of those, the ones a person took over or that wait for a person;
  * - viewings booked by AI: viewings created in the period from the website chat or WhatsApp;
- * - AI cost: not recorded yet. When `ai_usage` (05 §14) exists, sum its `cost_estimate` for
- *   the period here.
+ * - AI cost: the estimated spend of every AI feature in the period (`ai_usage`, by the
+ *   agency's calendar day).
  */
 export async function aiReportNumbers(
   db: DbOrTx,
@@ -41,7 +41,12 @@ export async function aiReportNumbers(
       viewingsBooked: 0,
       costCents: null,
     };
-  const res = await db.execute<{ handled: number; handed: number; viewings: number }>(sql`
+  const res = await db.execute<{
+    handled: number;
+    handed: number;
+    viewings: number;
+    micros: number;
+  }>(sql`
     with handled as (
       select distinct c.id, c.status
       from messages m join conversations c on c.id = m.conversation_id
@@ -55,14 +60,17 @@ export async function aiReportNumbers(
           and a.sender = 'admin'))::int as handed,
       (select count(*) from viewings v where v.agency_id = ${agency()}
         and v.source in ('chat', 'whatsapp')
-        and ${within(sql`v.created_at`, range, timeZone)})::int as viewings`);
+        and ${within(sql`v.created_at`, range, timeZone)})::int as viewings,
+      (select coalesce(sum(u.cost_estimate_micros), 0) from ai_usage u
+        where u.agency_id = ${agency()} and u.date >= ${range.from}::date
+          and u.date <= ${range.to}::date) as micros`);
   const r = res.rows[0]!;
   return {
     setUp: true,
     conversationsHandled: num(r.handled),
     handedOver: num(r.handed),
     viewingsBooked: num(r.viewings),
-    costCents: null,
+    costCents: Math.round(num(r.micros) / 10_000),
   };
 }
 
