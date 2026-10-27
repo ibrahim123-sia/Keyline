@@ -192,6 +192,75 @@ test("share cards: og:image and twitter:image point at a versioned card that is 
   expect((await request.get("/og/nothing/here")).status()).toBe(404);
 });
 
+/**
+ * The mobile phone Lighthouse emulates, as an HTML-only crawler. Next streams metadata from
+ * generateMetadata into <body> for browsers and for Googlebot (which reads the whole DOM); it
+ * blocks and puts it in <head> for HTML-limited crawlers (facebookexternalhit, Bingbot,
+ * "Chrome-Lighthouse"...). Lighthouse 13's default user agent is a plain browser, whose SEO
+ * audits read <head> only, so SEO is checked the way such a crawler receives the page.
+ */
+const CRAWLER_UA =
+  "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36 Chrome-Lighthouse";
+
+test("home, search and property: Lighthouse accessibility 95+ and SEO 100 (mobile)", async ({}, testInfo) => {
+  test.skip(process.env.E2E_MODE !== "prod", "Lighthouse measures the production build only");
+  test.setTimeout(900_000);
+  const { default: lighthouse } = await import("lighthouse");
+  const port = 9334;
+  const browser = await chromium.launch({ args: [`--remote-debugging-port=${port}`] });
+  const base = `http://localhost:${process.env.E2E_PORT ?? 3200}`;
+  type Node = { snippet?: string; selector?: string; explanation?: string };
+  type Result = NonNullable<Awaited<ReturnType<typeof lighthouse>>>["lhr"];
+  // What lowered a score: every weighted audit that did not pass, with its elements
+  // (selector and, for contrast, the colours and ratio).
+  const failing = (lhr: Result, c: string) =>
+    lhr.categories[c]!.auditRefs.filter((r) => r.weight > 0)
+      .map((r) => lhr.audits[r.id]!)
+      .filter((a) => a.score !== null && a.score < 1)
+      .map((a) => {
+        const items = (a.details as { items?: Array<{ node?: Node }> })?.items ?? [];
+        const nodes = items
+          .slice(0, 6)
+          .map(
+            ({ node }) =>
+              `    ${node?.snippet?.slice(0, 110) ?? ""} @ ${node?.selector?.slice(0, 90) ?? ""} ${node?.explanation?.split("\n").at(-1)?.slice(0, 140) ?? ""}`,
+          );
+        return [`- ${a.id}: ${a.title}`, ...nodes].join("\n");
+      })
+      .join("\n");
+  const run = async (url: string, category: "accessibility" | "seo") => {
+    const result = await lighthouse(url, {
+      port,
+      output: "json" as const,
+      logLevel: "error" as const,
+      onlyCategories: [category],
+      ...(category === "seo" ? { emulatedUserAgent: CRAWLER_UA } : {}),
+    });
+    const lhr = result!.lhr;
+    return {
+      lhr,
+      score: Math.round((lhr.categories[category]?.score ?? 0) * 100),
+      why: failing(lhr, category),
+    };
+  };
+  try {
+    for (const path of ["/", "/buy", `/property/${listingSlug}`]) {
+      const a11y = await run(`${base}${path}`, "accessibility");
+      const seo = await run(`${base}${path}`, "seo");
+      const report = `${path}: accessibility ${a11y.score}, SEO ${seo.score}\n${a11y.why}\n${seo.why}`;
+      console.log(`[lighthouse] ${report}`);
+      await testInfo.attach(`lighthouse-a11y${path.replace(/\//g, "_")}.json`, {
+        body: JSON.stringify(a11y.lhr),
+        contentType: "application/json",
+      });
+      expect(a11y.score, report).toBeGreaterThanOrEqual(95);
+      expect(seo.score, report).toBe(100);
+    }
+  } finally {
+    await browser.close();
+  }
+});
+
 test("property page: Core Web Vitals in a Lighthouse mobile run", async ({}, testInfo) => {
   test.skip(process.env.E2E_MODE !== "prod", "Lighthouse measures the production build only");
   test.setTimeout(300_000);
