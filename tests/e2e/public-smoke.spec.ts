@@ -148,6 +148,26 @@ function lighthouseSummary(lhr: Lhr): string {
   return lines.join("\n");
 }
 
+test("commute filter: homes within a drive of one of the agency's places", async ({ page }) => {
+  // The place most demo listings are near (times are estimates without a Google key).
+  const { rows } = await db().query(
+    `select poi.id, poi.name from pois poi join property_pois pp on pp.poi_id = poi.id
+      where poi.is_active group by poi.id, poi.name order by count(*) desc limit 1`,
+  );
+  const place = rows[0] as { id: string; name: string };
+  await page.goto(`/buy?commute=${place.id}.drive.30`);
+  await expect(page.getByText(`Within 30 min drive of ${place.name}`).first()).toBeVisible();
+  const line = page.getByText(new RegExp(`min drive to ${place.name}`)).first();
+  await expect(line).toBeVisible();
+  const minutes = Number((await line.textContent())!.match(/(\d+) min/)![1]);
+  expect(minutes).toBeLessThanOrEqual(30);
+
+  await page.getByRole("button", { name: "More filters" }).click();
+  const sheet = page.getByRole("dialog");
+  await expect(sheet.getByRole("group", { name: "Commute time" })).toBeVisible();
+  await expect(sheet.getByRole("combobox", { name: "To" })).toHaveValue(place.id);
+});
+
 test("share cards: og:image and twitter:image point at a versioned card that is a PNG", async ({
   page,
   request,
