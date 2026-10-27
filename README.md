@@ -240,26 +240,29 @@ only allows in Developer Mode.
 ## Project structure
 
 ```
-app/          routes: (site) public website, (account) customer area, admin portal, api
-components/   ui (shadcn), site (with the page-builder sections), account, admin, maps, forms
-features/     one folder per domain module: queries, actions, validation, jobs
-db/           Drizzle schema, migrations and the demo seed
-lib/          auth, permissions, i18n, tokens, money and units, storage, PDF, rate limits, audit
-jobs/         job registry, runner and cron schedule
-emails/       React Email templates
-worker/       Cloudflare Worker entry (queue consumer and cron)
-scripts/      local database, test database, setup and CI helpers
-tests/        unit, integration and end-to-end tests
-docs/         product specification and build progress
+src/
+  app/          routes: (site) public website, (account) customer area, admin portal, api
+  components/   ui (shadcn), site (with the page-builder sections), account, admin, maps, forms
+  features/     one folder per domain module: queries, actions, validation, jobs, the AI layer
+  db/           Drizzle schema, migrations and the demo seed
+  lib/          auth, permissions, i18n, tokens, money and units, storage, PDF, rate limits, audit
+  jobs/         job registry, runner and cron schedule
+  emails/       React Email templates
+  worker/       Cloudflare Worker entry (queue consumer and cron)
+  middleware.ts edge middleware (sign-in redirect, visitor id, redirects, CSP)
+scripts/        local database, test database, setup and CI helpers
+tests/          unit, integration, end-to-end and AI eval tests
+.github/        CI workflow, issue and pull request templates, contributing and security guides
 ```
+
+Configuration files (Next.js, TypeScript, ESLint, Prettier, Vitest, Playwright, Drizzle,
+Wrangler) stay at the root, as the tools expect.
 
 ## Documentation
 
-- [`docs/spec/`](docs/spec/README.md): the product specification, from rules and stack to the
-  build phases.
-- [`docs/PROGRESS.md`](docs/PROGRESS.md): build status per phase, done-when checklists, and the
-  decisions taken along the way.
 - [`CHANGELOG.md`](CHANGELOG.md): notable changes.
+- The product specification and the build log (phase checklists and the decisions taken) are
+  kept by the maintainers in a local `docs/` folder, which is not part of the repository.
 
 ## Contributing, security and license
 

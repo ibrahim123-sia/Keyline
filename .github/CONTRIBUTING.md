@@ -5,19 +5,19 @@ For local setup, see the [README](../README.md#getting-started).
 
 ## Ground rules
 
-The specification in [`docs/spec/`](../docs/spec/README.md) is the source of truth; read
-[`01-rules-and-stack.md`](../docs/spec/01-rules-and-stack.md) before your first change. In short:
+The product specification (kept by the maintainers outside the repository) is the source of
+truth; ask for it before a larger change. In short:
 
 - TypeScript in strict mode; no `any` without a written reason.
 - Validate every input on the server with Zod, and check permissions on every admin page,
   action and route handler.
 - Write an audit log entry for every admin change.
-- No hard-coded content, currency, units or market: copy lives in `lib/i18n`, the rest comes from
-  Settings.
+- No hard-coded content, currency, units or market: copy lives in `src/lib/i18n`, the rest
+  comes from Settings.
 - Keep public pages fast: server components by default, client code loaded lazily, no heavy new
   dependencies without agreement.
-- Log decisions you make yourself in [`docs/PROGRESS.md`](../docs/PROGRESS.md) under "Decisions",
-  and notable changes in [`CHANGELOG.md`](../CHANGELOG.md).
+- Explain decisions you make yourself in the pull request, and note notable changes in
+  [`CHANGELOG.md`](../CHANGELOG.md).
 
 ## Workflow
 
@@ -29,9 +29,9 @@ The specification in [`docs/spec/`](../docs/spec/README.md) is the source of tru
 
 ## Database changes
 
-Change the Drizzle schema in `db/schema/`, then run `pnpm db:generate` and commit the generated
+Change the Drizzle schema in `src/db/schema/`, then run `pnpm db:generate` and commit the generated
 migration with it. CI fails when the schema and the migrations disagree. Add a column when a
-feature needs it and note the reason in `docs/PROGRESS.md`. Removing or renaming anything in
+feature needs it and give the reason in the pull request. Removing or renaming anything in
 the data model needs agreement first.
 
 ## Checks to run before pushing

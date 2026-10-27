@@ -45,3 +45,6 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# product spec and build log: kept locally by the maintainers, not in the repository
+/docs/

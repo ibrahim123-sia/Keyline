@@ -1,6 +1,6 @@
 ## What and why
 
-<!-- What does this change do, and which part of the spec (docs/spec) does it cover? -->
+<!-- What does this change do, and which part of the spec does it cover? -->
 
 ## How to test
 
@@ -13,5 +13,5 @@
 - [ ] Server input validated, permissions checked, admin changes audited
 - [ ] No hard-coded content or market values; copy in `lib/i18n`
 - [ ] Schema changes come with a generated migration
-- [ ] `docs/PROGRESS.md` and `CHANGELOG.md` updated where needed
+- [ ] `CHANGELOG.md` updated where needed; decisions explained above
 - [ ] Screenshots attached for visible changes
