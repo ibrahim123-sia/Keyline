@@ -311,5 +311,9 @@ export const reports = {
     seoMany: "{n} live listings are missing their SEO title or description",
     seoBody: "Search engines show these texts; without them they guess.",
     seoAction: "Fix SEO",
+    topicTitle: "Blog idea: {idea}",
+    topicBodyOne: "1 visitor asked about {label} in the chat this week.",
+    topicBodyMany: "{n} visitors asked about {label} in the chat this week.",
+    topicAction: "Write a post",
   },
 };

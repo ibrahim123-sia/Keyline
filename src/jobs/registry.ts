@@ -1,6 +1,7 @@
 import { customerReplyJob } from "@/features/ai/assistant/customer";
 import { conversationSummaryJob } from "@/features/ai/assistant/summary";
 import { embedBackfillJob, embedJob } from "@/features/ai/embeddings";
+import { chatTopicsJob } from "@/features/ai/topics";
 import {
   alertsNewListingJob,
   alertsPriceDropJob,
@@ -46,6 +47,7 @@ const jobs: JobDefinition[] = [
   embedBackfillJob as JobDefinition,
   customerReplyJob as JobDefinition,
   conversationSummaryJob as JobDefinition,
+  chatTopicsJob as JobDefinition,
 ];
 
 const byName = new Map(jobs.map((j) => [j.name, j]));

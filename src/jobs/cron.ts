@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { queueIdleSummaries } from "@/features/ai/assistant/summary";
+import { TOPICS_JOB } from "@/features/ai/topics";
 import { queueEmbeddingBackfill } from "@/features/ai/embeddings";
 import { runAlertDigest } from "@/features/alerts/jobs";
 import { jobRuns } from "@/db/schema/system";
@@ -157,6 +158,15 @@ export const cronTasks: CronTask[] = [
     schedule: "daily at 03:30",
     due: at(3, 30),
     run: async () => recountAllMediaUsage(await getDb()),
+  },
+  // Weekly (10 §5): the last seven days of chat questions grouped into topics.
+  {
+    name: "ai.chat-topics",
+    schedule: "weekly on Monday at 05:00",
+    due: (t) => t.weekday === 1 && at(5)(t),
+    run: async () => ({
+      queued: (await enqueue(TOPICS_JOB, {}, { dedupeKey: TOPICS_JOB, maxAttempts: 2 })) !== null,
+    }),
   },
   // Weekly: the SEO report's broken-link check (a queue job: it can take a few minutes).
   {
