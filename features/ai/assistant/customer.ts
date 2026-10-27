@@ -8,6 +8,10 @@ import { rateLimits } from "@/db/schema/system";
 import { properties } from "@/db/schema/properties";
 import { projects } from "@/db/schema/projects";
 import { sendOutgoing } from "@/features/inbox/store";
+import { loadListingCards } from "@/features/listings/cards";
+import { siteUrl } from "@/features/site/url";
+import { ActionError } from "@/lib/actions";
+import { marketFormats } from "./lookup";
 import { loadSettings } from "@/features/settings/queries";
 import type { SettingsOf } from "@/features/settings/schema";
 import { zonedDate } from "@/features/viewings/slots";
@@ -403,18 +407,54 @@ export async function replyInConversation(
           : format(t.handover, { agent: h.agentName ?? "our team" });
       handedOver = true;
     }
-    const sent = await sendOutgoing(db, {
-      conversationId: conv.id,
-      text,
-      sender: "ai",
-      toolCalls,
-      cards: turn.cards,
-      inReplyTo: lastIn.id,
-      now: new Date(Math.max(now.getTime(), Date.now())),
-    });
+    const sentAt = new Date(Math.max(now.getTime(), Date.now()));
+    let sent: { messageId: string };
+    try {
+      sent = await sendOutgoing(db, {
+        conversationId: conv.id,
+        text,
+        sender: "ai",
+        toolCalls,
+        cards: conv.channel === "web_chat" ? turn.cards : [],
+        inReplyTo: lastIn.id,
+        now: sentAt,
+      });
+    } catch (err) {
+      // WhatsApp's 24-hour window closed while the job waited: only a person (with a
+      // template) can write now.
+      if (err instanceof ActionError && err.code === "WA_WINDOW") {
+        await db
+          .update(conversations)
+          .set({ status: "needs_human" })
+          .where(eq(conversations.id, conv.id));
+        return { status: "skipped", reason: "wa_window" };
+      }
+      throw err;
+    }
+    // On WhatsApp a listing card is a photo with its caption and link (10 §2).
+    if (conv.channel === "whatsapp" && turn.cards.length)
+      await sendWhatsappCards(db, conv.id, turn.cards.slice(0, 3), sentAt);
     return { status: "replied", messageId: sent.messageId, handedOver };
   } finally {
     await dropLease(db, conv.id);
+  }
+}
+
+/** Listing cards as WhatsApp photos: title, live price and link in the caption. */
+async function sendWhatsappCards(db: Db, conversationId: string, ids: string[], at: Date) {
+  const market = await loadSettings("market", db);
+  const f = marketFormats(market);
+  const cards = await loadListingCards(db, ids);
+  for (const [i, card] of cards.entries()) {
+    const caption = `${card.title}\n${f.price(card)}\n${siteUrl(`/property/${card.slug}`)}`;
+    await sendOutgoing(db, {
+      conversationId,
+      text: caption,
+      sender: "ai",
+      image: card.photos[0] ? { link: siteUrl(card.photos[0].url), caption } : null,
+      // After the answer, in order.
+      now: new Date(at.getTime() + i + 1),
+    });
   }
 }
 

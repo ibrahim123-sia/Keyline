@@ -4,6 +4,8 @@ import { z } from "zod";
 import type { Db } from "@/db/client";
 import { currentAgencyId } from "@/db/schema/_common";
 import { conversations, messages, visitorEvents, visitors } from "@/db/schema/crm";
+import { queueCustomerReply } from "@/features/ai/assistant/customer";
+import { checkAiAvailable } from "@/features/ai/limits";
 import { findRefCode } from "@/features/attribution/whatsapp-ref";
 import { addIncoming, ensureConversation, findOpenConversation } from "@/features/inbox/store";
 import { e164FromWaId, waId } from "@/features/inbox/rules";
@@ -231,12 +233,15 @@ async function handleMessage(db: Db, msg: WaMessage, profileName: string | null,
       now: at,
     });
     leadEventWritten = true;
+    // A new conversation is the assistant's when it is on for WhatsApp (10 §2), else the team's.
+    const assistant = (await checkAiAvailable("whatsapp", { db, now })).ok;
     conv = await ensureConversation(db, {
       channel: "whatsapp",
       contactId: lead.contactId,
       leadId: lead.leadId,
       visitorId: click?.visitorId ?? null,
       externalId: id,
+      status: assistant ? "ai" : "needs_human",
       now: at,
     });
     if (conv.leadId !== lead.leadId)
@@ -245,7 +250,7 @@ async function handleMessage(db: Db, msg: WaMessage, profileName: string | null,
         .set({ leadId: lead.leadId, contactId: lead.contactId })
         .where(eq(conversations.id, conv.id));
   }
-  await addIncoming(db, {
+  const messageId = await addIncoming(db, {
     conversationId: conv.id,
     body,
     attachments,
@@ -253,6 +258,17 @@ async function handleMessage(db: Db, msg: WaMessage, profileName: string | null,
     at,
     leadEvent: !leadEventWritten,
   });
+  // The assistant answers words; a photo, file or voice note without any ("[voice note]") goes
+  // to the team (transcribing voice notes is an optional later step, 10 §2).
+  if (conv.status === "ai") {
+    const words = Boolean(msg.text?.body.trim()) || !/^\[[^\]]+\]$/.test(body.trim());
+    if (words) await queueCustomerReply(db, { conversationId: conv.id, messageId });
+    else
+      await db
+        .update(conversations)
+        .set({ status: "needs_human" })
+        .where(eq(conversations.id, conv.id));
+  }
 }
 
 /**
