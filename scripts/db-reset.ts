@@ -2,12 +2,13 @@ import "./_env";
 import { Client } from "pg";
 import { runMigrations } from "../db/migrate";
 import { closeDb } from "../db/client";
+import { readEnv } from "../lib/legacy-env";
 
 /**
  * `pnpm db:reset --yes` — drops every table (schemas `public` and `drizzle`) and re-applies
  * all migrations. Refuses to run against production.
  */
-if (process.env.KEYLINE_ENV === "production") {
+if (readEnv("PROPEL_ENV") === "production") {
   console.error("[db] refusing to reset a production database");
   process.exit(1);
 }

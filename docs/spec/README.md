@@ -1,6 +1,6 @@
-# Keyline — Project Spec (start here)
+# Propel — Project Spec (start here)
 
-**Keyline** is an AI-powered website, CRM and lead engine for real estate agencies.
+**Propel** is an AI-powered website, CRM and lead engine for real estate agencies.
 One agency installs it and runs its whole business from it.
 
 This folder is the single source of truth for the project. Read every file before writing code.
@@ -33,7 +33,7 @@ A visitor lands on the agency's website, searches homes on a list and a map, ope
 
 ## Positioning
 
-- Keyline is for real estate agencies anywhere. Never write a city or country in Keyline's own branding.
+- Propel is for real estate agencies anywhere. Never write a city or country in Propel's own branding.
 - The demo agency is **Haven & Dune**, fictional, with Dubai-style data (off-plan, payment plans, AED). All market details come from settings.
 - Single-tenant: one agency per install. Not a SaaS. But every main table has `agency_id` so multi-tenant stays possible later.
 

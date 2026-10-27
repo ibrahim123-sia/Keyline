@@ -37,7 +37,7 @@ const featureSwitches: Array<{ key: keyof SettingsOf<"ai">["features"]; label: s
   { key: "whatsapp", label: "WhatsApp assistant" },
   { key: "writingHelpers", label: "Writing helpers (descriptions, SEO, alt text, blog drafts)" },
   { key: "leadScoring", label: "Lead scoring and conversation summaries" },
-  { key: "mcp", label: "MCP access for AI tools outside Keyline" },
+  { key: "mcp", label: "MCP access for AI tools outside Propel" },
 ];
 
 const usd = (cents: number) =>
@@ -59,7 +59,7 @@ export function AiSettingsForm({
         <>
           <FormSection
             title="AI features"
-            description="Turn each AI feature on or off. When one is off or over budget, Keyline falls back: the team answers chats and leads are scored by the rules."
+            description="Turn each AI feature on or off. When one is off or over budget, Propel falls back: the team answers chats and leads are scored by the rules."
           >
             {featureSwitches.map((f) => (
               <SwitchField

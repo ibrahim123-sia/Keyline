@@ -198,9 +198,9 @@ describe("demo seed: Haven & Dune", () => {
     // Rented listings leave search.
     expect(rent.total).toBe(9);
     expect(result.admins.map((a) => [a.email, a.readOnly])).toEqual([
-      ["admin@demo.keyline", false],
-      ["staff@demo.keyline", false],
-      ["viewer@demo.keyline", true],
+      ["admin@demo.propel", false],
+      ["staff@demo.propel", false],
+      ["viewer@demo.propel", true],
     ]);
   });
 
@@ -322,9 +322,9 @@ describe("demo seed: Haven & Dune", () => {
 
   it("adds 3 demo customers with saved homes, searches, a compare set and past tours", async () => {
     expect(result.customers.map((c) => c.email)).toEqual([
-      "mina@demo.keyline",
-      "omar.customer@demo.keyline",
-      "lucy@demo.keyline",
+      "mina@demo.propel",
+      "omar.customer@demo.propel",
+      "lucy@demo.propel",
     ]);
     expect(result.counts.saved_searches).toBe(3);
     expect(result.counts.saved_homes).toBeGreaterThanOrEqual(9);

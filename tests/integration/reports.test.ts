@@ -77,7 +77,7 @@ async function seed() {
   await patchSettings(
     db,
     "general",
-    { timeZone: "Asia/Dubai", agencyName: "Keyline Demo Homes" },
+    { timeZone: "Asia/Dubai", agencyName: "Propel Demo Homes" },
     actor,
   );
   await patchSettings(
@@ -543,7 +543,7 @@ describe("reports (09 §7)", () => {
     await runDueJobs();
     const sent = await db.select().from(emailLog).where(eq(emailLog.template, "report.weekly"));
     expect(sent.map((e) => e.to).sort()).toEqual(["owner@example.com", "team@example.com"]);
-    expect(sent[0]!.subject).toBe("Keyline Demo Homes: weekly report, 12 Oct 2026 to 18 Oct 2026");
+    expect(sent[0]!.subject).toBe("Propel Demo Homes: weekly report, 12 Oct 2026 to 18 Oct 2026");
     expect(sent[0]!.html).toContain("/admin/reports?period=custom&amp;from=2026-10-12");
     expect(sent[0]!.html).toContain("format=pdf");
     // After it went out: later ticks that day, and a retried job, send nothing.

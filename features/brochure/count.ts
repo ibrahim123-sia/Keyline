@@ -6,7 +6,7 @@ import { isBot } from "@/features/attribution/bots";
 import { recordTrack } from "@/features/attribution/record";
 import { parseVisitorCookie, VISITOR_COOKIE } from "@/features/attribution/visitor-cookie";
 import { loadSettings } from "@/features/settings/queries";
-import { CONSENT_COOKIE, parseConsent } from "@/lib/consent";
+import { CONSENT_COOKIE, LEGACY_CONSENT_COOKIE, parseConsent } from "@/lib/consent";
 import { localDateString } from "@/lib/local-date";
 import type { BrochureKind } from "./types";
 
@@ -75,7 +75,9 @@ export function downloadContext(
 ): Omit<DownloadCount, "kind" | "id" | "path" | "source"> | null {
   const ua = request.headers.get("user-agent") ?? "";
   if (isBot(ua)) return null;
-  const consent = parseConsent(cookies.get(CONSENT_COOKIE)?.value);
+  const consent = parseConsent(
+    (cookies.get(CONSENT_COOKIE) ?? cookies.get(LEGACY_CONSENT_COOKIE))?.value,
+  );
   return {
     visitorKey: parseVisitorCookie(cookies.get(VISITOR_COOKIE)?.value)?.key ?? null,
     consent: {

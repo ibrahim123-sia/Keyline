@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Please do not open a public issue for security problems. Report them privately through
-GitHub's [private vulnerability reporting](https://github.com/ibrahim123-sia/Keyline/security/advisories/new)
+GitHub's [private vulnerability reporting](https://github.com/ibrahim123-sia/Propel/security/advisories/new)
 for this repository.
 
 Include what you found, the steps to reproduce it and the impact you expect. We will confirm
@@ -11,9 +11,9 @@ receipt, keep you informed while we work on it, and credit you once it is fixed 
 
 ## Supported versions
 
-Keyline is deployed continuously from `main`; fixes go to the latest version only.
+Propel is deployed continuously from `main`; fixes go to the latest version only.
 
-## How Keyline protects data
+## How Propel protects data
 
 - Every admin page, server action and route handler checks permissions on the server.
 - All input is validated on the server; public forms are rate-limited and protected against spam.

@@ -84,16 +84,16 @@ export class AiNotConfiguredError extends Error {
   }
 }
 
-const g = globalThis as { __keylineAiProviderOverride?: AiProvider | null };
+const g = globalThis as { __propelAiProviderOverride?: AiProvider | null };
 
 /** Tests and the eval script can swap the provider (e.g. Anthropic over a fake fetch). */
 export function setProviderOverride(provider: AiProvider | null): void {
-  g.__keylineAiProviderOverride = provider;
+  g.__propelAiProviderOverride = provider;
 }
 
 /** The provider for the current settings. Anthropic needs its key in Settings -> Integrations. */
 export async function providerFor(config: AiConfig, db?: DbOrTx): Promise<AiProvider> {
-  if (g.__keylineAiProviderOverride) return g.__keylineAiProviderOverride;
+  if (g.__propelAiProviderOverride) return g.__propelAiProviderOverride;
   if (config.provider === "mock") return new MockProvider();
   const [apiKey, gatewayToken] = await Promise.all([
     getSecret("ai_api_key", db),

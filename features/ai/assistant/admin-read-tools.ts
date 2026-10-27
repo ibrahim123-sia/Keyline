@@ -376,7 +376,7 @@ export const reportTool = defineTool({
   kind: "read",
   name: "report",
   description:
-    "A report for a period, computed by Keyline: overview (leads, viewings, deals), sources, funnel, response-time, listings, agents or ai. Returns its KPIs (with the previous period) and tables.",
+    "A report for a period, computed by Propel: overview (leads, viewings, deals), sources, funnel, response-time, listings, agents or ai. Returns its KPIs (with the previous period) and tables.",
   input: z.object({
     report: z.enum(reportKeys),
     period: z.enum(["7d", "30d", "90d", "month", "lastMonth", "ytd", "custom"]).default("30d"),

@@ -134,8 +134,8 @@ describe("Anthropic provider (fetch, no SDK)", () => {
 
   it("goes through the AI Gateway when it is set, with its token", async () => {
     expect(anthropicBaseUrl(null)).toBe("https://api.anthropic.com");
-    expect(anthropicBaseUrl({ accountId: "acc", name: "keyline" })).toBe(
-      "https://gateway.ai.cloudflare.com/v1/acc/keyline/anthropic",
+    expect(anthropicBaseUrl({ accountId: "acc", name: "propel" })).toBe(
+      "https://gateway.ai.cloudflare.com/v1/acc/propel/anthropic",
     );
     const { fn, calls } = fakeFetch([
       () =>
@@ -148,12 +148,12 @@ describe("Anthropic provider (fetch, no SDK)", () => {
     ]);
     const provider = new AnthropicProvider({
       apiKey: "sk-test",
-      gateway: { accountId: "acc", name: "keyline", token: "gw" },
+      gateway: { accountId: "acc", name: "propel", token: "gw" },
       fetch: fn,
     });
     const res = await provider.complete(request({ model: "claude-haiku-5-5" }));
     expect(calls[0]!.url).toBe(
-      "https://gateway.ai.cloudflare.com/v1/acc/keyline/anthropic/v1/messages",
+      "https://gateway.ai.cloudflare.com/v1/acc/propel/anthropic/v1/messages",
     );
     const headers = calls[0]!.init.headers as Record<string, string>;
     expect(headers["x-api-key"]).toBe("sk-test");

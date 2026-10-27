@@ -101,7 +101,7 @@ export async function scoreLeadWithAi(
   const items = parseScoringReply(run.text);
   if (!items) return fallback("bad_reply");
 
-  // Facts Keyline knows for sure win over the model: contact details and viewings.
+  // Facts Propel knows for sure win over the model: contact details and viewings.
   const keys = new Set(items.map((i) => i.key));
   const sure = new Set(ruleItems(lead.rules));
   for (const k of ["fullContact", "someContact", "askedViewing"] as const) {

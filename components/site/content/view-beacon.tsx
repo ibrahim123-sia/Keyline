@@ -5,7 +5,7 @@ import { useEffect } from "react";
 /** Counts one view of a post per browser tab session (the admin's "views" column). */
 export function ViewBeacon({ postId }: { postId: string }) {
   useEffect(() => {
-    const key = `keyline.viewed.${postId}`;
+    const key = `propel.viewed.${postId}`;
     try {
       if (sessionStorage.getItem(key)) return;
       sessionStorage.setItem(key, "1");

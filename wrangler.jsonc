@@ -1,16 +1,16 @@
 /**
  * Cloudflare Workers config (OpenNext). Top level = production, `env.staging` = staging.
  * Before the first deploy, create the resources and replace the placeholders:
- *   wrangler r2 bucket create keyline-cache | keyline-media (and -staging variants)
- *   wrangler queues create keyline-jobs | keyline-jobs-dlq (and -staging variants)
- *   wrangler hyperdrive create keyline --connection-string="postgres://...neon..."
+ *   wrangler r2 bucket create propel-cache | propel-media (and -staging variants)
+ *   wrangler queues create propel-jobs | propel-jobs-dlq (and -staging variants)
+ *   wrangler hyperdrive create propel --connection-string="postgres://...neon..."
  * CI replaces __HYPERDRIVE_ID__ / __HYPERDRIVE_ID_STAGING__ from repository secrets.
  * Secrets (never in this file): BETTER_AUTH_SECRET, SECRETS_ENCRYPTION_KEY,
  * INTERNAL_JOB_SECRET, TURNSTILE_SECRET_KEY, GOOGLE_CLIENT_SECRET -> `wrangler secret put`.
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "keyline",
+  "name": "propel",
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
@@ -18,10 +18,10 @@
   "observability": { "enabled": true },
   "limits": { "cpu_ms": 300000 },
   "triggers": { "crons": ["* * * * *"] },
-  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "keyline" }],
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "propel" }],
   "r2_buckets": [
-    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "keyline-cache" },
-    { "binding": "MEDIA_BUCKET", "bucket_name": "keyline-media" }
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "propel-cache" },
+    { "binding": "MEDIA_BUCKET", "bucket_name": "propel-media" }
   ],
   "durable_objects": {
     "bindings": [
@@ -31,14 +31,14 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOQueueHandler", "DOShardedTagCache"] }],
   "queues": {
-    "producers": [{ "binding": "JOBS_QUEUE", "queue": "keyline-jobs" }],
+    "producers": [{ "binding": "JOBS_QUEUE", "queue": "propel-jobs" }],
     "consumers": [
       {
-        "queue": "keyline-jobs",
+        "queue": "propel-jobs",
         "max_batch_size": 10,
         "max_batch_timeout": 5,
         "max_retries": 5,
-        "dead_letter_queue": "keyline-jobs-dlq"
+        "dead_letter_queue": "propel-jobs-dlq"
       }
     ]
   },
@@ -54,19 +54,19 @@
   // Workers AI: embeddings for the assistants' search (Settings -> Integrations -> AI).
   "ai": { "binding": "AI" },
   "vars": {
-    "KEYLINE_ENV": "production",
+    "PROPEL_ENV": "production",
     "STORAGE_DRIVER": "r2",
     "JOBS_DRIVER": "queue",
     "DEMO_MODE": "false"
   },
   "env": {
     "staging": {
-      "name": "keyline-staging",
+      "name": "propel-staging",
       "triggers": { "crons": ["* * * * *"] },
-      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "keyline-staging" }],
+      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "propel-staging" }],
       "r2_buckets": [
-        { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "keyline-staging-cache" },
-        { "binding": "MEDIA_BUCKET", "bucket_name": "keyline-staging-media" }
+        { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "propel-cache-staging" },
+        { "binding": "MEDIA_BUCKET", "bucket_name": "propel-media-staging" }
       ],
       "durable_objects": {
         "bindings": [
@@ -75,14 +75,14 @@
         ]
       },
       "queues": {
-        "producers": [{ "binding": "JOBS_QUEUE", "queue": "keyline-staging-jobs" }],
+        "producers": [{ "binding": "JOBS_QUEUE", "queue": "propel-jobs-staging" }],
         "consumers": [
           {
-            "queue": "keyline-staging-jobs",
+            "queue": "propel-jobs-staging",
             "max_batch_size": 10,
             "max_batch_timeout": 5,
             "max_retries": 5,
-            "dead_letter_queue": "keyline-staging-jobs-dlq"
+            "dead_letter_queue": "propel-jobs-dlq-staging"
           }
         ]
       },
@@ -97,7 +97,7 @@
       "browser": { "binding": "BROWSER" },
       "ai": { "binding": "AI" },
       "vars": {
-        "KEYLINE_ENV": "staging",
+        "PROPEL_ENV": "staging",
         "STORAGE_DRIVER": "r2",
         "JOBS_DRIVER": "queue",
         "DEMO_MODE": "true"

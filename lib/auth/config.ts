@@ -49,7 +49,7 @@ export function createAuth(db: Db, options: { nextCookies?: boolean } = {}) {
   const googleConfigured = Boolean(e.GOOGLE_CLIENT_ID && e.GOOGLE_CLIENT_SECRET);
 
   return betterAuth({
-    appName: "Keyline",
+    appName: "Propel",
     baseURL,
     secret: e.BETTER_AUTH_SECRET,
     trustedOrigins: [e.APP_URL, baseURL],
@@ -66,7 +66,7 @@ export function createAuth(db: Db, options: { nextCookies?: boolean } = {}) {
     }),
     advanced: {
       database: { generateId: () => newId() },
-      cookiePrefix: "keyline",
+      cookiePrefix: "propel",
     },
     user: {
       additionalFields: {
@@ -239,7 +239,7 @@ export function createAuth(db: Db, options: { nextCookies?: boolean } = {}) {
     },
     plugins: [
       twoFactor({
-        issuer: "Keyline",
+        issuer: "Propel",
         totpOptions: { digits: 6, period: 30 },
         backupCodeOptions: { amount: 10, length: 10 },
         accountLockout: {

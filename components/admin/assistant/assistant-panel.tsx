@@ -32,7 +32,7 @@ type Line = {
   tools?: string[];
 };
 
-const STORE = "keyline:admin-assistant";
+const STORE = "propel:admin-assistant";
 
 function load(): { sessionId: string; lines: Line[] } {
   try {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { legacyEnvNames, readEnv, type RenamedEnv } from "./legacy-env";
 
 /**
  * Server environment. Parsed lazily so build steps that do not need a value do not fail.
@@ -7,7 +8,7 @@ import { z } from "zod";
 const serverEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   APP_URL: z.url().default("http://localhost:3000"),
-  KEYLINE_ENV: z.enum(["development", "staging", "production"]).default("development"),
+  PROPEL_ENV: z.enum(["development", "staging", "production"]).default("development"),
   AGENCY_ID: z.uuid().default("0192f000-0000-7000-8000-000000000001"),
   DEMO_MODE: z
     .enum(["true", "false"])
@@ -26,7 +27,7 @@ const serverEnvSchema = z.object({
   INTERNAL_JOB_SECRET: z.string().optional(),
 
   STORAGE_DRIVER: z.enum(["fs", "r2"]).default("fs"),
-  /** Local media folder for the fs driver; defaults to ~/.keyline/media (see lib/storage). */
+  /** Local media folder for the fs driver; defaults to ~/.propel/media (see lib/storage). */
   STORAGE_FS_DIR: z.string().optional(),
   JOBS_DRIVER: z.enum(["inline", "queue", "manual"]).default("inline"),
 
@@ -40,7 +41,11 @@ let cached: ServerEnv | undefined;
 
 export function env(): ServerEnv {
   if (cached) return cached;
-  const parsed = serverEnvSchema.safeParse(emptyToUndefined(process.env));
+  const source = emptyToUndefined(process.env);
+  // Renamed variables: the old KEYLINE_* name still counts when the new one is not set.
+  for (const name of Object.keys(legacyEnvNames) as RenamedEnv[])
+    source[name] = readEnv(name, source);
+  const parsed = serverEnvSchema.safeParse(source);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
     throw new Error(`Invalid environment: ${issues}`);
@@ -63,7 +68,7 @@ function emptyToUndefined(source: NodeJS.ProcessEnv): Record<string, string | un
 }
 
 export function isProduction(): boolean {
-  return env().KEYLINE_ENV === "production";
+  return env().PROPEL_ENV === "production";
 }
 
 /** True when running inside Cloudflare Workers (OpenNext), false in Node (dev server, scripts, tests). */

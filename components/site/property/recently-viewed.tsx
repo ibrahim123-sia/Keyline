@@ -4,8 +4,9 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CardContext } from "@/components/site/listings/listing-card";
 import { useHydrated } from "@/lib/use-hydrated";
+import { getStored } from "@/lib/stored";
 
-const KEY = "keyline.recent";
+const KEY = "propel.recent";
 const MAX = 12;
 
 // The cards (and the listing card code) load only when the section is about to be seen.
@@ -16,7 +17,7 @@ const RecentlyViewedCards = dynamic(
 
 function readIds(): string[] {
   try {
-    const raw = JSON.parse(localStorage.getItem(KEY) ?? "[]");
+    const raw = JSON.parse(getStored(localStorage, KEY) ?? "[]");
     return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string") : [];
   } catch {
     return [];

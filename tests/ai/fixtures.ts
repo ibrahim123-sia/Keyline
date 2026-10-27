@@ -9,7 +9,7 @@ import { newId } from "@/lib/ids";
 import { renderRichText, type RichDoc } from "@/lib/rich-text";
 
 /**
- * A small fictional agency for the AI eval set and the AI integration tests (Keyline demo
+ * A small fictional agency for the AI eval set and the AI integration tests (Propel demo
  * data, AED, m²). Listings are referred to by key in the eval cases.
  */
 

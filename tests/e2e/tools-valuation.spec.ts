@@ -14,7 +14,7 @@ async function seedArea(request: APIRequestContext) {
     rentPeriod: "year",
     phoneCountryCode: "+971",
   });
-  await setSettings(request, "contact", { email: "hello@keyline.example" });
+  await setSettings(request, "contact", { email: "hello@propel.example" });
   await setSettings(request, "leads", { assignmentRule: "area_match" });
   const q = async (sql: string, params: unknown[] = []) => (await db().query(sql, params)).rows;
   const suffix = Math.floor(Math.random() * 1e6);
@@ -32,7 +32,7 @@ async function seedArea(request: APIRequestContext) {
   );
   await q(`delete from agents where slug = 'e2e-vt-agent'`);
   await q(
-    `insert into agents (id, agency_id, name, slug, email, areas) values (gen_random_uuid(), $1, 'Noor Keyline', 'e2e-vt-agent', 'noor@keyline.example', array[$2::uuid])`,
+    `insert into agents (id, agency_id, name, slug, email, areas) values (gen_random_uuid(), $1, 'Noor Propel', 'e2e-vt-agent', 'noor@propel.example', array[$2::uuid])`,
     [AGENCY, area.id],
   );
   for (const [i, perSqft] of [2000, 2100, 2200, 2300].entries())
@@ -83,7 +83,7 @@ test("valuation: the steps end on a range from comparable homes", async ({ page,
   await expect(page.getByRole("heading", { name: "Photos" })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("textbox", { name: "Name", exact: true }).fill("Rana Owner");
-  await page.getByRole("textbox", { name: "Email", exact: true }).fill("rana@keyline.example");
+  await page.getByRole("textbox", { name: "Email", exact: true }).fill("rana@propel.example");
   await page.getByRole("button", { name: "Get my estimate" }).click();
   await expect(page.getByText("Please agree so we can contact you.")).toBeVisible();
   await page.getByRole("checkbox", { name: "I agree to be contacted about my request." }).check();

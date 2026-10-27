@@ -3,7 +3,7 @@ import type { SeedPreset } from "../types";
 /** Demo customers and inbox of the Haven & Dune preset (16 §1); people are fictional. */
 export const havenDuneCustomers: SeedPreset["customers"] = [
   {
-    email: "mina@demo.keyline",
+    email: "mina@demo.propel",
     name: "Mina Park",
     phone: "+971500000201",
     search: {
@@ -13,13 +13,13 @@ export const havenDuneCustomers: SeedPreset["customers"] = [
     },
   },
   {
-    email: "omar.customer@demo.keyline",
+    email: "omar.customer@demo.propel",
     name: "Omar Haddad",
     phone: "+971500000202",
     search: { name: "Villas to rent", query: "purpose=rent&type=villas", frequency: "weekly" },
   },
   {
-    email: "lucy@demo.keyline",
+    email: "lucy@demo.propel",
     name: "Lucy Grant",
     phone: "+447700900321",
     search: {

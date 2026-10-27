@@ -27,7 +27,7 @@ const env: NodeJS.ProcessEnv = {
   SECRETS_ENCRYPTION_KEY:
     process.env.SECRETS_ENCRYPTION_KEY ?? "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
   INTERNAL_JOB_SECRET: process.env.INTERNAL_JOB_SECRET ?? "e2e-internal-secret",
-  KEYLINE_ENV: "development",
+  PROPEL_ENV: "development",
   JOBS_DRIVER: "inline",
   STORAGE_DRIVER: "fs",
   STORAGE_FS_DIR: localDataPath("e2e-media"),

@@ -26,7 +26,7 @@ All list routes accept filter query params (see 4.2). Unknown slugs return a hel
 ## 2. Global parts
 
 **Header:** logo, header menu (from Menus), currency switcher, "Sign in" or account menu (avatar → Saved, Searches, Tours, Profile, Sign out), primary button "List your property" (text and link editable).
-**Footer:** from settings and footer menus. Licence number, legal links, social icons, newsletter signup (optional), "Powered by Keyline".
+**Footer:** from settings and footer menus. Licence number, legal links, social icons, newsletter signup (optional), "Powered by Propel".
 **Chat widget:** bottom-right launcher on every page (can be hidden per page). Opens the customer assistant (`10-ai.md`). Knows the page context (which property or area the visitor is on).
 **Cookie banner:** first visit. Categories: necessary (always), analytics, marketing. Choices saved and changeable from footer link.
 **Currency switcher:** changes display currency site-wide (cookie). Prices show "≈" when converted, with tooltip "Approximate. Listed price is AED 2,450,000."

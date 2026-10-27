@@ -39,10 +39,10 @@ type MockState = {
   counter: number;
 };
 
-const g = globalThis as { __keylineAiMock?: MockState };
+const g = globalThis as { __propelAiMock?: MockState };
 function state(): MockState {
-  g.__keylineAiMock ??= { script: [], rules: [], calls: [], counter: 0 };
-  return g.__keylineAiMock;
+  g.__propelAiMock ??= { script: [], rules: [], calls: [], counter: 0 };
+  return g.__propelAiMock;
 }
 
 /** Queues exact replies for the next calls (tests). */

@@ -10,6 +10,7 @@ import type { SecretKey } from "@/features/settings/schema";
 import { cronTasks } from "@/jobs/cron";
 import { env } from "@/lib/env";
 import type { TableParams } from "@/lib/table-params";
+import { readEnv } from "@/lib/legacy-env";
 
 export type { JobStatus } from "@/db/schema/system";
 type JobStatus = (typeof jobStatuses)[number];
@@ -192,9 +193,9 @@ export async function integrationStatus(db?: DbOrTx): Promise<IntegrationState[]
 export function runtimeInfo() {
   const e = env();
   return {
-    environment: e.KEYLINE_ENV,
+    environment: e.PROPEL_ENV,
     /** Release tag of this deploy (also on every log line, lib/log.ts). */
-    release: process.env.KEYLINE_RELEASE || null,
+    release: readEnv("PROPEL_RELEASE") ?? null,
     storage: e.STORAGE_DRIVER === "r2" ? "Cloudflare R2" : "Local disk",
     jobs:
       e.JOBS_DRIVER === "queue"

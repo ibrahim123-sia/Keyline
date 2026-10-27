@@ -48,7 +48,7 @@ export function viewingIcs(e: IcsEvent): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Keyline//Viewings//EN",
+    "PRODID:-//Propel//Viewings//EN",
     "CALSCALE:GREGORIAN",
     // A downloaded file, not an iTIP message: always PUBLISH; STATUS says cancelled.
     "METHOD:PUBLISH",

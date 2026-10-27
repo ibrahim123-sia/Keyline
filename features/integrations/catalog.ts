@@ -15,7 +15,7 @@ export const keyInfo: Record<SecretKey, { label: string; help?: string }> = {
   },
   whatsapp_app_secret: {
     label: "App secret",
-    help: "Lets Keyline check that webhook calls really come from Meta.",
+    help: "Lets Propel check that webhook calls really come from Meta.",
   },
   whatsapp_verify_token: { label: "Webhook verify token" },
   resend_api_key: { label: "API key" },
@@ -35,7 +35,7 @@ export const keyInfo: Record<SecretKey, { label: string; help?: string }> = {
   portal_webhook_secret: { label: "Portal webhook secret" },
   social_meta_app_secret: {
     label: "Meta app secret",
-    help: "Lets Keyline check that Lead Ads webhook calls really come from Meta.",
+    help: "Lets Propel check that Lead Ads webhook calls really come from Meta.",
   },
   social_meta_page_token: {
     label: "Page access token",
@@ -43,7 +43,7 @@ export const keyInfo: Record<SecretKey, { label: string; help?: string }> = {
   },
 };
 
-/** Tokens Keyline makes up itself (the admin pastes them into the other service). */
+/** Tokens Propel makes up itself (the admin pastes them into the other service). */
 export const generatableSecrets = [
   "whatsapp_verify_token",
   "social_meta_secret",

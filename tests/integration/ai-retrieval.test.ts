@@ -197,7 +197,7 @@ describe("AI lead score", () => {
     expect(res).toMatchObject({ source: "rules", fallbackReason: "off" });
   });
 
-  it("scores with the same rubric when AI is on; facts Keyline knows win; bad replies fall back", async () => {
+  it("scores with the same rubric when AI is on; facts Propel knows win; bad replies fall back", async () => {
     const db = await getDb();
     await patchSettings(
       db,

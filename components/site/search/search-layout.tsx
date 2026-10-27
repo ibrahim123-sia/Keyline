@@ -15,9 +15,10 @@ import type { ListingCardData } from "@/features/listings/cards";
 import type { SearchFilters } from "@/features/search/params";
 import { search as t } from "@/lib/i18n/dictionaries/search";
 import { SearchMap } from "./search-map";
+import { getStored } from "@/lib/stored";
 
-const LIST_ONLY_KEY = "keyline.search.listOnly";
-const STORAGE_EVENT = "keyline:storage";
+const LIST_ONLY_KEY = "propel.search.listOnly";
+const STORAGE_EVENT = "propel:storage";
 
 /** A boolean remembered in this browser (false on the server and in private mode). */
 function useStoredFlag(key: string): [boolean, (value: boolean) => void] {
@@ -32,7 +33,7 @@ function useStoredFlag(key: string): [boolean, (value: boolean) => void] {
     },
     () => {
       try {
-        return localStorage.getItem(key) === "1";
+        return getStored(localStorage, key) === "1";
       } catch {
         return false;
       }

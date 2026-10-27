@@ -1,8 +1,18 @@
 # Changelog
 
-All notable changes to Keyline. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+All notable changes to Propel. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
+
+### Changed
+
+- The product is renamed to **Propel** (it was first "Lintel", then "Keyline"). Names in the
+  app, emails, PDFs, docs, the package, Cloudflare resources (`propel`, `propel-cache`,
+  `propel-media`, `propel-jobs`, `propel-jobs-dlq`, and `-staging`), demo logins
+  (`@demo.propel`) and the local data folder (`~/.propel`) follow. Sign-in, consent and
+  currency cookies, browser storage keys and `KEYLINE_*` environment variables keep working
+  under their old names and move to the new ones; database objects and old migrations keep
+  their names.
 
 ### Added
 

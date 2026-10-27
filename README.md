@@ -1,10 +1,10 @@
 <div align="center">
 
-# Keyline
+# Propel
 
 **The website, CRM and lead engine for real estate agencies, in one app.**
 
-[![CI](https://github.com/ibrahim123-sia/Keyline/actions/workflows/ci.yml/badge.svg)](https://github.com/ibrahim123-sia/Keyline/actions/workflows/ci.yml)
+[![CI](https://github.com/ibrahim123-sia/Propel/actions/workflows/ci.yml/badge.svg)](https://github.com/ibrahim123-sia/Propel/actions/workflows/ci.yml)
 ![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![Cloudflare Workers](https://img.shields.io/badge/runs%20on-Cloudflare%20Workers-f38020?logo=cloudflare&logoColor=white)
@@ -12,7 +12,7 @@
 
 </div>
 
-One agency installs Keyline and runs its whole business from it: listings and projects, the public
+One agency installs Propel and runs its whole business from it: listings and projects, the public
 website and blog, SEO, leads from every channel, viewings, the customer area and buyer tools, with
 an AI assistant for visitors and another for the team.
 
@@ -25,7 +25,7 @@ an AI assistant for visitors and another for the team.
 - [Getting started](#getting-started)
 - [Demo data](#demo-data)
 - [Configuration](#configuration)
-- [Using Keyline from Claude (MCP)](#using-keyline-from-claude-mcp)
+- [Using Propel from Claude (MCP)](#using-propel-from-claude-mcp)
 - [Scripts](#scripts)
 - [Testing](#testing)
 - [Deployment](#deployment)
@@ -81,7 +81,7 @@ compiled to WebAssembly (PGlite), with the same extensions as production.
 ```bash
 pnpm install
 cp .env.example .env.local      # fill BETTER_AUTH_SECRET, SECRETS_ENCRYPTION_KEY, INTERNAL_JOB_SECRET
-pnpm db:start                   # terminal 1: database on 127.0.0.1:5433 (data in ~/.keyline/pglite)
+pnpm db:start                   # terminal 1: database on 127.0.0.1:5433 (data in ~/.propel/pglite)
 pnpm db:migrate
 pnpm db:seed                    # optional: the demo agency (see below)
 pnpm dev                        # terminal 2: http://localhost:3000
@@ -110,14 +110,14 @@ sign up at `/sign-up`. In development no email leaves the machine: messages are 
 agents, pages, blog posts, leads, viewings, campaign data and customers. Passwords are generated
 and printed once at the end of the run; two-step verification is off for the demo accounts.
 
-| Account                      | Role            |
-| ---------------------------- | --------------- |
-| `admin@demo.keyline`         | Admin (owner)   |
-| `staff@demo.keyline`         | Admin           |
-| `viewer@demo.keyline`        | Read-only admin |
-| `mina@demo.keyline`          | Customer        |
-| `omar.customer@demo.keyline` | Customer        |
-| `lucy@demo.keyline`          | Customer        |
+| Account                     | Role            |
+| --------------------------- | --------------- |
+| `admin@demo.propel`         | Admin (owner)   |
+| `staff@demo.propel`         | Admin           |
+| `viewer@demo.propel`        | Read-only admin |
+| `mina@demo.propel`          | Customer        |
+| `omar.customer@demo.propel` | Customer        |
+| `lucy@demo.propel`          | Customer        |
 
 Each demo customer has saved homes, a saved search and a past tour.
 
@@ -133,9 +133,9 @@ Use `pnpm db:seed --reset` to replace the demo data in an existing database.
   Calendar, the AI provider) are not environment variables. Admins enter them in
   Settings → Integrations, and they are stored encrypted (AES-256-GCM) in the database.
 
-## Using Keyline from Claude (MCP)
+## Using Propel from Claude (MCP)
 
-Keyline is an MCP server at `/api/mcp` (Streamable HTTP, JSON responses). It offers the admin
+Propel is an MCP server at `/api/mcp` (Streamable HTTP, JSON responses). It offers the admin
 assistant's tools: questions about leads, listings and reports, and changes that are only
 proposed until an admin confirms them.
 
@@ -147,7 +147,7 @@ proposed until an admin confirms them.
 3. Add the server to your MCP client. For Claude Code:
 
    ```bash
-   claude mcp add --transport http keyline https://your-domain.example/api/mcp \
+   claude mcp add --transport http propel https://your-domain.example/api/mcp \
      --header "Authorization: Bearer lnt_your_token"
    ```
 
@@ -156,7 +156,7 @@ proposed until an admin confirms them.
    ```json
    {
      "mcpServers": {
-       "keyline": {
+       "propel": {
          "type": "http",
          "url": "https://your-domain.example/api/mcp",
          "headers": { "Authorization": "Bearer lnt_your_token" }
@@ -209,8 +209,8 @@ only allows in Developer Mode.
 
 1. Create a Neon project (PostgreSQL 16 or newer). The first migration enables the PostGIS,
    pgvector, pg_trgm and unaccent extensions.
-2. In Cloudflare, create the R2 buckets (`keyline-cache`, `keyline-media`, plus `-staging`
-   variants), the queues (`keyline-jobs`, `keyline-jobs-dlq`, plus `-staging` variants) and a
+2. In Cloudflare, create the R2 buckets (`propel-cache`, `propel-media`, plus `-staging`
+   variants), the queues (`propel-jobs`, `propel-jobs-dlq`, plus `-staging` variants) and a
    Hyperdrive configuration pointing at Neon (`wrangler hyperdrive create`).
 3. Set the Worker secrets for each environment, for example
    `wrangler secret put BETTER_AUTH_SECRET --env staging`, and likewise `SECRETS_ENCRYPTION_KEY`,
@@ -265,4 +265,4 @@ docs/         product specification and build progress
 
 - How to set up, branch, commit and open a pull request: [`CONTRIBUTING.md`](.github/CONTRIBUTING.md).
 - To report a vulnerability privately: [`SECURITY.md`](.github/SECURITY.md).
-- Keyline is proprietary software. See [`LICENSE`](LICENSE).
+- Propel is proprietary software. See [`LICENSE`](LICENSE).

@@ -3,11 +3,11 @@ import { usDemoContent, usDemoPages } from "./us-demo-content";
 
 /**
  * Second preset (16 §2): Maple & Main Realty, a fictional US-style agency in Austin, Texas.
- * Proves Keyline is not tied to one market: USD, square feet, miles, no permit field, rent per
+ * Proves Propel is not tied to one market: USD, square feet, miles, no permit field, rent per
  * month, no split rent payments, US phone numbers and wording. Same code as Haven & Dune; only
  * settings and data differ. Places are real public places at approximate coordinates; the
  * agency, agents, builder, project and listings are fictional; prices are samples. Phone
- * numbers use the 555-01xx range kept for fiction; emails use example.com or demo.keyline.
+ * numbers use the 555-01xx range kept for fiction; emails use example.com or demo.propel.
  */
 const phone = (n: number) => `+1512555${String(100 + n).padStart(4, "0")}`;
 
@@ -82,9 +82,9 @@ export const usDemo: SeedPreset = {
     },
   },
   admins: [
-    { email: "admin@demo.keyline", name: "Demo Owner" },
-    { email: "staff@demo.keyline", name: "Demo Staff" },
-    { email: "viewer@demo.keyline", name: "Demo Viewer", readOnly: true },
+    { email: "admin@demo.propel", name: "Demo Owner" },
+    { email: "staff@demo.propel", name: "Demo Staff" },
+    { email: "viewer@demo.propel", name: "Demo Viewer", readOnly: true },
   ],
   propertyTypes: [
     {
@@ -613,7 +613,7 @@ export const usDemo: SeedPreset = {
   crm: { phone, leads: 8 },
   customers: [
     {
-      email: "taylor@demo.keyline",
+      email: "taylor@demo.propel",
       name: "Taylor Brooks",
       phone: phone(50),
       search: {
@@ -623,13 +623,13 @@ export const usDemo: SeedPreset = {
       },
     },
     {
-      email: "chris.customer@demo.keyline",
+      email: "chris.customer@demo.propel",
       name: "Chris Nguyen",
       phone: phone(51),
       search: { name: "Condos to rent", query: "purpose=rent&type=condos", frequency: "weekly" },
     },
     {
-      email: "riley@demo.keyline",
+      email: "riley@demo.propel",
       name: "Riley Morgan",
       phone: phone(52),
       search: {

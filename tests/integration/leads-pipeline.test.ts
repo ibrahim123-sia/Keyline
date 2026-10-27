@@ -558,7 +558,7 @@ describe("visitor tracking (09 §2)", () => {
     expect(await db.select().from(visitors)).toHaveLength(0); // no cookie yet
 
     cookieJar.vid = "s.0192f000-0000-7000-8000-00000000c001";
-    cookieJar.keyline_consent = "v1.a1.m0.1760000000";
+    cookieJar.propel_consent = "v1.a1.m0.1760000000";
     await send(view, "Googlebot/2.1");
     await send("not json");
     await send({ type: "nope", path: "/" });

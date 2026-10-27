@@ -1,11 +1,12 @@
-import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
+import { localDataRoot } from "../lib/local-data";
 
 /**
- * Local runtime data lives outside the project folder (in ~/.keyline). Inside the project,
+ * Local runtime data lives outside the project folder (in ~/.propel, see lib/local-data.ts).
+ * Inside the project,
  * every database write would wake Next's file watcher and reload the page in a loop.
  */
-export const LOCAL_DATA_ROOT = process.env.KEYLINE_DATA_DIR ?? join(homedir(), ".keyline");
+export const LOCAL_DATA_ROOT = localDataRoot();
 
 export function localDataPath(...parts: string[]): string {
   return resolve(LOCAL_DATA_ROOT, ...parts);

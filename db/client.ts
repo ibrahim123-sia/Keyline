@@ -12,8 +12,8 @@ export type DbOrTx = Db | Tx;
 export const DB_CASING = "snake_case" as const;
 
 declare global {
-  var __keylinePool: Pool | undefined;
-  var __keylineDb: Db | undefined;
+  var __propelPool: Pool | undefined;
+  var __propelDb: Db | undefined;
 }
 
 function createDb(pool: Pool): Db {
@@ -25,7 +25,7 @@ function createDb(pool: Pool): Db {
  * Kept on globalThis so hot reloads do not open a new pool each time.
  */
 function nodeDb(): Db {
-  if (globalThis.__keylineDb) return globalThis.__keylineDb;
+  if (globalThis.__propelDb) return globalThis.__propelDb;
   const url = process.env.DATABASE_URL;
   if (!url)
     throw new Error("DATABASE_URL is not set. Start the local database with `pnpm db:start`.");
@@ -35,9 +35,9 @@ function nodeDb(): Db {
     idleTimeoutMillis: 30_000,
   });
   pool.on("error", (err) => console.error("[db] idle client error", err.message));
-  globalThis.__keylinePool = pool;
-  globalThis.__keylineDb = createDb(pool);
-  return globalThis.__keylineDb;
+  globalThis.__propelPool = pool;
+  globalThis.__propelDb = createDb(pool);
+  return globalThis.__propelDb;
 }
 
 /**
@@ -60,9 +60,9 @@ export async function getDb(): Promise<Db> {
 
 /** Close the Node pool (scripts and tests). */
 export async function closeDb(): Promise<void> {
-  const pool = globalThis.__keylinePool;
-  globalThis.__keylinePool = undefined;
-  globalThis.__keylineDb = undefined;
+  const pool = globalThis.__propelPool;
+  globalThis.__propelPool = undefined;
+  globalThis.__propelDb = undefined;
   if (pool) await pool.end();
 }
 

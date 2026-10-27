@@ -194,7 +194,7 @@ export const resetAdminTwoFactor = adminAction(
 
 /**
  * Personal API token for MCP clients (10 §4). Shown once; only its SHA-256 hash is stored.
- * "propose" lets write tools prepare changes that an admin confirms in Keyline.
+ * "propose" lets write tools prepare changes that an admin confirms in Propel.
  */
 export const createApiToken = adminAction(
   z

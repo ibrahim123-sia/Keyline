@@ -56,14 +56,14 @@ describe("demo seed: Maple & Main Realty (US preset)", () => {
       ),
     ).toEqual([{ n: 1 }]);
     expect(result.admins.map((a) => a.email)).toEqual([
-      "admin@demo.keyline",
-      "staff@demo.keyline",
-      "viewer@demo.keyline",
+      "admin@demo.propel",
+      "staff@demo.propel",
+      "viewer@demo.propel",
     ]);
     expect(result.customers.map((c) => c.email)).toEqual([
-      "taylor@demo.keyline",
-      "chris.customer@demo.keyline",
-      "riley@demo.keyline",
+      "taylor@demo.propel",
+      "chris.customer@demo.propel",
+      "riley@demo.propel",
     ]);
   });
 

@@ -16,8 +16,9 @@ import { cn } from "cn";
 import type { Suggestion } from "@/features/search/suggest";
 import { format } from "@/lib/i18n";
 import { search as t } from "@/lib/i18n/dictionaries/search";
+import { getStored } from "@/lib/stored";
 
-const RECENT_KEY = "keyline.search.recent";
+const RECENT_KEY = "propel.search.recent";
 const kinds = ["location", "building", "project", "developer", "listing"] as const;
 const icons = {
   location: MapPinIcon,
@@ -29,7 +30,7 @@ const icons = {
 
 function readRecent(): Suggestion[] {
   try {
-    const raw = localStorage.getItem(RECENT_KEY);
+    const raw = getStored(localStorage, RECENT_KEY);
     const list = raw ? (JSON.parse(raw) as Suggestion[]) : [];
     return Array.isArray(list) ? list.slice(0, 6) : [];
   } catch {

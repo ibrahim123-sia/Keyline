@@ -107,7 +107,7 @@ describe("MCP server (10 §4)", () => {
     expect(init.body.result).toMatchObject({
       protocolVersion: "2025-06-18",
       capabilities: { tools: {} },
-      serverInfo: { name: "keyline" },
+      serverInfo: { name: "propel" },
     });
     expect((await rpc(READ, "notifications/initialized")).status).toBe(202);
 

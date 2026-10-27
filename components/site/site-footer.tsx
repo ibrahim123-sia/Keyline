@@ -25,7 +25,7 @@ const socialLabels: Record<(typeof socialKeys)[number], string> = {
 /**
  * Footer (02 §5, 06 §2, 08 §2): dark ink, logo + short text, contact details, link columns
  * (the three footer menus), social links, legal line with the licence number and the policy
- * pages, cookie settings and "Powered by Keyline" (cannot be removed).
+ * pages, cookie settings and "Powered by Propel" (cannot be removed).
  */
 export async function SiteFooter() {
   const [general, contact, website, year, menus, legalLinks] = await Promise.all([

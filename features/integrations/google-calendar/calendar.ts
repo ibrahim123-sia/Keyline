@@ -90,7 +90,7 @@ export async function completeConnect(
   });
   if (!t.refreshToken)
     throw new ActionError(
-      "Google did not allow offline access. Remove Keyline from the Google account's apps and connect again.",
+      "Google did not allow offline access. Remove Propel from the Google account's apps and connect again.",
       "NO_REFRESH_TOKEN",
     );
   const values = {
@@ -413,7 +413,7 @@ export async function testGoogleCalendar(db?: DbOrTx) {
   try {
     // A made-up refresh token: "invalid_grant" means Google knows the client.
     await calendarApi().refresh({
-      refreshToken: "keyline-connection-test",
+      refreshToken: "propel-connection-test",
       clientId: googleCalendar.clientId,
       clientSecret: secret,
     });

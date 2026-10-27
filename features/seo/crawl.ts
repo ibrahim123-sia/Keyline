@@ -4,7 +4,7 @@
  * passed in (the site itself on Workers, plain fetch elsewhere, a fake in tests).
  */
 
-export const CRAWLER_AGENT = "KeylineSiteCheck/1.0";
+export const CRAWLER_AGENT = "PropelSiteCheck/1.0";
 
 export type CrawlFetch = (url: string, init?: RequestInit) => Promise<Response>;
 

@@ -1,3 +1,5 @@
+import { readEnv } from "./legacy-env";
+
 /**
  * Structured logs (14 §5): one JSON line per event, with the request id when there is one,
  * read by Cloudflare's Workers logs (or the terminal locally). No personal data: fields whose
@@ -36,7 +38,7 @@ export function logLine(
   now: Date = new Date(),
 ): string {
   // Release tag (14 §5 "error tracking with release tags"), set per deploy.
-  const release = process.env.KEYLINE_RELEASE || undefined;
+  const release = readEnv("PROPEL_RELEASE");
   return JSON.stringify({
     level,
     event,

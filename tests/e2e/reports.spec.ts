@@ -11,7 +11,7 @@ test("dashboard KPIs, a report with another period, and its CSV export", async (
   test.setTimeout(300_000);
   await clearLeads();
   const contact = await db().query<{ id: string }>(
-    `insert into contacts (id, agency_id, name) values (gen_random_uuid(), $1, 'Keyline Report Contact') returning id`,
+    `insert into contacts (id, agency_id, name) values (gen_random_uuid(), $1, 'Propel Report Contact') returning id`,
     [AGENCY],
   );
   const lead = (source: string, hoursAgo: number, won = false) =>
@@ -63,7 +63,7 @@ test("dashboard KPIs, a report with another period, and its CSV export", async (
   );
   const csv = await readFile((await download.path())!, "utf8");
   expect(csv).toContain("Website form,2,");
-  expect(csv).not.toContain("Keyline Report Contact");
+  expect(csv).not.toContain("Propel Report Contact");
   await expect
     .poll(
       async () =>

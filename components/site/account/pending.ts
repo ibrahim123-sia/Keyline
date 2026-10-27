@@ -1,5 +1,7 @@
 "use client";
 
+import { getStored } from "@/lib/stored";
+
 /**
  * A save a guest started (12 §1): kept in this browser while they sign in or sign up (the
  * verification email may open a new tab, so not sessionStorage), then finished on the page
@@ -9,7 +11,7 @@ export type PendingAction =
   | { kind: "save-home"; propertyId?: string; projectId?: string }
   | { kind: "save-search"; query: string; name: string };
 
-const KEY = "keyline.pending";
+const KEY = "propel.pending";
 const DAY = 86_400_000;
 
 export function setPending(action: PendingAction) {
@@ -26,7 +28,7 @@ export function setPending(action: PendingAction) {
 /** The pending action for this page, removed once taken. */
 export function takePending(): PendingAction | null {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = getStored(localStorage, KEY);
     if (!raw) return null;
     const { action, path, at } = JSON.parse(raw) as {
       action: PendingAction;

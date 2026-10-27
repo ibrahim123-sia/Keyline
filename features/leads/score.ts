@@ -4,7 +4,7 @@ import { leads as t } from "@/lib/i18n/dictionaries/leads";
 /**
  * Lead score 0-100 by the rubric in 10 §2 "Lead score", with its reasons (the UI always shows
  * them, never just the number). The rubric below is the single source: the rules here apply
- * it to what Keyline knows for sure, and the AI scorer (features/ai/scoring.ts) applies the
+ * it to what Propel knows for sure, and the AI scorer (features/ai/scoring.ts) applies the
  * same items to the conversation, falling back to these rules. Pure.
  */
 export type ScoreInput = {

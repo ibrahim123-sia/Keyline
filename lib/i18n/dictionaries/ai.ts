@@ -18,10 +18,10 @@ export const ai = {
   budgetEmail: {
     alertSubject: "AI spend has reached {pct}% of this month's limit",
     alertBody:
-      "Keyline's estimated AI spend this month is {spent} of the {limit} limit set in Settings -> AI.\n\nWhen the limit is reached, AI features pause until next month and visitors' chats go to the team as usual.",
+      "Propel's estimated AI spend this month is {spent} of the {limit} limit set in Settings -> AI.\n\nWhen the limit is reached, AI features pause until next month and visitors' chats go to the team as usual.",
     limitSubject: "AI features paused: this month's spend limit is reached",
     limitBody:
-      "Keyline's estimated AI spend this month has reached the {limit} limit set in Settings -> AI.\n\nAI features are paused until next month (or until the limit is raised). Website chats go to the team, and leads are scored by the rules.",
+      "Propel's estimated AI spend this month has reached the {limit} limit set in Settings -> AI.\n\nAI features are paused until next month (or until the limit is raised). Website chats go to the team, and leads are scored by the rules.",
     button: "Open AI settings",
   },
   features: {

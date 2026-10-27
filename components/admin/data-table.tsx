@@ -35,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { deleteView, saveView } from "@/features/saved-views/actions";
 import { viewQuery, type SavedView, type SavedViewTable } from "@/features/saved-views/schema";
+import { getStored } from "@/lib/stored";
 
 export type { ColumnDef };
 
@@ -89,7 +90,7 @@ export function DataTable<T>({
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(`keyline.table.${tableId}.columns`);
+      const saved = getStored(localStorage, `propel.table.${tableId}.columns`);
       if (saved) setVisibility(JSON.parse(saved) as VisibilityState);
     } catch {
       /* private mode: use defaults */
@@ -134,7 +135,7 @@ export function DataTable<T>({
       setVisibility((prev) => {
         const next = typeof updater === "function" ? updater(prev) : updater;
         try {
-          localStorage.setItem(`keyline.table.${tableId}.columns`, JSON.stringify(next));
+          localStorage.setItem(`propel.table.${tableId}.columns`, JSON.stringify(next));
         } catch {
           /* ignore */
         }

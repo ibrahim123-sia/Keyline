@@ -1,17 +1,17 @@
 import { createReadStream } from "node:fs";
 import { mkdir, open, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { mimeFromName } from "@/lib/images/inspect";
+import { localDataRoot } from "@/lib/local-data";
 import { assertKey, assertPrefix, type ObjectMeta, type StorageDriver } from "./index";
 
 /**
  * Local disk driver for development and the e2e server. Files live outside the project
- * (default ~/.keyline/media) so the dev server's file watcher never sees them. The content
+ * (default ~/.propel/media) so the dev server's file watcher never sees them. The content
  * type comes from the extension: every public key has one, staging keys are never served.
  */
-export function fsStorage(root = path.join(homedir(), ".keyline", "media")): StorageDriver {
+export function fsStorage(root = path.join(localDataRoot(), "media")): StorageDriver {
   const file = (key: string) => {
     assertKey(key);
     return path.join(root, ...key.split("/"));

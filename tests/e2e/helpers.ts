@@ -14,7 +14,7 @@ export function db(): Pool {
 }
 
 export function uniqueEmail(prefix: string): string {
-  return `${prefix}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6)}@e2e.keyline`;
+  return `${prefix}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6)}@e2e.propel`;
 }
 
 /** Runs the real setup command (`pnpm admin:create`) against the e2e database. */
@@ -167,7 +167,7 @@ export async function clearListings(): Promise<void> {
 export const decidedCookies = {
   cookies: [
     {
-      name: "keyline_consent",
+      name: "propel_consent",
       value: "v1.a0.m0.1760000000",
       domain: "localhost",
       path: "/",
@@ -244,7 +244,7 @@ export async function seedDemo(
           APP_URL: appUrl,
           SECRETS_ENCRYPTION_KEY:
             process.env.SECRETS_ENCRYPTION_KEY ?? "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
-          KEYLINE_ENV: "development",
+          PROPEL_ENV: "development",
           JOBS_DRIVER: "manual",
         },
       },

@@ -1,7 +1,13 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { CONSENT_COOKIE, CONSENT_EVENT, parseConsent, type Consent } from "@/lib/consent";
+import {
+  CONSENT_COOKIE,
+  CONSENT_EVENT,
+  LEGACY_CONSENT_COOKIE,
+  parseConsent,
+  type Consent,
+} from "@/lib/consent";
 
 function subscribe(onChange: () => void) {
   window.addEventListener(CONSENT_EVENT, onChange);
@@ -10,11 +16,13 @@ function subscribe(onChange: () => void) {
 
 /** The raw cookie value ("" when none). Strings compare by value, so the snapshot is stable. */
 function snapshot(): string {
+  let legacy = "";
   for (const part of document.cookie.split(";")) {
     const [k, ...v] = part.trim().split("=");
     if (k === CONSENT_COOKIE) return decodeURIComponent(v.join("="));
+    if (k === LEGACY_CONSENT_COOKIE) legacy = decodeURIComponent(v.join("="));
   }
-  return "";
+  return legacy;
 }
 
 /** null while rendering on the server: the choice is only known in the browser. */

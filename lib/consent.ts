@@ -3,11 +3,13 @@
  * the visitor agrees. Stored in one small cookie the server and the browser can both read.
  * Client-safe.
  */
-export const CONSENT_COOKIE = "keyline_consent";
+export const CONSENT_COOKIE = "propel_consent";
+/** Its name before the rename (Keyline -> Propel, 2026-10-27): still read, moved by the middleware. */
+export const LEGACY_CONSENT_COOKIE = "keyline_consent";
 /** Fired on window when the visitor saves a choice. */
-export const CONSENT_EVENT = "keyline:consent";
+export const CONSENT_EVENT = "propel:consent";
 /** Fired to reopen the banner (the footer's "Cookie settings" link). */
-export const COOKIE_SETTINGS_EVENT = "keyline:cookie-settings";
+export const COOKIE_SETTINGS_EVENT = "propel:cookie-settings";
 /** Ask again after six months. */
 export const CONSENT_MAX_AGE = 60 * 60 * 24 * 182;
 
@@ -27,11 +29,13 @@ export function parseConsent(value: string | null | undefined): Consent | null {
 
 /** The consent cookie out of a `document.cookie` string. */
 export function consentFromCookieString(cookies: string): Consent | null {
+  let legacy: Consent | null = null;
   for (const part of cookies.split(";")) {
     const [k, ...v] = part.trim().split("=");
     if (k === CONSENT_COOKIE) return parseConsent(decodeURIComponent(v.join("=")));
+    if (k === LEGACY_CONSENT_COOKIE) legacy = parseConsent(decodeURIComponent(v.join("=")));
   }
-  return null;
+  return legacy;
 }
 
 export const allows = (consent: Consent | null, category: ConsentCategory): boolean =>

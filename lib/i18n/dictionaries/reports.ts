@@ -47,7 +47,7 @@ export const reports = {
     signIn: "Please sign in again, then export.",
     pdfUnavailable: "PDF export is not available right now. Try again, or export CSV.",
     generated: "Generated {date} · {timeZone}",
-    madeWith: "Made with Keyline",
+    madeWith: "Made with Propel",
   },
   kpis: {
     leads: "Leads",
