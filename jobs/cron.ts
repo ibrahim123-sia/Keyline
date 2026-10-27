@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
+import { queueIdleSummaries } from "@/features/ai/assistant/summary";
 import { queueEmbeddingBackfill } from "@/features/ai/embeddings";
 import { runAlertDigest } from "@/features/alerts/jobs";
 import { jobRuns } from "@/db/schema/system";
@@ -71,6 +72,14 @@ export const cronTasks: CronTask[] = [
     schedule: "every minute",
     due: () => true,
     run: async () => alertUnansweredLeads(await getDb()),
+    quiet: true,
+  },
+  // 10 §2: chats with the assistant, quiet for 15 minutes, get a summary and a new score.
+  {
+    name: "ai.conversation-summaries",
+    schedule: "every 5 minutes",
+    due: every(5),
+    run: async () => queueIdleSummaries(await getDb()),
     quiet: true,
   },
   // 13 §2: busy times from connected Google Calendars, for the free viewing slots.

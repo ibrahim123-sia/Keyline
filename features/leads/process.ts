@@ -378,7 +378,7 @@ export async function refreshLeadScore(db: DbOrTx, leadId: string, now = new Dat
     await db.execute<{ messages: number; mortgage: number; viewings: number }>(sql`
       select
         (select count(*)::int from ${leadEvents} where lead_id = ${leadId} and body is not null and body <> '') as messages,
-        (select count(*)::int from ${leadEvents} where lead_id = ${leadId} and meta->>'source' = 'mortgage') as mortgage,
+        (select count(*)::int from ${leadEvents} where lead_id = ${leadId} and (meta->>'source' = 'mortgage' or meta->>'preApproved' = 'true')) as mortgage,
         (select count(*)::int from ${viewings} where lead_id = ${leadId}) as viewings`)
   ).rows;
   const rules = {
