@@ -71,6 +71,12 @@ export function switchOn(config: AiConfig, name: AiSwitch): boolean {
   return config.ai.features[name];
 }
 
+/** Whether the editors show their AI writing buttons (master switch and "Writing helpers"). */
+export async function writingHelpersOn(db?: DbOrTx): Promise<boolean> {
+  const config = await loadAiConfig(db);
+  return config.enabled && switchOn(config, "writingHelpers");
+}
+
 export class AiNotConfiguredError extends Error {
   constructor(message: string) {
     super(message);

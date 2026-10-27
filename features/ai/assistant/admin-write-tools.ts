@@ -32,7 +32,7 @@ import { siteOrigin, siteUrl } from "@/features/site/url";
 import { newShortCode, shortLinkPath, sitePath } from "@/features/utm/links";
 import { createAdminViewing, moveViewing, setViewingStatus } from "@/features/viewings/admin";
 import { ActionError } from "@/lib/actions";
-import { auditChange, writeAudit } from "@/lib/audit";
+import { auditChange, writeAudit, type AuditActor } from "@/lib/audit";
 import { toMinor } from "@/lib/money";
 import { renderRichText, type RichDoc } from "@/lib/rich-text";
 import type { PostDoc } from "@/lib/rich-text-post";
@@ -452,53 +452,82 @@ export const createListingDraftTool = defineTool({
     };
   },
   async execute(input, ctx) {
-    const db = ctx.db;
-    const want = input.type.toLowerCase().replace(/s$/, "");
-    const types = await db
-      .select({ id: propertyTypes.id, name: propertyTypes.name })
-      .from(propertyTypes)
-      .where(eq(propertyTypes.agencyId, currentAgencyId()));
-    const type = types.find((t) => t.name.toLowerCase().replace(/s$/, "") === want);
-    if (!type)
-      throw new ActionError(`There is no property type called ${input.type}.`, "VALIDATION");
-    const market = await loadSettings("market", db);
-    const [loc] = input.area ? await findLocations(db, [input.area]) : [];
-    const doc = input.description ? paragraphsDoc(input.description) : null;
-    const reference = await nextPropertyReference(db);
-    const [row] = await db
-      .insert(properties)
-      .values({
-        reference,
-        title: input.title,
-        slug: await propertySlug(db as Tx, input.title, null),
-        purpose: input.purpose,
-        completion: input.completion,
-        propertyTypeId: type.id,
-        locationId: loc?.id ?? null,
-        buildingName: input.building ?? null,
-        beds: input.beds ?? null,
-        baths: input.baths ?? null,
-        size: input.size ? areaToSqm(input.size, market.areaUnit) : null,
-        price: input.price ? toMinor(input.price, market.baseCurrency.decimals) : null,
-        currency: market.baseCurrency.code,
-        pricePeriod: input.purpose === "rent" ? market.rentPeriod : null,
-        ...(doc ? { description: doc, descriptionHtml: renderRichText(doc) } : {}),
-        source: "manual",
-        createdBy: ctx.admin.user.id,
-        updatedBy: ctx.admin.user.id,
-      })
-      .returning();
-    await writeAudit(db, {
+    const row = await insertListingDraft(ctx.db, input, {
       actor: ctx.auditActor,
-      action: "property.create",
-      entityType: "property",
-      entityId: row!.id,
-      after: { reference, title: row!.title, purpose: row!.purpose, status: row!.status },
+      userId: ctx.admin.user.id,
     });
-    await refreshAutoBadges(db, [row!.id]);
-    return done("Draft created", { reference, link: `/admin/properties/${row!.id}` });
+    return done("Draft created", { reference: row.reference, link: `/admin/properties/${row.id}` });
   },
 });
+
+export type ListingDraftInput = {
+  title: string;
+  purpose: "sale" | "rent";
+  completion?: "ready" | "off_plan";
+  type: string;
+  area?: string;
+  building?: string;
+  beds?: number;
+  baths?: number;
+  /** In the agency's area unit. */
+  size?: number;
+  /** Whole units of the base currency. */
+  price?: number;
+  description?: string;
+  highlights?: string[];
+};
+
+/** A draft listing from plain facts (assistant tool and "Paste text" helper). */
+export async function insertListingDraft(
+  db: DbOrTx,
+  input: ListingDraftInput,
+  by: { actor: AuditActor; userId: string },
+) {
+  const want = input.type.toLowerCase().replace(/s$/, "");
+  const types = await db
+    .select({ id: propertyTypes.id, name: propertyTypes.name })
+    .from(propertyTypes)
+    .where(eq(propertyTypes.agencyId, currentAgencyId()));
+  const type = types.find((t) => t.name.toLowerCase().replace(/s$/, "") === want);
+  if (!type) throw new ActionError(`There is no property type called ${input.type}.`, "VALIDATION");
+  const market = await loadSettings("market", db);
+  const [loc] = input.area ? await findLocations(db, [input.area]) : [];
+  const doc = input.description ? paragraphsDoc(input.description) : null;
+  const reference = await nextPropertyReference(db);
+  const [row] = await db
+    .insert(properties)
+    .values({
+      reference,
+      title: input.title,
+      slug: await propertySlug(db as Tx, input.title, null),
+      purpose: input.purpose,
+      completion: input.completion ?? "ready",
+      propertyTypeId: type.id,
+      locationId: loc?.id ?? null,
+      buildingName: input.building ?? null,
+      beds: input.beds ?? null,
+      baths: input.baths ?? null,
+      size: input.size ? areaToSqm(input.size, market.areaUnit) : null,
+      price: input.price ? toMinor(input.price, market.baseCurrency.decimals) : null,
+      currency: market.baseCurrency.code,
+      pricePeriod: input.purpose === "rent" ? market.rentPeriod : null,
+      ...(doc ? { description: doc, descriptionHtml: renderRichText(doc) } : {}),
+      ...(input.highlights?.length ? { highlights: input.highlights } : {}),
+      source: "manual",
+      createdBy: by.userId,
+      updatedBy: by.userId,
+    })
+    .returning();
+  await writeAudit(db, {
+    actor: by.actor,
+    action: "property.create",
+    entityType: "property",
+    entityId: row!.id,
+    after: { reference, title: row!.title, purpose: row!.purpose, status: row!.status },
+  });
+  await refreshAutoBadges(db, [row!.id]);
+  return row!;
+}
 
 /* draft_blog_post ------------------------------------------------------------------------ */
 
@@ -523,46 +552,62 @@ export const draftBlogPostTool = defineTool({
     };
   },
   async execute(input, ctx) {
-    const blocks = input.body
-      .split(/\n\s*\n/)
-      .map((p) => p.trim())
-      .filter(Boolean)
-      .map((p) =>
-        p.startsWith("## ")
-          ? {
-              type: "heading",
-              attrs: { level: 2 },
-              content: [{ type: "text", text: p.slice(3).trim() }],
-            }
-          : { type: "paragraph", content: [{ type: "text", text: p.replace(/\s+/g, " ") }] },
-      );
-    const prepared = await prepareBody(ctx.db, { type: "doc", content: blocks } as PostDoc);
-    const [row] = await ctx.db
-      .insert(posts)
-      .values({
-        title: input.title,
-        slug: await postSlug(ctx.db, input.title, null),
-        excerpt: input.excerpt ?? null,
-        body: prepared.body,
-        bodyHtml: prepared.bodyHtml,
-        readingMinutes: prepared.readingMinutes,
-        authorUserId: ctx.admin.user.id,
-        isAiDrafted: true,
-        createdBy: ctx.admin.user.id,
-        updatedBy: ctx.admin.user.id,
-      })
-      .returning({ id: posts.id, slug: posts.slug });
-    await writeAudit(ctx.db, {
+    const id = await insertPostDraft(ctx.db, input, {
       actor: ctx.auditActor,
-      action: "post.create",
-      entityType: "post",
-      entityId: row!.id,
-      after: { title: input.title, slug: row!.slug, aiDrafted: true },
+      userId: ctx.admin.user.id,
     });
-    revalidatePost(row!.id);
-    return done("Draft saved", { link: `/admin/website/blog/${row!.id}` });
+    return done("Draft saved", { link: `/admin/website/blog/${id}` });
   },
 });
+
+/**
+ * An AI-drafted blog post, never published (assistant tool and the blog helper). The body is
+ * plain paragraphs separated by blank lines; "## " starts a heading.
+ */
+export async function insertPostDraft(
+  db: DbOrTx,
+  input: { title: string; excerpt?: string | null; body: string },
+  by: { actor: AuditActor; userId: string },
+): Promise<string> {
+  const blocks = input.body
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) =>
+      p.startsWith("## ")
+        ? {
+            type: "heading",
+            attrs: { level: 2 },
+            content: [{ type: "text", text: p.slice(3).trim() }],
+          }
+        : { type: "paragraph", content: [{ type: "text", text: p.replace(/\s+/g, " ") }] },
+    );
+  const prepared = await prepareBody(db, { type: "doc", content: blocks } as PostDoc);
+  const [row] = await db
+    .insert(posts)
+    .values({
+      title: input.title,
+      slug: await postSlug(db, input.title, null),
+      excerpt: input.excerpt || null,
+      body: prepared.body,
+      bodyHtml: prepared.bodyHtml,
+      readingMinutes: prepared.readingMinutes,
+      authorUserId: by.userId,
+      isAiDrafted: true,
+      createdBy: by.userId,
+      updatedBy: by.userId,
+    })
+    .returning({ id: posts.id, slug: posts.slug });
+  await writeAudit(db, {
+    actor: by.actor,
+    action: "post.create",
+    entityType: "post",
+    entityId: row!.id,
+    after: { title: input.title, slug: row!.slug, aiDrafted: true },
+  });
+  revalidatePost(row!.id);
+  return row!.id;
+}
 
 /* send_lead_reply ------------------------------------------------------------------------ */
 

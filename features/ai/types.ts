@@ -16,8 +16,11 @@ export type AiToolResultBlock = {
  * back unchanged in the next request of the same conversation, as the provider requires.
  */
 export type AiOpaqueBlock = { type: "opaque"; provider: string; raw: unknown };
+/** An image the model looks at, by public address (alt text suggestions, 10 §5). */
+export type AiImageBlock = { type: "image"; url: string };
 
-export type AiContentBlock = AiTextBlock | AiToolUseBlock | AiToolResultBlock | AiOpaqueBlock;
+export type AiContentBlock =
+  AiTextBlock | AiImageBlock | AiToolUseBlock | AiToolResultBlock | AiOpaqueBlock;
 
 export type AiMessage = { role: "user" | "assistant"; content: AiContentBlock[] };
 

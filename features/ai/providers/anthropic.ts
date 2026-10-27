@@ -52,7 +52,8 @@ function toWireContent(blocks: AiMessage["content"]): WireBlock[] {
   for (const b of blocks) {
     if (b.type === "text") {
       if (b.text.trim()) out.push({ type: "text", text: b.text });
-    } else if (b.type === "tool_use")
+    } else if (b.type === "image") out.push({ type: "image", source: { type: "url", url: b.url } });
+    else if (b.type === "tool_use")
       out.push({ type: "tool_use", id: b.id, name: b.name, input: b.input });
     else if (b.type === "tool_result")
       out.push({
