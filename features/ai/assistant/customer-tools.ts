@@ -2,7 +2,7 @@ import "server-only";
 import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { getDb, type Db, type DbOrTx } from "@/db/client";
-import { conversations, leads } from "@/db/schema/crm";
+import { contacts, conversations, leads } from "@/db/schema/crm";
 import { guideForLocation, liveCounts } from "@/features/area-guides/public";
 import { handleBrochureRequest } from "@/features/brochure/request";
 import { compareItems } from "@/features/compare/load";
@@ -63,6 +63,17 @@ async function linkConversation(db: DbOrTx, ctx: AiToolContext, leadId: string) 
     .update(conversations)
     .set({ contactId: lead.contactId })
     .where(and(eq(conversations.id, ctx.conversationRef), isNull(conversations.contactId)));
+}
+
+/** The contact the conversation already belongs to (from the chat's start or an earlier tool). */
+async function conversationContact(db: DbOrTx, ctx: AiToolContext) {
+  if (!ctx.conversationRef) return null;
+  const [row] = await db
+    .select({ name: contacts.name, email: contacts.email, phone: contacts.phone })
+    .from(conversations)
+    .innerJoin(contacts, eq(contacts.id, conversations.contactId))
+    .where(eq(conversations.id, ctx.conversationRef));
+  return row ?? null;
 }
 
 const notFound = (what: string) => ({
@@ -608,11 +619,19 @@ export const bookViewingTool = defineTool({
   async run(input, ctx) {
     const db = await dbOf(ctx);
     const { requiredBeforeBooking: need } = await loadSettings("ai", db);
+    // What the visitor already told us in this conversation fills the gaps, so the booking
+    // joins their lead instead of starting a second one.
+    const known = await conversationContact(db, ctx);
+    const details = {
+      name: input.name || known?.name || "",
+      phone: input.phone || known?.phone || "",
+      email: input.email || known?.email || "",
+    };
     const missing = [
-      need.name && input.name.length < 2 ? "name" : null,
-      need.phone && !input.phone ? "phone number" : null,
-      need.email && !input.email ? "email" : null,
-      !input.phone && !input.email ? "a phone number or email" : null,
+      need.name && details.name.length < 2 ? "name" : null,
+      need.phone && !details.phone ? "phone number" : null,
+      need.email && !details.email ? "email" : null,
+      !details.phone && !details.email ? "a phone number or email" : null,
     ].filter(Boolean);
     if (missing.length)
       return { booked: false, ask: `Ask the visitor for their ${missing.join(" and ")} first.` };
@@ -625,9 +644,7 @@ export const bookViewingTool = defineTool({
         propertyId: row.id,
         type: input.type,
         start: new Date(input.start),
-        name: input.name,
-        email: input.email,
-        phone: input.phone,
+        ...details,
         notes: input.notes,
         timeZone: null,
         visitorKey,
