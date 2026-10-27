@@ -148,6 +148,30 @@ function lighthouseSummary(lhr: Lhr): string {
   return lines.join("\n");
 }
 
+test("share cards: og:image and twitter:image point at a versioned card that is a PNG", async ({
+  page,
+  request,
+}) => {
+  for (const path of [`/property/${listingSlug}`, "/projects/the-linden-residences"]) {
+    await page.goto(path);
+    const og = await page.locator('meta[property="og:image"]').first().getAttribute("content");
+    expect(og, path).toMatch(/\/og\/(property|project)\/[a-z0-9-]+\?v=[0-9a-f]{12}$/);
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+      "content",
+      "summary_large_image",
+    );
+    const card = await request.get(og!);
+    expect(card.status(), path).toBe(200);
+    expect(card.headers()["content-type"]).toBe("image/png");
+    expect(card.headers()["cache-control"]).toContain("immutable");
+    expect((await card.body()).length).toBeGreaterThan(10_000);
+    // Another version (old content) is only cached briefly.
+    const stale = await request.get(og!.replace(/v=[0-9a-f]+/, "v=000000000000"));
+    expect(stale.headers()["cache-control"]).toContain("max-age=600");
+  }
+  expect((await request.get("/og/nothing/here")).status()).toBe(404);
+});
+
 test("property page: Core Web Vitals in a Lighthouse mobile run", async ({}, testInfo) => {
   test.skip(process.env.E2E_MODE !== "prod", "Lighthouse measures the production build only");
   test.setTimeout(300_000);

@@ -20,6 +20,7 @@ import { fillTitlePattern, htmlToText } from "@/features/site/seo";
 import { siteOrigin, siteUrl } from "@/features/site/url";
 import { format, pages, site } from "@/lib/i18n";
 import { content } from "@/lib/i18n/dictionaries/content";
+import { shareImage } from "@/features/og/cards";
 
 /** Per request: the slug (and the visitor's currency for listing cards) decide what renders. */
 export const instant = false;
@@ -40,7 +41,8 @@ export async function generateMetadata(props: PageProps<"/insights/[slug]">): Pr
   const title =
     p.seo.title ||
     fillTitlePattern(seo.postTitlePattern, { title: p.title, category: p.category?.name }, p.title);
-  const og = p.seo.ogImageId ? await getPublicMedia(p.seo.ogImageId) : p.cover;
+  const og = p.seo.ogImageId ? await getPublicMedia(p.seo.ogImageId) : null;
+  const images = await shareImage("post", p.slug, og?.url);
   const text = description(p);
   return {
     title,
@@ -54,7 +56,13 @@ export async function generateMetadata(props: PageProps<"/insights/[slug]">): Pr
       publishedTime: p.publishedAt,
       modifiedTime: p.updatedAt,
       authors: p.author ? [p.author.name] : undefined,
-      images: og ? [{ url: og.url }] : undefined,
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: text || undefined,
+      images: images.map((i) => i.url),
     },
   };
 }

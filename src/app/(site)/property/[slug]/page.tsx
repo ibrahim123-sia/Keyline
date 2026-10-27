@@ -46,8 +46,8 @@ import { areaFromSqm, perAreaFromSqm } from "@/lib/units";
 import { format } from "@/lib/i18n";
 import { Icon } from "@/lib/icons";
 import { property as t } from "@/lib/i18n/dictionaries/property";
-import { mediaVariant } from "@/lib/media-src";
 import { redirectIfMoved } from "@/features/seo/serve";
+import { shareImage } from "@/features/og/cards";
 
 /** Per request: the slug (and the visitor's currency cookie) decide what renders; data is cached. */
 export const instant = false;
@@ -76,7 +76,7 @@ export async function generateMetadata(props: PageProps<"/property/[slug]">): Pr
   const title = listingTitle(l, seo.listingTitlePattern, market, general.agencyName);
   const description = (l.seo.description || l.descriptionText).slice(0, 160) || undefined;
   const canonical = l.seo.canonicalUrl || `/property/${l.slug}`;
-  const image = l.seo.ogImageUrl ? mediaVariant(l.seo.ogImageUrl, 1200) : undefined;
+  const images = await shareImage("property", l.slug, l.seo.chosenOgImageUrl);
   return {
     title,
     description,
@@ -87,8 +87,9 @@ export async function generateMetadata(props: PageProps<"/property/[slug]">): Pr
       title,
       description,
       url: canonical,
-      images: image ? [{ url: image, width: 1200 }] : undefined,
+      images,
     },
+    twitter: { card: "summary_large_image", title, description, images: images.map((i) => i.url) },
   };
 }
 
