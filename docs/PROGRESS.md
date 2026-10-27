@@ -5,18 +5,18 @@ Spec: [`docs/spec/`](spec/README.md) (README + `01..16`).
 
 ## Status
 
-| Phase | Name                     | Status                                                                                                    |
-| ----- | ------------------------ | --------------------------------------------------------------------------------------------------------- |
-| 1     | Foundation               | done (staging deploy waits for credentials)                                                               |
-| 2     | Settings and master data | done (staging deploy waits for credentials)                                                               |
-| 3     | Properties and projects  | done (staging deploy waits for credentials)                                                               |
-| 4     | Public site core         | done except LCP (Phase 10 performance pass)                                                               |
-| 5     | CMS and SEO              | done                                                                                                      |
-| 6     | Leads and CRM            | built; e2e in CI                                                                                          |
-| 7     | Customer area            | built; e2e in CI                                                                                          |
-| 8     | Tools                    | built except commute search and share cards                                                               |
-| 9     | AI                       | in progress: customer assistant (web + WhatsApp) and suggestions done; admin assistant, helpers, MCP next |
-| 10    | Reports, polish, launch  | in progress: reports, System page, CSP, US preset done                                                    |
+| Phase | Name                     | Status                                                                                                                |
+| ----- | ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| 1     | Foundation               | done (staging deploy waits for credentials)                                                                           |
+| 2     | Settings and master data | done (staging deploy waits for credentials)                                                                           |
+| 3     | Properties and projects  | done (staging deploy waits for credentials)                                                                           |
+| 4     | Public site core         | done except LCP (Phase 10 performance pass)                                                                           |
+| 5     | CMS and SEO              | done                                                                                                                  |
+| 6     | Leads and CRM            | built; e2e in CI                                                                                                      |
+| 7     | Customer area            | built; e2e in CI                                                                                                      |
+| 8     | Tools                    | built except commute search and share cards                                                                           |
+| 9     | AI                       | built: customer assistant (web + WhatsApp), admin assistant, MCP server, writing helpers; real-model eval needs a key |
+| 10    | Reports, polish, launch  | in progress: reports, System page, CSP, US preset done                                                                |
 
 ## Phase 1 — Foundation (plan)
 
@@ -160,16 +160,16 @@ Done-when checklist (from `15-build-phases.md`):
 4. Eval harness `pnpm ai:eval` with retrieval, knowledge and assistant cases (done; assistant cases pending until the assistant registers in `tests/ai/agents.ts`).
 5. Customer assistant: the 10 §2 tools, the web chat answering with listing cards, booking with confirmation, hand-over, end-of-conversation summary and scoring; eval set to 30+ cases (done, migration 0016).
 6. WhatsApp agent on the same brain (24-hour window, templates outside it, listing cards as image + caption) (done; voice transcription left for later).
-7. Admin assistant: ask (read tools over fixed SQL), suggest (dashboard cards, done), act (write tools through the confirm flow, AIActionPreview card) (next).
-8. AI helpers in the editors (description, titles, SEO, alt text, blog draft, listing from text) and chat topic clustering.
-9. MCP server with per-admin tokens; write tools stay pending until confirmed.
+7. Admin assistant: ask (10 read tools over the screens' queries), suggest (dashboard cards from fixed SQL), act (10 write tools through the confirm flow, the top-bar panel with AIActionPreview cards) (done).
+8. AI helpers in the editors: listing description, title ideas, SEO title and description, alt text (the photo by address), blog draft from a brief, listing draft from pasted text (done). Chat topics: the `chat_topics` read tool; a weekly clustering job is left for later.
+9. MCP server at /api/mcp with per-admin tokens; write tools stay pending until confirmed (done).
 
 Done-when checklist (from `15-build-phases.md`):
 
 - [ ] Eval set passes (grounded answers, no invented listings, correct hand-over) — 41 of 41 with the test provider (`pnpm ai:eval`); a run against a real model needs the agency's key
 - [x] Customer assistant books a real viewing end to end — `tests/integration/ai-assistant.test.ts` "books a real free slot only after the details are there, and links the lead"
-- [ ] Every admin AI write action needs confirm and appears in the audit log
-- [ ] MCP server works from an MCP client with a token, and write actions stay pending until confirmed
+- [x] Every admin AI write action needs confirm and appears in the audit log — `tests/integration/ai-admin.test.ts` (every write tool), e2e `tests/e2e/admin-assistant.spec.ts`
+- [x] MCP server works from an MCP client with a token, and write actions stay pending until confirmed — `tests/integration/mcp.test.ts` (JSON-RPC over HTTP as a client sends it); a run from Claude against staging waits for the deploy
 
 ## Phase 10 — Reports, polish, launch (plan)
 
@@ -248,7 +248,7 @@ Done-when checklist (from `15-build-phases.md`):
 
 ## Next
 
-- Phase 9: admin assistant (read tools, write tools through the confirm flow, the chat panel and AIActionPreview card), AI helpers in the editors, MCP server.
+- Phase 9: a run of `pnpm ai:eval` against a real model; SEO suggestions on the other SEO panels (projects, pages, posts use the same `aiSuggest` prop); weekly chat topic clustering; voice note transcription.
 - Phase 8: commute time search and share cards.
 - Phase 10: accessibility and performance passes, README screenshots.
 
@@ -339,6 +339,10 @@ Done-when checklist (from `15-build-phases.md`):
 82. **End of conversation** (10 §2): every 5 minutes, chats the assistant answered in that have been quiet for 15 minutes and are not summarised since their last message get `ai.conversation_summary`: a summary on the conversation and the lead's timeline, stated requirements added only where the lead has none (a budget the lead stated replaces one worked out from a listing), and a new score. A stated pre-approval counts like the mortgage form for the score.
 83. **WhatsApp agent**: a new WhatsApp conversation is the assistant's when Settings -> AI has it on; listing cards go as photo messages with the title, live price and link in the caption (up to 3). A message without words (voice note, photo, file) goes to the team; voice transcription is left for later. A reply whose 24-hour window closed while it waited is dropped and the conversation goes to the team.
 84. **`pnpm ai:eval` stubs `next/cache`** (scripts/register-next-cache-stub.mjs) so the cached public loaders the tools use run outside Next, as in the Vitest setup.
+85. **Admin assistant history lives in the browser tab** (sessionStorage), sent with each question; proposals live in `ai_actions` with the panel's session id. No new table: an admin conversation is short and personal, and every change it proposes is already stored and audited.
+86. **Write tools that need several changes run inside the confirm transaction**; helpers that open their own transactions (viewings) run as savepoints there, so a refused step rolls everything back. `send_lead_reply` writes on WhatsApp only inside the 24-hour window, else by email.
+87. **MCP is stateless Streamable HTTP with JSON answers** (no server-sent stream, no session): it needs no Durable Object on Workers and suits tool calls. A "read" token sees the read tools; "read + propose" adds the write tools, `list_pending_actions` and `confirm_action`. It is switched by Settings -> AI -> MCP only (no model is called).
+88. **Writing helpers suggest, the admin keeps**: description, titles, SEO and alt text fill the editor without saving (an Undo brings the old description back); blog and listing drafts are created as drafts and open in their editor. They use the saved listing, so a change typed in the last seconds before autosave is not seen. Alt text sends the photo to the model by its public `/media` address (no large uploads), so it works where the site is reachable (staging, production).
 
 ## Data model changes (vs `05-data-model.md`)
 
