@@ -244,7 +244,7 @@ Done-when checklist (from `15-build-phases.md`):
 - Phase 5: built and merged; its new e2e specs (page builder, content admin, blog, SEO) run in CI for the first time.
 - Phase 6: built and merged; the new e2e specs (inbox, leads, viewings admin, marketing) run in CI.
 - Phase 7: built and merged (alerts and the customer area); its e2e spec runs in CI.
-- Phase 9: the customer assistant. Done: the 14 customer tools, the `ai.customer_reply` job, web chat wired to it (cards, hand-over, fallback to the team), the eval agent (`pnpm ai:eval` with the test provider: 14 of 16 pass). Open: the chat window UI (cards, typing state, "Talk to a person"), end-of-conversation summary and score, `get_listing` outside Next (the eval script has no `cacheLife`), 30+ eval cases, integration and e2e tests.
+- Phase 9: the customer assistant. Done: the 14 customer tools, the `ai.customer_reply` job, web chat (cards, typing state, "Talk to a person", fallback to the team), WhatsApp agent, end-of-conversation summary and score, 31 assistant eval cases, integration tests (`tests/integration/ai-assistant.test.ts`). Open: an e2e of the chat window with the test provider; a run of `pnpm ai:eval` against a real model (needs a key).
 
 ## Next
 
@@ -334,6 +334,11 @@ Done-when checklist (from `15-build-phases.md`):
 77. **The assistant's replies run as a job** (`ai.customer_reply`), not inside the visitor's request: the chat window already polls, a retried job survives a slow or failed model call, and one short lease per conversation keeps two replies from racing. A reply records the visitor message it answered (`messages.in_reply_to`, ids are time-ordered), so a message sent while the model was thinking is answered next instead of skipped.
 78. **Booking, saving contact details and the brochure are `read` tools**, not proposals: they act for the visitor, who confirms in the chat (`book_viewing` needs `visitorConfirmed: true` and the details Settings -> AI asks for). Admin changes stay behind the confirm flow.
 79. **Hand-over** sets the conversation to "needs_human" and emails the lead's agent and the lead inbox once per hand-over (`chat.handover`, the "new lead" row of Settings -> Notifications). When AI is off, over budget or fails, the visitor sees the usual "someone from our team will reply" once and the team answers.
+80. **Listing search drops the words about asking** ("do you have", "looking for", "for sale", "home") before the vector and full-text match: buy or rent is a filter, and left in, these words matched every listing, so a search for a castle looked confident. FAQ search keeps them ("buyer", "rent" carry meaning there).
+81. **A booking from the chat uses what the visitor already gave** (the conversation's contact) for any missing name, email or phone, so it joins their lead instead of starting a second one.
+82. **End of conversation** (10 §2): every 5 minutes, chats the assistant answered in that have been quiet for 15 minutes and are not summarised since their last message get `ai.conversation_summary`: a summary on the conversation and the lead's timeline, stated requirements added only where the lead has none (a budget the lead stated replaces one worked out from a listing), and a new score. A stated pre-approval counts like the mortgage form for the score.
+83. **WhatsApp agent**: a new WhatsApp conversation is the assistant's when Settings -> AI has it on; listing cards go as photo messages with the title, live price and link in the caption (up to 3). A message without words (voice note, photo, file) goes to the team; voice transcription is left for later. A reply whose 24-hour window closed while it waited is dropped and the conversation goes to the team.
+84. **`pnpm ai:eval` stubs `next/cache`** (scripts/register-next-cache-stub.mjs) so the cached public loaders the tools use run outside Next, as in the Vitest setup.
 
 ## Data model changes (vs `05-data-model.md`)
 
