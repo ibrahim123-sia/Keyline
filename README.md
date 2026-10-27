@@ -25,6 +25,7 @@ an AI assistant for visitors and another for the team.
 - [Getting started](#getting-started)
 - [Demo data](#demo-data)
 - [Configuration](#configuration)
+- [Using Keyline from Claude (MCP)](#using-keyline-from-claude-mcp)
 - [Scripts](#scripts)
 - [Testing](#testing)
 - [Deployment](#deployment)
@@ -45,7 +46,7 @@ an AI assistant for visitors and another for the team.
 | Marketing               | Campaign links with QR codes, campaign report, newsletter with double opt-in, editable message templates                                                                                            | Available   |
 | Customer area           | Saved homes and shareable lists, saved searches with instant, daily and weekly alerts, price-drop and status alerts, compare, tours, data download and account deletion                             | Available   |
 | Buyer tools             | Mortgage and rental-return calculators, compare page, branded PDF brochure, valuation, list your property, price trends, commute search, share cards                                                | In progress |
-| AI                      | Customer assistant on the website and WhatsApp, admin assistant with preview and confirm, AI writing helpers, MCP server                                                                            | Planned     |
+| AI                      | Customer assistant on the website and WhatsApp, admin assistant with preview and confirm, AI writing helpers, MCP server                                                                            | In progress |
 | Reports and launch      | Dashboard KPIs, reports with CSV and PDF export, accessibility and performance passes                                                                                                               | Planned     |
 
 Everything the agency sees is configurable from Settings: branding, market (currency, units,
@@ -132,6 +133,43 @@ Use `pnpm db:seed --reset` to replace the demo data in an existing database.
   Calendar, the AI provider) are not environment variables. Admins enter them in
   Settings → Integrations, and they are stored encrypted (AES-256-GCM) in the database.
 
+## Using Keyline from Claude (MCP)
+
+Keyline is an MCP server at `/api/mcp` (Streamable HTTP, JSON responses). It offers the admin
+assistant's tools: questions about leads, listings and reports, and changes that are only
+proposed until an admin confirms them.
+
+1. In **Settings → Admin users**, create a personal API token. "Read" tokens see the read tools;
+   "Read + propose" tokens can also prepare changes and confirm them with `confirm_action`.
+   The token is shown once.
+2. Keep **Settings → AI → MCP** switched on (it is by default). The write actions offered
+   follow the same "Allowed actions" checkboxes as the admin assistant.
+3. Add the server to your MCP client. For Claude Code:
+
+   ```bash
+   claude mcp add --transport http keyline https://your-domain.example/api/mcp \
+     --header "Authorization: Bearer lnt_your_token"
+   ```
+
+   For a client that reads a JSON config:
+
+   ```json
+   {
+     "mcpServers": {
+       "keyline": {
+         "type": "http",
+         "url": "https://your-domain.example/api/mcp",
+         "headers": { "Authorization": "Bearer lnt_your_token" }
+       }
+     }
+   }
+   ```
+
+A write tool never changes anything by itself: it returns a proposal id and a preview. The
+change waits in the admin (and in `list_pending_actions`) until an admin confirms it, and the
+audit log records it with the AI as the actor and the confirming admin. Deleting, settings,
+users, bulk exports and publishing are not available to the AI at all.
+
 ## Scripts
 
 | Script                                                   | What it does                                                    |
@@ -143,6 +181,8 @@ Use `pnpm db:seed --reset` to replace the demo data in an existing database.
 | `pnpm db:reset --yes`                                    | Drop everything and re-apply migrations (refuses in production) |
 | `pnpm admin:create --email … [--name …]`                 | Create or promote an admin                                      |
 | `pnpm dev:cron`                                          | Call the cron endpoint every minute (stands in for the Worker)  |
+| `pnpm ai:eval`                                           | Run the AI eval set (test provider unless a key is given)       |
+| `pnpm ai:backfill` / `pnpm ai:prompts`                   | Rebuild the search index / bundle the prompt files              |
 | `pnpm lint` / `pnpm typecheck` / `pnpm format:check`     | Quality checks                                                  |
 | `pnpm test:unit` / `pnpm test:integration` / `pnpm test` | Vitest (integration tests use an in-memory database)            |
 | `pnpm test:e2e`                                          | Playwright (starts its own database and app on port 3200)       |
