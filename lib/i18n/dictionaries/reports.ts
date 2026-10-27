@@ -288,4 +288,28 @@ export const reports = {
     recipientsHint: "Type an email and press Enter. Leave empty to send it to every active admin.",
     weekdays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
   },
+  /** Dashboard suggestion cards (10 §3 "Suggest"). */
+  suggestions: {
+    hotOne: "1 hot lead has no viewing yet",
+    hotMany: "{n} hot leads have no viewing yet",
+    hotBody:
+      "Leads scoring 70 or more are the likeliest to buy or rent soon. Offer them a viewing.",
+    hotAction: "See hot leads",
+    overpricedTitle: "{reference} is {pct}% above similar homes",
+    overpricedBody:
+      "{title} costs more per area than the middle of similar homes for sale in the same area and type. Check the price with the owner.",
+    overpricedAction: "Open the listing",
+    verifyOne: "1 live listing needs verifying",
+    verifyMany: "{n} live listings need verifying",
+    verifyBody: "Not verified in the last {days} days. A recent check keeps the Verified badge.",
+    verifyAction: "See them",
+    photosOne: "1 live listing has no photos",
+    photosMany: "{n} live listings have no photos",
+    photosBody: "Listings without photos get far fewer inquiries.",
+    photosAction: "Add photos",
+    seoOne: "1 live listing is missing its SEO title or description",
+    seoMany: "{n} live listings are missing their SEO title or description",
+    seoBody: "Search engines show these texts; without them they guess.",
+    seoAction: "Fix SEO",
+  },
 };
