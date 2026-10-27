@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type ComponentProps } from "react";
 import { cn } from "cn";
 import { TextInputField } from "@/components/admin/fields";
 import { SeoFields, type SeoValues } from "@/components/admin/seo-fields";
@@ -38,6 +38,7 @@ export function PageSettingsSheet({
   fallbackDescription,
   onSave,
   readOnly,
+  aiSuggest,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,6 +50,8 @@ export function PageSettingsSheet({
   fallbackDescription: string;
   onSave: (values: SettingsValues) => Promise<Record<string, string[]> | null>;
   readOnly: boolean;
+  /** AI title and description suggestions; omitted when the writing helpers are off. */
+  aiSuggest?: ComponentProps<typeof SeoFields>["aiSuggest"];
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -69,6 +72,7 @@ export function PageSettingsSheet({
             onSave={onSave}
             onCancel={() => onOpenChange(false)}
             readOnly={readOnly}
+            aiSuggest={readOnly ? undefined : aiSuggest}
           />
         )}
       </SheetContent>
@@ -85,6 +89,7 @@ function SettingsForm({
   onSave,
   onCancel,
   readOnly,
+  aiSuggest,
 }: {
   initial: SettingsValues;
   isHome: boolean;
@@ -94,6 +99,8 @@ function SettingsForm({
   onSave: (values: SettingsValues) => Promise<Record<string, string[]> | null>;
   onCancel: () => void;
   readOnly: boolean;
+  /** AI title and description suggestions; omitted when the writing helpers are off. */
+  aiSuggest?: ComponentProps<typeof SeoFields>["aiSuggest"];
 }) {
   const formId = useId();
   const [values, setValues] = useState(initial);
@@ -179,6 +186,7 @@ function SettingsForm({
             fallbackDescription={fallbackDescription}
             siteName={siteName}
             errorFor={err}
+            aiSuggest={aiSuggest}
           />
           {!published && (
             <p className="-mt-2 text-[12.5px] text-text-muted">

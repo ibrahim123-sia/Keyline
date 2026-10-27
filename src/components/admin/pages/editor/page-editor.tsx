@@ -54,8 +54,10 @@ import {
   setHomePage,
   unpublishPage,
 } from "@/features/cms/page-actions";
+import { aiSuggestSeo } from "@/features/ai/helper-actions";
 import type { PageEditorData } from "@/features/cms/page-admin";
 import { sectionCatalog } from "@/features/cms/section-catalog";
+import { sectionsText } from "@/features/cms/section-text";
 import {
   newSectionId,
   sectionProblems,
@@ -141,12 +143,15 @@ export function PageEditor({
   previewSrc,
   siteName,
   readOnly,
+  aiHelpers = false,
 }: {
   data: PageEditorData;
   /** The preview route for this page's draft (signed link, edit mode). */
   previewSrc: string;
   siteName: string;
   readOnly: boolean;
+  /** The writing helpers are on (10 §5). */
+  aiHelpers?: boolean;
 }) {
   const router = useRouter();
   const id = data.page.id;
@@ -745,6 +750,11 @@ export function PageEditor({
         fallbackDescription=""
         onSave={saveSettings}
         readOnly={readOnly}
+        aiSuggest={
+          aiHelpers
+            ? () => aiSuggestSeo({ kind: "page", title: meta.title, text: sectionsText(sections) })
+            : undefined
+        }
       />
       <RevisionsSheet
         open={panel === "revisions"}
