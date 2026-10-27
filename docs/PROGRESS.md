@@ -5,18 +5,18 @@ Spec: [`docs/spec/`](spec/README.md) (README + `01..16`).
 
 ## Status
 
-| Phase | Name                     | Status                                                                                |
-| ----- | ------------------------ | ------------------------------------------------------------------------------------- |
-| 1     | Foundation               | done (staging deploy waits for credentials)                                           |
-| 2     | Settings and master data | done (staging deploy waits for credentials)                                           |
-| 3     | Properties and projects  | done (staging deploy waits for credentials)                                           |
-| 4     | Public site core         | done except LCP (Phase 10 performance pass)                                           |
-| 5     | CMS and SEO              | done                                                                                  |
-| 6     | Leads and CRM            | built; e2e in CI                                                                      |
-| 7     | Customer area            | built; e2e in CI                                                                      |
-| 8     | Tools                    | built except commute search and share cards                                           |
-| 9     | AI                       | in progress: service layer, retrieval, scoring and eval harness done; assistants next |
-| 10    | Reports, polish, launch  | in progress: reports, System page, CSP, US preset done                                |
+| Phase | Name                     | Status                                                                                                    |
+| ----- | ------------------------ | --------------------------------------------------------------------------------------------------------- |
+| 1     | Foundation               | done (staging deploy waits for credentials)                                                               |
+| 2     | Settings and master data | done (staging deploy waits for credentials)                                                               |
+| 3     | Properties and projects  | done (staging deploy waits for credentials)                                                               |
+| 4     | Public site core         | done except LCP (Phase 10 performance pass)                                                               |
+| 5     | CMS and SEO              | done                                                                                                      |
+| 6     | Leads and CRM            | built; e2e in CI                                                                                          |
+| 7     | Customer area            | built; e2e in CI                                                                                          |
+| 8     | Tools                    | built except commute search and share cards                                                               |
+| 9     | AI                       | in progress: customer assistant (web + WhatsApp) and suggestions done; admin assistant, helpers, MCP next |
+| 10    | Reports, polish, launch  | in progress: reports, System page, CSP, US preset done                                                    |
 
 ## Phase 1 — Foundation (plan)
 
@@ -158,16 +158,16 @@ Done-when checklist (from `15-build-phases.md`):
 2. Embeddings pipeline (Workers AI bge-m3 or hashing test embeddings) and hybrid search with a confidence signal; `searchKnowledge()` for FAQs and pages (done).
 3. Lead scoring with the shared rubric, rules as the fallback (done).
 4. Eval harness `pnpm ai:eval` with retrieval, knowledge and assistant cases (done; assistant cases pending until the assistant registers in `tests/ai/agents.ts`).
-5. Customer assistant: the 10 §2 tools, the web chat answering with listing cards, booking with confirmation, hand-over, end-of-conversation summary and scoring; eval set to 30+ cases (next).
-6. WhatsApp agent on the same brain (24-hour window, templates outside it, listing cards as image + caption).
-7. Admin assistant: ask (read tools over fixed SQL), suggest (dashboard cards), act (write tools through the confirm flow, AIActionPreview card).
+5. Customer assistant: the 10 §2 tools, the web chat answering with listing cards, booking with confirmation, hand-over, end-of-conversation summary and scoring; eval set to 30+ cases (done, migration 0016).
+6. WhatsApp agent on the same brain (24-hour window, templates outside it, listing cards as image + caption) (done; voice transcription left for later).
+7. Admin assistant: ask (read tools over fixed SQL), suggest (dashboard cards, done), act (write tools through the confirm flow, AIActionPreview card) (next).
 8. AI helpers in the editors (description, titles, SEO, alt text, blog draft, listing from text) and chat topic clustering.
 9. MCP server with per-admin tokens; write tools stay pending until confirmed.
 
 Done-when checklist (from `15-build-phases.md`):
 
-- [ ] Eval set passes (grounded answers, no invented listings, correct hand-over)
-- [ ] Customer assistant books a real viewing end to end
+- [ ] Eval set passes (grounded answers, no invented listings, correct hand-over) — 41 of 41 with the test provider (`pnpm ai:eval`); a run against a real model needs the agency's key
+- [x] Customer assistant books a real viewing end to end — `tests/integration/ai-assistant.test.ts` "books a real free slot only after the details are there, and links the lead"
 - [ ] Every admin AI write action needs confirm and appears in the audit log
 - [ ] MCP server works from an MCP client with a token, and write actions stay pending until confirmed
 
@@ -244,11 +244,11 @@ Done-when checklist (from `15-build-phases.md`):
 - Phase 5: built and merged; its new e2e specs (page builder, content admin, blog, SEO) run in CI for the first time.
 - Phase 6: built and merged; the new e2e specs (inbox, leads, viewings admin, marketing) run in CI.
 - Phase 7: built and merged (alerts and the customer area); its e2e spec runs in CI.
-- Phase 9: the customer assistant. Done: the 14 customer tools, the `ai.customer_reply` job, web chat (cards, typing state, "Talk to a person", fallback to the team), WhatsApp agent, end-of-conversation summary and score, 31 assistant eval cases, integration tests (`tests/integration/ai-assistant.test.ts`). Open: an e2e of the chat window with the test provider; a run of `pnpm ai:eval` against a real model (needs a key).
+- Phase 9: the customer assistant. Done: the 14 customer tools, the `ai.customer_reply` job, web chat (cards, typing state, "Talk to a person", fallback to the team), WhatsApp agent, end-of-conversation summary and score, 31 assistant eval cases, integration tests (`tests/integration/ai-assistant.test.ts`). E2E `tests/e2e/assistant.spec.ts`. Open: a run of `pnpm ai:eval` against a real model (needs a key). Dashboard suggestion cards from fixed SQL are done; the AI report shows the estimated spend.
 
 ## Next
 
-- Phase 9: WhatsApp agent, admin assistant with the confirm flow, AI helpers, MCP server.
+- Phase 9: admin assistant (read tools, write tools through the confirm flow, the chat panel and AIActionPreview card), AI helpers in the editors, MCP server.
 - Phase 8: commute time search and share cards.
 - Phase 10: accessibility and performance passes, README screenshots.
 
