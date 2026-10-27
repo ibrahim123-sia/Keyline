@@ -1,5 +1,8 @@
 "use client";
 
+import { AiDraftDialog } from "@/components/admin/ai/ai-draft-dialog";
+import { aiListingFromText } from "@/features/ai/helper-actions";
+
 import {
   ArchiveIcon,
   ArchiveRestoreIcon,
@@ -123,6 +126,7 @@ export function PropertiesManager({
   savedViews,
   archived,
   readOnly,
+  aiHelpers,
 }: {
   rows: PropertyRow[];
   total: number;
@@ -137,6 +141,8 @@ export function PropertiesManager({
   savedViews: SavedView[];
   archived: boolean;
   readOnly?: boolean;
+  /** Settings -> AI writing helpers: a listing draft from pasted text. */
+  aiHelpers?: boolean;
 }) {
   const router = useRouter();
   const search = useSearchParams();
@@ -384,6 +390,17 @@ export function PropertiesManager({
                   <UploadIcon /> Import
                 </Link>
               </Button>
+            )}
+            {!readOnly && aiHelpers && (
+              <AiDraftDialog
+                buttonLabel="From pasted text"
+                title="New listing from text"
+                description="Paste a portal ad or the owner's message. A draft is created from what the text says; check it before publishing."
+                fieldLabel="Listing text"
+                placeholder="e.g. Bright 3-bed villa for sale in Dubai Hills, 3,200 sq ft, private garden, asking 4.5M"
+                run={(text) => aiListingFromText({ text })}
+                editorPath={(id) => `/admin/properties/${id}`}
+              />
             )}
             {!readOnly && <NewPropertyDialog types={types} />}
           </>

@@ -1,5 +1,8 @@
 "use client";
 
+import { AiDraftDialog } from "@/components/admin/ai/ai-draft-dialog";
+import { aiDraftBlogPost } from "@/features/ai/helper-actions";
+
 import { SparklesIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -48,6 +51,7 @@ export function PostsManager({
   sort,
   categories,
   readOnly,
+  aiHelpers,
 }: {
   rows: PostListRow[];
   total: number;
@@ -56,6 +60,8 @@ export function PostsManager({
   sort: { id: string; desc: boolean };
   categories: CategoryOption[];
   readOnly?: boolean;
+  /** Settings -> AI writing helpers: a draft from a brief. */
+  aiHelpers?: boolean;
 }) {
   const router = useRouter();
   const columns = useMemo<ColumnDef<PostListRow, unknown>[]>(
@@ -158,6 +164,17 @@ export function PostsManager({
               { value: "none", label: "No category" },
             ]}
           />
+          {!readOnly && aiHelpers && (
+            <AiDraftDialog
+              buttonLabel="Draft with AI"
+              title="Draft a post with AI"
+              description="Say what the post is about and any facts to use. You get a draft to edit; figures it does not know are marked [add source]."
+              fieldLabel="Brief"
+              placeholder="e.g. Moving to Dubai Hills with children: schools, parks and commutes"
+              run={(brief) => aiDraftBlogPost({ brief })}
+              editorPath={(id) => `/admin/website/blog/${id}`}
+            />
+          )}
           {!readOnly && <NewPostDialog />}
         </>
       }

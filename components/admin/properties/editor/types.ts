@@ -37,4 +37,7 @@ export type SectionProps = {
   readOnly: boolean;
   /** Fields the chosen property type hides. */
   hidden: ReadonlySet<string>;
+  propertyId: string;
+  /** Settings -> AI has the writing helpers on (and the admin may edit). */
+  aiHelpers: boolean;
 };

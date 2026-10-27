@@ -1,3 +1,4 @@
+import { writingHelpersOn } from "@/features/ai/config";
 import { and, asc, eq } from "drizzle-orm";
 import { PageHeader } from "@/components/admin/page-header";
 import { PropertiesManager } from "@/components/admin/properties/properties-manager";
@@ -57,6 +58,7 @@ export default async function PropertiesPage(props: PageProps<"/admin/properties
         savedViews={views}
         archived={params.get("archived") === "1"}
         readOnly={user.readOnly}
+        aiHelpers={!user.readOnly && (await writingHelpersOn(db))}
       />
     </>
   );

@@ -57,6 +57,7 @@ export function PropertyEditor({
   market,
   serverNow,
   readOnly,
+  aiHelpers = false,
 }: {
   id: string;
   reference: string;
@@ -71,6 +72,7 @@ export function PropertyEditor({
   /** When the page was rendered: "verified in the last 30 days" is measured from it. */
   serverNow: string;
   readOnly: boolean;
+  aiHelpers?: boolean;
 }) {
   const router = useRouter();
   const [data, setData] = useState(initial);
@@ -240,6 +242,8 @@ export function PropertyEditor({
     status,
     readOnly,
     hidden,
+    propertyId: id,
+    aiHelpers: aiHelpers && !readOnly,
   };
 
   const sections = [

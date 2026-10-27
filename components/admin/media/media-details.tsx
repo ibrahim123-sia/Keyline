@@ -1,5 +1,8 @@
 "use client";
 
+import { AiButton } from "@/components/admin/ai/ai-button";
+import { aiSuggestAltText } from "@/features/ai/helper-actions";
+
 import { CopyIcon, DownloadIcon, ExternalLinkIcon, RefreshCwIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
@@ -32,6 +35,7 @@ export function MediaDetails({
   item,
   folders,
   readOnly,
+  aiHelpers,
   onChanged,
   onDeleted,
   onReplace,
@@ -39,6 +43,7 @@ export function MediaDetails({
   item: MediaItem;
   folders: string[];
   readOnly?: boolean;
+  aiHelpers?: boolean;
   onChanged: (item: MediaItem) => void;
   onDeleted: (id: string) => void;
   onReplace: (file: File, item: MediaItem) => void;
@@ -178,6 +183,15 @@ export function MediaDetails({
             onChange={(alt) => setForm((f) => ({ ...f, alt }))}
             error={save.errorFor("alt")}
           />
+        )}
+        {item.kind === "image" && aiHelpers && !readOnly && (
+          <div>
+            <AiButton
+              label="Suggest alt text"
+              run={() => aiSuggestAltText({ mediaId: item.id })}
+              onResult={({ alt }) => setForm((f) => ({ ...f, alt }))}
+            />
+          </div>
         )}
         <TextInputField
           label="Caption"

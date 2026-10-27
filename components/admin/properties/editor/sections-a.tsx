@@ -1,6 +1,8 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
+import { AiButton } from "@/components/admin/ai/ai-button";
+import { aiSuggestTitles } from "@/features/ai/helper-actions";
 import {
   AdminField,
   CheckboxListField,
@@ -130,6 +132,43 @@ function MoneyField({
 
 /* 1. Basics ---------------------------------------------------------------- */
 
+/** Three AI title ideas from the saved details (10 §5); clicking one uses it. */
+function TitleSuggestions({
+  propertyId,
+  onPick,
+}: {
+  propertyId: string;
+  onPick: (title: string) => void;
+}) {
+  const [titles, setTitles] = useState<string[]>([]);
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <AiButton
+        label="Suggest titles"
+        run={() => aiSuggestTitles({ propertyId })}
+        onResult={(data) => setTitles(data.titles)}
+      />
+      {titles.length > 0 && (
+        <div role="group" aria-label="Title ideas" className="flex flex-wrap gap-2">
+          {titles.map((t) => (
+            <button
+              key={t}
+              type="button"
+              className="rounded-full border border-border px-3 py-1 text-[13px] text-ink hover:border-ink focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
+              onClick={() => {
+                onPick(t);
+                setTitles([]);
+              }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function BasicsSection({
   data,
   set,
@@ -137,6 +176,8 @@ export function BasicsSection({
   options,
   status,
   reference,
+  aiHelpers,
+  propertyId,
 }: SectionProps & { reference: string }) {
   const activeAgents = options.agents.filter((a) => a.isActive || a.id === data.agentId);
   return (
@@ -186,6 +227,7 @@ export function BasicsSection({
         onChange={(title) => set({ title })}
         error={errorFor("title")}
       />
+      {aiHelpers && <TitleSuggestions propertyId={propertyId} onPick={(title) => set({ title })} />}
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField
           label="Agent"

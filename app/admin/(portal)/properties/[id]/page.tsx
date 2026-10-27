@@ -6,6 +6,7 @@ import { getDb } from "@/db/client";
 import { loadEditorData } from "@/features/properties/editor-data";
 import { currencyFormats } from "@/features/properties/format";
 import { siteTitleTemplate } from "@/features/seo/titles";
+import { writingHelpersOn } from "@/features/ai/config";
 import { loadSettings } from "@/features/settings/queries";
 import { requireAdminPage } from "@/lib/auth/guards";
 
@@ -56,6 +57,7 @@ export default async function PropertyEditorPage(props: PageProps<"/admin/proper
         nearby={data.nearby}
         serverNow={now}
         readOnly={user.readOnly || data.row.deletedAt !== null}
+        aiHelpers={await writingHelpersOn(db)}
         market={{
           baseCurrency: market.baseCurrency.code,
           currencies: currencyFormats(market),

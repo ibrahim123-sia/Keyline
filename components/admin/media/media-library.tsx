@@ -64,6 +64,8 @@ export function MediaLibrary(props: {
   view: "grid" | "list";
   maxUploadMb: number;
   readOnly: boolean;
+  /** Settings -> AI writing helpers: alt text suggestions. */
+  aiHelpers?: boolean;
 }) {
   const { total, page, pageSize, folders, folder, view, readOnly } = props;
   const router = useRouter();
@@ -567,6 +569,7 @@ export function MediaLibrary(props: {
             item={openItem}
             folders={folders.map((f) => f.path).filter(Boolean)}
             readOnly={readOnly}
+            aiHelpers={props.aiHelpers}
             onChanged={(updated) => {
               setItems((list) => list.map((i) => (i.id === updated.id ? updated : i)));
               router.refresh();

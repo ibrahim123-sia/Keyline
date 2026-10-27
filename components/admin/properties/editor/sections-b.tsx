@@ -1,6 +1,10 @@
 "use client";
 
 import { BadgeCheckIcon } from "lucide-react";
+import { useState } from "react";
+import { AiButton, paragraphsToDoc } from "@/components/admin/ai/ai-button";
+import { aiSuggestSeo, aiWriteDescription } from "@/features/ai/helper-actions";
+import type { PropertyInput } from "@/features/properties/schema";
 import {
   CheckboxListField,
   ListField,
@@ -37,9 +41,39 @@ const groupLabels: Record<string, string> = {
 
 /* 7. Description ----------------------------------------------------------- */
 
-export function DescriptionSection({ data, set, errorFor }: SectionProps) {
+export function DescriptionSection({ data, set, errorFor, aiHelpers, propertyId }: SectionProps) {
+  // The text an AI draft replaced, so one click brings it back.
+  const [before, setBefore] = useState<{ value: PropertyInput["description"] } | null>(null);
   return (
     <FormSection id="description" title="Description">
+      {aiHelpers && (
+        <div className="flex flex-wrap items-center gap-2">
+          <AiButton
+            label="Write with AI"
+            run={() => aiWriteDescription({ propertyId })}
+            onResult={({ text }) => {
+              setBefore({ value: data.description });
+              set({ description: paragraphsToDoc(text) as PropertyInput["description"] });
+            }}
+          />
+          {before && (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                set({ description: before.value });
+                setBefore(null);
+              }}
+            >
+              Undo AI draft
+            </Button>
+          )}
+          <span className="text-[12.5px] text-text-muted">
+            Uses the saved details only; “[add detail]” marks what to fill in.
+          </span>
+        </div>
+      )}
       <RichTextEditor
         label="Description"
         description="Headings, bold, lists and links. 120 words or more helps the listing rank."
@@ -204,7 +238,15 @@ export function TrustSection({ data, set, errorFor, market }: SectionProps) {
 
 /* 13. SEO ------------------------------------------------------------------ */
 
-export function SeoSection({ data, set, errorFor, market, options, media }: SectionProps) {
+export function SeoSection({
+  data,
+  set,
+  errorFor,
+  market,
+  options,
+  media,
+  aiHelpers,
+}: SectionProps) {
   const plain = richTextToPlain(data.description).replace(/\s+/g, " ");
   const place = placeOf(options.locations, data.locationId);
   const pageTitle = market.titlePattern
@@ -243,6 +285,11 @@ export function SeoSection({ data, set, errorFor, market, options, media }: Sect
         siteName={market.siteName}
         errorFor={errorFor}
         shareImageUrl={coverUrl ? mediaVariant(coverUrl, 640) : null}
+        aiSuggest={
+          aiHelpers
+            ? () => aiSuggestSeo({ kind: "listing", title: data.title, text: plain })
+            : undefined
+        }
         checklist={{
           h1: data.title.trim() !== "",
           imagesWithoutAlt: photos.filter((m) => !m.alt && !media[m.mediaId]?.alt).length,

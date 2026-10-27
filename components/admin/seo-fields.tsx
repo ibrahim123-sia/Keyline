@@ -10,6 +10,8 @@ import {
   type ChecklistFacts,
   type CheckLevel,
 } from "@/features/seo/checklist";
+import { useState } from "react";
+import { AiButton } from "@/components/admin/ai/ai-button";
 import { useHydrated } from "@/lib/use-hydrated";
 import { SwitchField, TextInputField, TextareaField } from "./fields";
 import { MediaPicker } from "./media/media-picker";
@@ -68,6 +70,7 @@ export function SeoFields({
   errorFor,
   checklist,
   shareImageUrl,
+  aiSuggest,
 }: {
   values: SeoValues;
   onChange: (patch: Partial<SeoValues>) => void;
@@ -81,7 +84,13 @@ export function SeoFields({
   checklist?: ChecklistFacts;
   /** The picture shares show when no share image is chosen (usually the cover photo). */
   shareImageUrl?: string | null;
+  /** AI title and description suggestions (10 §5); omit when the writing helpers are off. */
+  aiSuggest?: () => Promise<
+    | { ok: true; data: { options: Array<{ title: string; description: string }> } }
+    | { ok: false; error: string }
+  >;
 }) {
+  const [suggestions, setSuggestions] = useState<Array<{ title: string; description: string }>>([]);
   const hydrated = useHydrated();
   const host = hydrated ? window.location.host : "";
   const title = values.seoTitle || fallbackTitle;
@@ -125,6 +134,36 @@ export function SeoFields({
           label={`${description.length} / ${DESCRIPTION_MAX} characters`}
         />
       </div>
+      {aiSuggest && (
+        <div className="flex flex-col gap-2">
+          <div>
+            <AiButton
+              label="Suggest title and description"
+              run={aiSuggest}
+              onResult={({ options }) => setSuggestions(options)}
+            />
+          </div>
+          {suggestions.length > 0 && (
+            <ul aria-label="Suggestions" className="flex flex-col gap-2">
+              {suggestions.map((o, i) => (
+                <li key={i}>
+                  <button
+                    type="button"
+                    className="w-full rounded-md border border-border bg-surface p-2.5 text-start hover:border-ink focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
+                    onClick={() => {
+                      onChange({ seoTitle: o.title, seoDescription: o.description });
+                      setSuggestions([]);
+                    }}
+                  >
+                    <span className="block text-[13.5px] font-medium text-ink">{o.title}</span>
+                    <span className="block text-[12.5px] text-text-muted">{o.description}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-3 lg:grid-cols-2">
         <div

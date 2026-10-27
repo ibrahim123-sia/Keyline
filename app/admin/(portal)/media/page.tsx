@@ -1,3 +1,4 @@
+import { writingHelpersOn } from "@/features/ai/config";
 import { PageHeader } from "@/components/admin/page-header";
 import { MediaLibrary } from "@/components/admin/media/media-library";
 import { getDb } from "@/db/client";
@@ -41,6 +42,7 @@ export default async function MediaPage(props: PageProps<"/admin/media">) {
         view={first(sp.view) === "list" ? "list" : "grid"}
         maxUploadMb={general.maxUploadMb}
         readOnly={user.readOnly}
+        aiHelpers={!user.readOnly && (await writingHelpersOn(db))}
       />
     </>
   );

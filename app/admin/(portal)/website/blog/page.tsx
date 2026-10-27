@@ -1,3 +1,4 @@
+import { writingHelpersOn } from "@/features/ai/config";
 import { BlogTabs } from "@/components/admin/blog/blog-tabs";
 import { PostsManager } from "@/components/admin/blog/posts-manager";
 import { PageHeader } from "@/components/admin/page-header";
@@ -34,6 +35,7 @@ export default async function BlogPage(props: PageProps<"/admin/website/blog">) 
         sort={params.sort}
         categories={categories}
         readOnly={user.readOnly}
+        aiHelpers={!user.readOnly && (await writingHelpersOn(db))}
       />
     </>
   );
