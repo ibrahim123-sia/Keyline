@@ -13,12 +13,16 @@ export function AdminTopbar({
   theme,
   onToggleTheme,
   userMenu,
+  onAsk,
 }: {
   theme: "light" | "dark";
   onToggleTheme?: () => void;
   userMenu?: ReactNode;
+  /** Opens the assistant with a question; absent when the assistant is off. */
+  onAsk?: (question: string) => void;
 }) {
   const [navOpen, setNavOpen] = useState(false);
+  const [question, setQuestion] = useState("");
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-surface/95 px-4 backdrop-blur lg:px-6">
       <Sheet open={navOpen} onOpenChange={setNavOpen}>
@@ -40,7 +44,14 @@ export function AdminTopbar({
         </SheetContent>
       </Sheet>
 
-      <div className="relative max-w-xl flex-1">
+      <form
+        className="relative max-w-xl flex-1"
+        onSubmit={(e) => {
+          e.preventDefault();
+          onAsk?.(question.trim());
+          setQuestion("");
+        }}
+      >
         <SparklesIcon
           className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-text-muted"
           aria-hidden
@@ -53,9 +64,11 @@ export function AdminTopbar({
           type="text"
           placeholder={admin.topbar.assistantPlaceholder}
           className="h-9 w-full rounded-md border border-input bg-muted ps-9 pe-3 text-[13.5px] text-ink outline-none placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-ring/40"
-          disabled
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          disabled={!onAsk}
         />
-      </div>
+      </form>
 
       <div className="ms-auto flex items-center gap-1">
         <Button variant="ghost" size="icon" asChild>
