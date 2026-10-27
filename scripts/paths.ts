@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { localDataRoot } from "../lib/local-data";
+import { localDataRoot } from "../src/lib/local-data";
 
 /**
  * Local runtime data lives outside the project folder (in ~/.propel, see lib/local-data.ts).

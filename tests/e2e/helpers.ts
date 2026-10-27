@@ -227,7 +227,7 @@ export async function seedDemo(
         "tsx",
         "--import",
         "./scripts/register-server-only.mjs",
-        "db/seed/index.ts",
+        "src/db/seed/index.ts",
         `--preset=${preset}`,
         "--reset",
       ],

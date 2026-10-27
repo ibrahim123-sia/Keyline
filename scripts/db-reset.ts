@@ -1,8 +1,8 @@
 import "./_env";
 import { Client } from "pg";
-import { runMigrations } from "../db/migrate";
-import { closeDb } from "../db/client";
-import { readEnv } from "../lib/legacy-env";
+import { runMigrations } from "../src/db/migrate";
+import { closeDb } from "../src/db/client";
+import { readEnv } from "../src/lib/legacy-env";
 
 /**
  * `pnpm db:reset --yes` — drops every table (schemas `public` and `drizzle`) and re-applies

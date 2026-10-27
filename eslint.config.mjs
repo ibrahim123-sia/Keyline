@@ -37,7 +37,7 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "playwright-report/**",
     "test-results/**",
-    "db/migrations/**",
+    "src/db/migrations/**",
     "docs/**",
     "next-env.d.ts",
     "cloudflare-env.d.ts",

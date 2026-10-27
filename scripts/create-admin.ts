@@ -1,7 +1,7 @@
 import "./_env";
 import { parseArgs } from "node:util";
-import { closeDb, getDb } from "../db/client";
-import { createOrPromoteAdmin, generatePassword } from "../features/admin-users/create-admin";
+import { closeDb, getDb } from "../src/db/client";
+import { createOrPromoteAdmin, generatePassword } from "../src/features/admin-users/create-admin";
 
 /**
  * `pnpm admin:create --email owner@agency.com [--name "Owner"] [--password ...]`

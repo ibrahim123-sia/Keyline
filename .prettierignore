@@ -7,7 +7,7 @@ coverage
 playwright-report
 test-results
 pnpm-lock.yaml
-db/migrations
+src/db/migrations
 docs/spec
 cloudflare-env.d.ts
 next-env.d.ts

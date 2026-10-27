@@ -20,7 +20,7 @@ import { startPgliteServer } from "./pglite";
  * `.data/` and reused until a migration file changes.
  */
 
-const MIGRATIONS_DIR = resolve("db/migrations");
+const MIGRATIONS_DIR = resolve("src/db/migrations");
 const CACHE_DIR = localDataPath("cache");
 
 function migrationsHash(): string {

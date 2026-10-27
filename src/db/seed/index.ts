@@ -1,4 +1,4 @@
-import "../../scripts/_env";
+import "../../../scripts/_env";
 import { parseArgs } from "node:util";
 import { backfillEmbeddings } from "@/features/ai/embeddings";
 import { closeDb, getDb } from "../client";

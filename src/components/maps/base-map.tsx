@@ -16,7 +16,7 @@ export type MapLibreModule = typeof import("maplibre-gl");
  * worker file is referenced here instead: the bundler emits it as a hashed static asset.
  */
 const workerUrl = () =>
-  new URL("../../node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).href;
+  new URL("../../../node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).href;
 
 /**
  * MapLibre map that loads its library only when it is about to be visible (14 §1: the map

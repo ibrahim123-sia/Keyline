@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { API_CSP, PREVIEW_FRAME_OPTIONS, baseSecurityHeaders } from "./lib/security/headers";
+import { API_CSP, PREVIEW_FRAME_OPTIONS, baseSecurityHeaders } from "./src/lib/security/headers";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
