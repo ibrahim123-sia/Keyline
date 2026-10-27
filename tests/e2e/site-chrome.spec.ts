@@ -85,8 +85,12 @@ test("header: the primary button and the currency switcher come from settings", 
   await header.getByRole("button", { name: "Currency: AED" }).click();
   await page.getByRole("menuitemradio", { name: "USD · example rate" }).click();
   await expect(header.getByRole("button", { name: "Currency: USD" })).toBeVisible();
-  const cookie = (await page.context().cookies()).find((c) => c.name === "propel_currency");
-  expect(cookie?.value).toBe("USD");
+  // The button changes at once (optimistic); the cookie arrives with the action's answer.
+  await expect
+    .poll(
+      async () => (await page.context().cookies()).find((c) => c.name === "propel_currency")?.value,
+    )
+    .toBe("USD");
 });
 
 test("phone: the menu holds the button and the currency choice @phone", async ({
