@@ -11,7 +11,14 @@ import { loadSettings } from "@/features/settings/queries";
 import { currentEmbeddingProvider } from "../embeddings";
 import { pgArrayLiteral } from "../sql";
 import { vectorLiteral, type EmbeddingProvider } from "../embeddings/provider";
-import { confidenceAdvice, confidenceFor, fuseRankings, orTsQuery, type Confidence } from "./rank";
+import {
+  confidenceAdvice,
+  confidenceFor,
+  fuseRankings,
+  listingQueryText,
+  orTsQuery,
+  type Confidence,
+} from "./rank";
 
 /**
  * Hybrid search (10 §1): the structured filters of the site search (purpose, price, beds,
@@ -95,7 +102,7 @@ export async function hybridSearch(
   const db = options.db ?? (await getDb());
   const limit = Math.min(Math.max(input.limit ?? 6, 1), 20);
   const filters = input.filters ?? {};
-  const text = input.text?.trim() ?? "";
+  const text = listingQueryText(input.text?.trim() ?? "");
   const market = await loadSettings("market", db);
 
   // Structured filters: the same SQL as the site search, for one purpose or both.

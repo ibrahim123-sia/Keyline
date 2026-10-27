@@ -3,7 +3,12 @@ import { z } from "zod";
 import { buildChunks, sectionText, splitText } from "@/features/ai/embeddings/chunks";
 import { hashEmbedding, normalizeWords } from "@/features/ai/embeddings/provider";
 import { costMicros, microsToCents, priceFor } from "@/features/ai/pricing";
-import { confidenceFor, fuseRankings, orTsQuery } from "@/features/ai/retrieval/rank";
+import {
+  confidenceFor,
+  fuseRankings,
+  listingQueryText,
+  orTsQuery,
+} from "@/features/ai/retrieval/rank";
 import { parseScoringReply, rubricPromptLines } from "@/features/ai/scoring";
 import { fenceToolResult, unfence } from "@/features/ai/tools/fence";
 import { blockedToolReason, defineTool, toolJsonSchema } from "@/features/ai/tools/registry";
@@ -138,6 +143,19 @@ describe("hybrid ranking", () => {
     );
     expect(orTsQuery("'; drop table --")).toBe("drop:* | table:*");
     expect(orTsQuery("!!")).toBeNull();
+  });
+
+  it("keeps only what describes the home in a listing question", () => {
+    expect(listingQueryText("Do you have a castle with a moat for sale?")).toBe(
+      "you have a castle with a moat for",
+    );
+    expect(orTsQuery(listingQueryText("Do you have a castle with a moat for sale?"))).toBe(
+      "castle:* | moat:*",
+    );
+    expect(listingQueryText("I'm looking for a home with a private pool")).toBe(
+      "for a with a private pool",
+    );
+    expect(listingQueryText("sale")).toBe("");
   });
 });
 

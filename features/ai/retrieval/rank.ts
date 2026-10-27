@@ -72,6 +72,29 @@ export const confidenceAdvice: Record<Confidence, string> = {
   none: "No listing matches. Say so, suggest widening the search, and offer to connect the visitor with the team.",
 };
 
+/**
+ * Words that say what the visitor is doing rather than what they want ("do you have … for
+ * sale", "I'm looking for a home"). Buy or rent is a filter, not a feature; left in, these
+ * match every listing's text and make a search for something that does not exist look sure.
+ */
+const LISTING_QUERY_NOISE = new Set(
+  (
+    "do does did can could would will any anything some something there here is are am im i'm " +
+    "looking look want wanted need find show see get got please hi hello thanks like " +
+    "sale sell selling buy buying purchase rent renting rental let lease available " +
+    "home homes house property properties place one ones"
+  ).split(" "),
+);
+
+/** The part of a listing question that describes the home (for vectors and full text). */
+export function listingQueryText(text: string): string {
+  return text
+    .split(/\s+/)
+    .filter((w) => !LISTING_QUERY_NOISE.has(w.toLowerCase().replace(/[^\p{L}\p{N}']/gu, "")))
+    .join(" ")
+    .trim();
+}
+
 /** Words of the text as an OR prefix query (every word is letters and digits only). */
 export function orTsQuery(text: string): string | null {
   const words = [...new Set(normalizeWords(text))].slice(0, 16);
