@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { connection } from "next/server";
 import { ChevronRightIcon } from "lucide-react";
 import { DashboardSuggestions } from "@/components/admin/dashboard/suggestions";
 import { KpiTiles } from "@/components/admin/reports/kpi-tiles";
@@ -28,8 +27,9 @@ const dashboardPresets: PeriodPreset[] = ["7d", "30d", "90d", "month", "lastMont
  * AI suggestion cards.
  */
 export default async function AdminDashboardPage(props: PageProps<"/admin">) {
+  // The session (and the search params) already make this page request-time; a direct
+  // connection() here failed when a Server Action refreshed the page after its inline jobs.
   const { user } = await requireAdminPage();
-  await connection();
   const sp = await props.searchParams;
   const db = await getDb();
   const ctx = await loadReportContext(db, parsePeriodParams(sp));
