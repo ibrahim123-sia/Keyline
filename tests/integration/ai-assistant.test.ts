@@ -80,6 +80,7 @@ describe("customer assistant in the website chat (10 §2)", () => {
       "conversations",
       "messages",
       "viewings",
+      "agents",
       "rate_limits",
       "job_runs",
       "email_log",
