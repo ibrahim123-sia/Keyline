@@ -9,7 +9,12 @@ import { chat as t } from "@/lib/i18n/dictionaries/chat";
 const ChatPanel = dynamic(() => import("./chat-panel").then((m) => m.ChatPanel), { ssr: false });
 
 /** The chat button on every site page (09 §1 #3); shown only when Settings turns it on. */
-export function ChatLauncher(props: { title: string; greeting: string; askContactFirst: boolean }) {
+export function ChatLauncher(props: {
+  title: string;
+  greeting: string;
+  askContactFirst: boolean;
+  humanButton: "always" | "after_3";
+}) {
   const [open, setOpen] = useState(false);
   return open ? (
     <ChatPanel {...props} onClose={() => setOpen(false)} />

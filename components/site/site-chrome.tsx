@@ -41,6 +41,7 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
           title={ai.assistantName}
           greeting={ai.greeting}
           askContactFirst={ai.webChat.askContactFirst}
+          humanButton={ai.showHumanButton}
         />
       )}
       <CookieBanner

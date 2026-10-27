@@ -14,5 +14,8 @@ export const chat = {
   team: "Team",
   assistant: "Assistant",
   waiting: "Thanks. Someone from the team will reply here shortly.",
+  typing: "Typing…",
+  person: "Talk to a person",
+  listings: "Homes",
   failed: "Could not send. Please try again.",
 } as const;

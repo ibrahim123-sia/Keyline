@@ -3,14 +3,60 @@
 import { XIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "cn";
-import { startChat, sendChatMessage } from "@/features/chat/actions";
-import type { ChatMessage } from "@/features/chat/schema";
+import { askForPerson, sendChatMessage, startChat } from "@/features/chat/actions";
+import type { ChatCard, ChatMessage } from "@/features/chat/schema";
 import { chat as t } from "@/lib/i18n/dictionaries/chat";
 
-type Poll = { enabled: boolean; conversation: { id: string } | null; messages: ChatMessage[] };
+type Status = "ai" | "needs_human" | "human" | "closed";
+type Poll = {
+  enabled: boolean;
+  conversation: { id: string; status: Status } | null;
+  messages: ChatMessage[];
+};
+
+/** While the assistant writes, the window checks more often (for up to a minute). */
+const FAST_POLL_MS = 1500;
+const FAST_POLL_FOR_MS = 60_000;
+const SLOW_POLL_MS = 5000;
+
+/** The page the chat was opened on, so the assistant knows what the visitor is looking at. */
+const pagePath = () => `${window.location.pathname}${window.location.search}`.slice(0, 500);
 
 const field =
   "w-full rounded-xl border border-border bg-surface px-3 py-2 text-[15px] text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent";
+
+/** Listings the assistant showed, with live prices (10 §2: cards instead of long text). */
+function Cards({ cards }: { cards: ChatCard[] }) {
+  return (
+    <ul aria-label={t.listings} className="mt-2 flex flex-col gap-2">
+      {cards.map((c) => (
+        <li key={c.id}>
+          <a
+            href={c.href}
+            className="flex gap-3 rounded-xl border border-border bg-surface p-2 text-ink hover:border-ink focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+          >
+            {c.photo && (
+              // eslint-disable-next-line @next/next/no-img-element -- a small /media thumbnail
+              <img
+                src={`${c.photo.url}${c.photo.url.includes("?") ? "&" : "?"}w=160`}
+                alt=""
+                width={64}
+                height={48}
+                loading="lazy"
+                className="h-12 w-16 shrink-0 rounded-md object-cover"
+              />
+            )}
+            <span className="flex min-w-0 flex-col">
+              <span className="truncate text-[14px] font-semibold">{c.title}</span>
+              <span className="text-[13px]">{c.price}</span>
+              <span className="truncate text-[12px] text-text-muted">{c.facts}</span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 /**
  * The chat window (09 §1 #3): the first message (with name and email or phone when Settings
@@ -20,14 +66,18 @@ export function ChatPanel({
   title,
   greeting,
   askContactFirst,
+  humanButton,
   onClose,
 }: {
   title: string;
   greeting: string;
   askContactFirst: boolean;
+  humanButton: "always" | "after_3";
   onClose: () => void;
 }) {
   const [started, setStarted] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<Status | null>(null);
+  const fastUntil = useRef(0);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "", website: "" });
   const [text, setText] = useState("");
@@ -45,6 +95,7 @@ export function ChatPanel({
       const data = (await res.json()) as Poll;
       if (!data.conversation) return setStarted(false);
       setStarted(true);
+      setStatus(data.conversation.status);
       if (data.messages.length) {
         last.current = data.messages.at(-1)!.createdAt;
         setMessages((cur) =>
@@ -59,14 +110,15 @@ export function ChatPanel({
   }, []);
 
   useEffect(() => {
-    const first = window.setTimeout(() => void load(true), 0);
-    const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") void load();
-    }, 5000);
-    return () => {
-      window.clearTimeout(first);
-      window.clearInterval(id);
+    let timer = 0;
+    let first = true;
+    const tick = () => {
+      if (first || document.visibilityState === "visible") void load(first);
+      first = false;
+      timer = window.setTimeout(tick, Date.now() < fastUntil.current ? FAST_POLL_MS : SLOW_POLL_MS);
     };
+    timer = window.setTimeout(tick, 0);
+    return () => window.clearTimeout(timer);
   }, [load]);
   useEffect(() => {
     panel.current?.querySelector<HTMLElement>("input, textarea")?.focus();
@@ -78,7 +130,7 @@ export function ChatPanel({
   const submitStart = async () => {
     setBusy(true);
     setError(null);
-    const res = await startChat(form).catch(() => null);
+    const res = await startChat({ ...form, page: pagePath() }).catch(() => null);
     setBusy(false);
     if (!res) return setError(t.failed);
     if (!res.ok) {
@@ -86,18 +138,33 @@ export function ChatPanel({
       return setError(res.error);
     }
     setErrors({});
+    fastUntil.current = Date.now() + FAST_POLL_FOR_MS;
     await load(true);
   };
   const submitMessage = async () => {
     if (!text.trim()) return;
     setBusy(true);
     setError(null);
-    const res = await sendChatMessage({ text }).catch(() => null);
+    const res = await sendChatMessage({ text, page: pagePath() }).catch(() => null);
     setBusy(false);
     if (!res?.ok) return setError(res && !res.ok ? res.error : t.failed);
     setText("");
+    fastUntil.current = Date.now() + FAST_POLL_FOR_MS;
     await load();
   };
+  const submitPerson = async () => {
+    setBusy(true);
+    setError(null);
+    const res = await askForPerson().catch(() => null);
+    setBusy(false);
+    if (!res?.ok) return setError(res && !res.ok ? res.error : t.failed);
+    fastUntil.current = Date.now() + FAST_POLL_FOR_MS;
+    await load();
+  };
+  const lastMine = messages.at(-1)?.mine ?? false;
+  const sentByMe = messages.filter((m) => m.mine).length;
+  const showPerson =
+    status === "ai" && messages.length > 0 && (humanButton === "always" || sentByMe >= 3);
   const err = (k: string) =>
     errors[k]?.[0] ? <span className="text-[13px] text-red-700">{errors[k]![0]}</span> : null;
 
@@ -139,9 +206,15 @@ export function ChatPanel({
               {m.mine ? t.you : m.sender === "ai" ? t.assistant : t.team}:{" "}
             </span>
             {m.body}
+            {m.cards.length > 0 && <Cards cards={m.cards} />}
           </li>
         ))}
-        {started && messages.length > 0 && messages.every((m) => m.mine) && (
+        {started && lastMine && status === "ai" && (
+          <li className="self-start text-[13px] text-text-muted" role="status">
+            {t.typing}
+          </li>
+        )}
+        {started && status !== "ai" && messages.length > 0 && messages.every((m) => m.mine) && (
           <li className="self-start text-[13px] text-text-muted">{t.waiting}</li>
         )}
         <li ref={end} aria-hidden />
@@ -220,6 +293,16 @@ export function ChatPanel({
             {t.start}
           </button>
         </form>
+      )}
+      {started && showPerson && (
+        <button
+          type="button"
+          onClick={() => void submitPerson()}
+          disabled={busy}
+          className="mx-3 mt-2 self-start rounded-full border border-border px-3 py-1.5 text-[13px] font-semibold text-ink hover:border-ink disabled:opacity-60"
+        >
+          {t.person}
+        </button>
       )}
       {started && (
         <form
