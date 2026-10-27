@@ -43,29 +43,57 @@ function lastResults(ctx: MockContext): Array<{ name: string; data: Record<strin
 
 const call = (name: string, input: unknown): MockReply => ({ toolCalls: [{ name, input }] });
 
+const REFERENCE = /\b[A-Z]{1,5}-\d{3,7}\b/gi;
+
 function firstTurn(ctx: MockContext): MockReply {
   const text = visitorText(ctx);
-  const ref = pageReference(ctx);
+  const named = [...text.matchAll(REFERENCE)].map((m) => m[0]!.toUpperCase());
+  const ref = named[0] ?? pageReference(ctx);
   if (
     /ignore (all |your |the |previous )*(instructions|rules)|system prompt|reveal your/i.test(text)
   )
     return {
       text: "I can't help with that, but I'm happy to help you find a home or answer questions about our listings.",
     };
+  if (ref && /who is the agent|which agent/i.test(text))
+    return call("get_listing", { reference: ref });
   if (
-    /\b(agent|human|person|someone real|real person)\b|negotiat|discount|drop the price|lower the price|best price|legal|lawyer|tax|complain/i.test(
+    /\b(agent|human|person|someone real|real person)\b|negotiat|discount|drop the price|lower the price|cut the price|best price|legal|lawyer|tax|complain|rude/i.test(
       text,
     )
   )
     return call("request_human", { reason: text.slice(0, 200) });
+  if (named.length >= 2 && /compare|versus|\bvs\b|difference/i.test(text))
+    return call("compare", { references: named.slice(0, 4) });
+  if (ref && /brochure/i.test(text)) {
+    const email = /[\w.+-]+@[\w-]+\.[\w.]+/.exec(text)?.[0];
+    if (!email) return { text: "Of course. Which email address should I send the brochure to?" };
+    return call("send_brochure", { reference: ref, email, name: "Visitor" });
+  }
+  const phone = /\+?\d[\d\s-]{7,}\d/.exec(text)?.[0];
+  const name = /\b(?:I'm|I am|my name is)\s+([A-Z][a-z]+)/.exec(text)?.[1];
+  if (phone && name) return call("save_contact", { name, phone, note: text.slice(0, 300) });
   if (ref && /\b(see|view|visit|tour|viewing|show me (it|the))\b/i.test(text))
     return call("available_slots", { reference: ref });
+  if (ref && /yield|return|\broi\b|rent (it )?out/i.test(text)) {
+    const rent = /([\d,]{4,})\s*(?:a|per)\s*year/i.exec(text)?.[1];
+    return call("rental_return", {
+      reference: ref,
+      ...(rent ? { rentYearly: Number(rent.replace(/,/g, "")) } : {}),
+    });
+  }
   if (ref && /mortgage|monthly|per month|finance/i.test(text))
     return call("mortgage_estimate", { reference: ref });
   if (ref && /\b(near|nearby|distance|how far|school|metro|beach|mall)\b/i.test(text))
     return call("nearby", { reference: ref });
   if (ref && /how much|price|cost|still available|available\?/i.test(text))
     return call("get_listing", { reference: ref });
+  const area =
+    /(?:tell me about|what is|what's|how is)\s+(?:the area of\s+|living in\s+)?([A-Z][\w ]+?)(?: like)?\??$/i.exec(
+      text,
+    )?.[1];
+  if (area && !/\b(fee|process|price)\b/i.test(area))
+    return call("area_info", { area: area.trim() });
   if (/\bfees?\b|process|how do i buy|can foreigners|weekend/i.test(text))
     return call("answer_faq", { question: text });
   return call("search_listings", { text });
@@ -143,6 +171,27 @@ function afterTools(ctx: MockContext): MockReply | null {
             : "I don't know that one. I can ask our team to help you.",
       };
     }
+    case "compare": {
+      const listings = (d.listings as Array<{ title: string; price: string }> | undefined) ?? [];
+      return listings.length
+        ? {
+            text: `Side by side: ${listings.map((l) => `${l.title} (${l.price})`).join(" vs ")}.`,
+          }
+        : { text: "I couldn't find those listings to compare." };
+    }
+    case "area_info":
+      if (!d.found) return { text: "I don't know that area, I'm afraid." };
+      return {
+        text: `${String(d.name)}: ${(d.liveListings as { forSale: number }).forSale} homes for sale and ${(d.liveListings as { forRent: number }).forRent} for rent right now.`,
+      };
+    case "rental_return":
+      return d.grossYieldPct !== undefined
+        ? { text: `As an estimate, the gross yield would be about ${String(d.grossYieldPct)}%.` }
+        : { text: "I can't work that out without the yearly rent. What rent do you expect?" };
+    case "save_contact":
+      return { text: "Thanks, I've passed your details to the team. Someone will call you back." };
+    case "send_brochure":
+      return { text: `Done, the brochure is on its way to ${String(d.to)}.` };
     case "mortgage_estimate":
       return d.monthlyPayment
         ? {
