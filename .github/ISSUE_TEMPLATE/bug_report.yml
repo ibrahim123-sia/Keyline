@@ -1,0 +1,43 @@
+name: Bug report
+description: Something in Propel does not work as it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to …
+        2. Click …
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Public website
+        - Customer area
+        - Admin portal
+        - AI assistants or MCP
+        - Emails, PDFs or jobs
+        - Setup, deploy or CI
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where
+      description: Environment (local, staging, production), browser and the page address.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Never paste secrets, API keys or personal data of customers.
