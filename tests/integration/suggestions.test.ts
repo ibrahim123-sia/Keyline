@@ -45,10 +45,10 @@ describe("dashboard suggestions (10 §3 Suggest)", () => {
     const db = await getDb();
     const contactId = newId();
     await db.insert(contacts).values({ id: contactId, name: "Hot Lead" });
-    await db.insert(leads).values({ contactId, source: "website", aiScore: 82 });
+    await db.insert(leads).values({ contactId, source: "form", aiScore: 82 });
     const [warm] = await db
       .insert(leads)
-      .values({ contactId, source: "website", aiScore: 85, type: "tenant" })
+      .values({ contactId, source: "form", aiScore: 85, type: "tenant" })
       .returning({ id: leads.id });
     // The second one already has a viewing.
     await db.insert(viewings).values({
