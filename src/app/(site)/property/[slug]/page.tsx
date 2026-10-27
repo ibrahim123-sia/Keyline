@@ -55,9 +55,14 @@ export const instant = false;
 const appUrl = () => (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
 /** "Garden villa · Pier Seven, 7 Quay Road, Old Harbour, Coastal City" — never the unit number. */
+/** Building, address and the place path, each name once ("Dubai Marina" is often in all three). */
 function addressLine(l: PublicListing): string {
   const places = [...l.places].reverse().map((p) => p.name);
-  return [l.buildingName, l.addressLine, ...places].filter(Boolean).join(", ");
+  const parts = [l.buildingName, ...(l.addressLine ?? "").split(","), ...places]
+    .map((p) => p?.trim())
+    .filter((p): p is string => Boolean(p));
+  const seen = new Set<string>();
+  return parts.filter((p) => !seen.has(p.toLowerCase()) && seen.add(p.toLowerCase())).join(", ");
 }
 
 export async function generateMetadata(props: PageProps<"/property/[slug]">): Promise<Metadata> {
