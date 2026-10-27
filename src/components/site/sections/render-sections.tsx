@@ -275,7 +275,8 @@ function PromiseStrip({ s }: { s: Extract<Section, { type: "promise_strip" }> })
               </span>
             )}
             <div>
-              <h3 className="text-[17px] font-semibold text-ink">{item.title}</h3>
+              {/* The strip has no heading of its own, so its items are the next level. */}
+              <h2 className="text-[17px] font-semibold text-ink">{item.title}</h2>
               <p className="mt-1 text-[14.5px] text-text">{item.text}</p>
             </div>
           </li>
