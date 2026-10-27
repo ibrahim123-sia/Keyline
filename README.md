@@ -16,11 +16,17 @@ One agency installs Propel and runs its whole business from it: listings and pro
 website and blog, SEO, leads from every channel, viewings, the customer area and buyer tools, with
 an AI assistant for visitors and another for the team.
 
+<p align="center">
+  <img src=".github/screenshots/home.jpg" alt="The demo agency's home page with the search card" width="49%">
+  <img src=".github/screenshots/admin-dashboard.jpg" alt="The admin dashboard with KPIs, a leads chart and suggestions" width="49%">
+</p>
+
 ---
 
 ## Contents
 
 - [Features](#features)
+- [Screenshots](#screenshots)
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
 - [Demo data](#demo-data)
@@ -52,6 +58,21 @@ an AI assistant for visitors and another for the team.
 Everything the agency sees is configurable from Settings: branding, market (currency, units,
 time zone), contact details, integrations, lead rules and AI behaviour. Nothing about a market or
 an agency is hard-coded.
+
+## Screenshots
+
+All taken from the demo agency (Haven & Dune) on the production build. Refresh them with
+`SCREENSHOTS=1 E2E_MODE=prod pnpm exec playwright test tests/e2e/screenshots.spec.ts`.
+
+| Search with the map                                                                                            | A listing                                                                                            |
+| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| ![Homes for sale with filters, list and map with price clusters](.github/screenshots/search.jpg)               | ![A listing page with the gallery, key facts and the agent card](.github/screenshots/property.jpg)   |
+| **The property editor**                                                                                        | **The admin assistant**                                                                              |
+| ![The property editor with sections, completeness and autosave](.github/screenshots/admin-property-editor.jpg) | ![The admin assistant answering a question about a listing](.github/screenshots/admin-assistant.jpg) |
+
+<p align="center">
+  <img src=".github/screenshots/property-phone.jpg" alt="A listing on a phone with the sticky Book a tour and WhatsApp bar" width="300">
+</p>
 
 ## Tech stack
 
