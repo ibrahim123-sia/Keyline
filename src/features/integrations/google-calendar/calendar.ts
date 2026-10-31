@@ -8,7 +8,8 @@ import { agents } from "@/db/schema/people";
 import { projects } from "@/db/schema/projects";
 import { properties } from "@/db/schema/properties";
 import { loadSettings } from "@/features/settings/queries";
-import { getSecret, recordSecretTest } from "@/features/settings/secrets";
+import { getSecret } from "@/features/settings/secrets";
+import { recordIntegrationResult } from "@/features/system/alerts";
 import { siteOrigin } from "@/features/site/url";
 import { zonedTime } from "@/features/viewings/slots";
 import { defineJob } from "@/jobs/types";
@@ -431,7 +432,11 @@ export async function testGoogleCalendar(db?: DbOrTx) {
       };
     } else result = { ok: false, message };
   }
-  await recordSecretTest("google_oauth_client_secret", result.ok ? null : result.message, conn);
+  await recordIntegrationResult(
+    "google_oauth_client_secret",
+    result.ok ? null : result.message,
+    conn,
+  );
   return result;
 }
 

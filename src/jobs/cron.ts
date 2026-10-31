@@ -14,7 +14,10 @@ import { refreshStalePois, refreshStaleProjectPois } from "@/features/pois/dista
 import { dailyListingMaintenance } from "@/features/properties/maintenance";
 import { CRAWL_JOB } from "@/features/seo/crawl-job";
 import { pruneNotFound } from "@/features/seo/not-found-log";
+import { queueDailySummary } from "@/features/reports/daily";
 import { queueWeeklyReport } from "@/features/reports/weekly";
+import { remindExchangeRates } from "@/features/system/alerts";
+import { runRetention } from "@/features/system/retention";
 import { enqueue } from "./enqueue";
 import { loadSettings } from "@/features/settings/queries";
 import { queueViewingReminders } from "@/features/viewings/notify";
@@ -138,8 +141,24 @@ export const cronTasks: CronTask[] = [
     due: at(0, 15),
     run: async () => dailyListingMaintenance(await getDb()),
   },
+  // Daily summary to admins (13 §3): checked every 5 minutes, sent once a day from the time
+  // in Settings -> Notifications.
+  {
+    name: "reports.daily-summary",
+    schedule: "every 5 minutes (sends once a day from the time in Settings -> Notifications)",
+    due: every(5),
+    run: async () => queueDailySummary(await getDb()),
+    quiet: true,
+  },
   // Daily 02:00-03:30: clean-ups and repairs.
   { name: "rate-limits.purge", schedule: "daily at 02:00", due: at(2), run: () => purgeExpired() },
+  // 04 §11, 14 §3: old guest chats, lost leads past their months, visitor events after 180 days.
+  {
+    name: "data-retention",
+    schedule: "daily at 02:10",
+    due: at(2, 10),
+    run: async () => runRetention(await getDb()),
+  },
   {
     name: "seo.not-found-prune",
     schedule: "daily at 03:15",
@@ -199,6 +218,13 @@ export const cronTasks: CronTask[] = [
     schedule: "monthly on the 1st at 03:00",
     due: (t) => t.day === 1 && at(3)(t),
     run: async () => computeLastMonthPriceStats(await getDb()),
+  },
+  // Monthly (13 §2): a reminder when the visitor currencies' display rates are a month old.
+  {
+    name: "rates.reminder",
+    schedule: "monthly on the 1st at 09:00",
+    due: (t) => t.day === 1 && at(9)(t),
+    run: async () => remindExchangeRates(await getDb()),
   },
   // Monthly: distances to nearby places older than 90 days are measured again (07 §4.7).
   {

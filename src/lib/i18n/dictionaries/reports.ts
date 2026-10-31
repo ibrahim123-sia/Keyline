@@ -277,6 +277,14 @@ export const reports = {
     signInNote: "The links open in the admin; you may be asked to sign in.",
     preview: "Leads {leads}, viewings {viewings}, won {won}",
   },
+  daily: {
+    subject: "{agency}: daily summary for {day}",
+    heading: "Yesterday, and what is waiting today",
+    intro: "Here is how {day} went, compared with the day before.",
+    viewingsToday: "Viewings today",
+    waitingReply: "Leads waiting for a first reply",
+    preview: "Leads {leads}, viewings today {today}, waiting for a reply {waiting}",
+  },
   settings: {
     title: "Weekly report email",
     description:

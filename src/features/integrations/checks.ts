@@ -1,7 +1,8 @@
 import "server-only";
 import type { DbOrTx } from "@/db/client";
 import { loadSettings } from "@/features/settings/queries";
-import { getSecret, recordSecretTest } from "@/features/settings/secrets";
+import { getSecret } from "@/features/settings/secrets";
+import { recordIntegrationResult } from "@/features/system/alerts";
 import type { SecretKey, SettingsOf } from "@/features/settings/schema";
 import { aiProviderLabels } from "@/features/ai/provider-labels";
 import { gatewayBase } from "@/features/ai/providers/http";
@@ -55,7 +56,7 @@ async function check(
         : `Could not connect: ${(err as Error).message}`,
     };
   }
-  await recordSecretTest(key, result.ok ? null : result.message, db);
+  await recordIntegrationResult(key, result.ok ? null : result.message, db);
   return result;
 }
 
