@@ -258,6 +258,9 @@ export const reports = {
       handedOver: "Handed to the team",
       viewings: "Viewings booked by AI",
       cost: "AI cost",
+      answers: "Answers by the assistant",
+      grounded: "Answers backed by a search",
+      flagged: "Answers flagged as bad",
     },
     table: "AI",
     columns: { metric: "Metric", value: "This period" },
@@ -266,6 +269,7 @@ export const reports = {
       "Conversations handled: conversations where the assistant replied in the period. Handed to the team: of those, the ones a person took over or that wait for a person.",
       "Viewings booked by AI: viewings booked in the period from the website chat or WhatsApp.",
       "AI cost: the estimated spend of every AI feature in the period (assistants, helpers, scoring, summaries, search index), in US dollars.",
+      "Answers backed by a search: the share of the assistant's answers that looked something up first (listings, projects, places, FAQs, prices, free viewing times); greetings and questions back count as not backed. Flagged: answers a person marked as bad in the inbox.",
     ],
   },
   weekly: {
