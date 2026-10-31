@@ -377,6 +377,7 @@ export default async function ProjectPage(props: PageProps<"/projects/[slug]">) 
                 notes={p.plan.notes}
                 headingLevel={2}
                 price={p.startingPrice ? { amount: p.startingPrice, currency } : null}
+                scheduleHref={`/api/brochure/project/${p.id}/schedule`}
               />
             </div>
           )}

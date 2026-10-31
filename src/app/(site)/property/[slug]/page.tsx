@@ -245,6 +245,7 @@ export default async function PropertyPage(props: PageProps<"/property/[slug]">)
               <Section id="plan" title={t.plan.title}>
                 <PaymentPlanView
                   headingLevel={3}
+                  scheduleHref={`/api/brochure/property/${l.id}/schedule`}
                   steps={l.plan.steps}
                   summaryLabel={l.plan.summaryLabel}
                   notes={l.plan.notes}
