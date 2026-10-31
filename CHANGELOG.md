@@ -48,6 +48,16 @@ All notable changes to Propel. Format: [Keep a Changelog](https://keepachangelog
 - Security headers and a CSP (with a report-only switch), structured logs; System page: overdue and stuck jobs, late scheduled tasks and the release tag.
 - A US-style demo preset (Maple & Main Realty) next to Haven & Dune, with seed data that follows the market settings.
 - README screenshots, refreshed with `SCREENSHOTS=1` and Playwright.
+- AI providers: xAI (Grok) and Google (Gemini) next to Anthropic, and a backup provider that answers when the main one fails.
+- Daily summary email to admins, an email and an admin banner when an integration stops working, and a monthly reminder to check exchange rates.
+- Nightly data retention: old guest chats, people whose leads were lost long ago, and visitor events after 180 days.
+- Data download as a PDF too; emails when an account is deleted and when its data is downloaded.
+- Page builder: a Tools section and an AI assistant teaser whose questions open the chat; "Hide the chat button on this page".
+- Newsletter signup under blog posts; payment schedule PDF on listing and project pages.
+- Listing descriptions: "Improve" and "Shorten" next to "Write with AI".
+- Inbox: flag a bad assistant answer; the AI report shows answers, the share backed by a lookup and the flagged ones.
+- Google Meet links for video viewings, from the agent's calendar event.
+- Every server error is logged with the release tag, route and request id.
 
 ### Performance
 
@@ -56,6 +66,7 @@ All notable changes to Propel. Format: [Keep a Changelog](https://keepachangelog
 
 ### Fixed
 
+- No CSP violation report from the form checks on sign-in and other pages.
 - The home page search card no longer squeezes the area field in narrow columns.
 - A listing's address line names each place once ("Dubai Marina, Dubai", not "Dubai Marina, Dubai Marina, ...").
 - Lighthouse accessibility 100 and SEO 100 on the home, search and listing pages on a phone.
