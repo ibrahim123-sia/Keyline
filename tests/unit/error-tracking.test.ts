@@ -24,7 +24,6 @@ describe("server error tracking (14 §5)", () => {
         routeType: "render",
         renderSource: "server-rendering",
         revalidateReason: undefined,
-        renderType: "dynamic",
       },
     );
     expect(spy).toHaveBeenCalledTimes(1);
