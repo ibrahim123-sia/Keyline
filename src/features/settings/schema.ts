@@ -384,6 +384,7 @@ export const secretKeys = [
   "resend_webhook_secret",
   "google_oauth_client_secret",
   "ai_api_key",
+  "ai_fallback_api_key",
   "ai_gateway_token",
   "social_meta_secret",
   "social_tiktok_secret",
@@ -513,9 +514,16 @@ export const integrationsSchema = z.object({
   ai: z
     .object({
       enabled: z.boolean(),
-      provider: z.enum(["anthropic", "mock"]),
+      provider: z.enum(["xai", "gemini", "anthropic", "mock"]),
       chatModel: z.string().max(80),
       fastModel: z.string().max(80),
+      /**
+       * A second provider asked when the first fails (down, overloaded, out of credit), with
+       * its own key (`ai_fallback_api_key`) and models for the same two tiers.
+       */
+      fallbackProvider: z.enum(["none", "xai", "gemini", "anthropic"]).default("none"),
+      fallbackChatModel: z.string().trim().max(80).default(""),
+      fallbackFastModel: z.string().trim().max(80).default(""),
       gatewayAccountId: z.string().max(80),
       gatewayName: z.string().max(80),
       /**
@@ -530,6 +538,9 @@ export const integrationsSchema = z.object({
       provider: "mock",
       chatModel: "claude-sonnet-5-5",
       fastModel: "claude-haiku-5-5",
+      fallbackProvider: "none",
+      fallbackChatModel: "",
+      fallbackFastModel: "",
       gatewayAccountId: "",
       gatewayName: "",
       embeddingProvider: "mock",
