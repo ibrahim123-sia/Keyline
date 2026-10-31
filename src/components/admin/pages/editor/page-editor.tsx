@@ -743,6 +743,7 @@ export function PageEditor({
           ogImageId: meta.ogImageId,
           canonicalUrl: meta.canonicalUrl,
           noindex: meta.noindex,
+          hideChat: meta.hideChat,
         }}
         isHome={meta.isHome}
         published={published}

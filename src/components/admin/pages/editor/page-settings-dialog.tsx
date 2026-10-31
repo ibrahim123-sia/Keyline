@@ -2,7 +2,7 @@
 
 import { useId, useState, type ComponentProps } from "react";
 import { cn } from "cn";
-import { TextInputField } from "@/components/admin/fields";
+import { SwitchField, TextInputField } from "@/components/admin/fields";
 import { SeoFields, type SeoValues } from "@/components/admin/seo-fields";
 import { Button } from "@/components/ui/button";
 import {
@@ -175,6 +175,12 @@ function SettingsForm({
               </label>
             ))}
           </fieldset>
+          <SwitchField
+            label="Hide the chat button on this page"
+            description="For pages that should keep visitors on one form, such as an ad landing page."
+            checked={values.hideChat}
+            onChange={(hideChat) => setValues((v) => ({ ...v, hideChat }))}
+          />
           <SeoFields
             values={seo}
             onChange={(patch) => {
