@@ -5,6 +5,7 @@ import { Breadcrumb } from "@/components/site/breadcrumb";
 import { PostBody } from "@/components/site/content/post-body";
 import { PostCard, postDate } from "@/components/site/content/post-card";
 import { ShareLinks } from "@/components/site/content/share-links";
+import { FooterSignup } from "@/components/site/newsletter/footer-signup";
 import { ViewBeacon } from "@/components/site/content/view-beacon";
 import { JsonLd } from "@/components/site/json-ld";
 import { ListingCard } from "@/components/site/listings/listing-card";
@@ -78,7 +79,11 @@ export default async function PostPage(props: PageProps<"/insights/[slug]">) {
   const t = content.insights;
   const origin = siteOrigin();
   const url = siteUrl(`/insights/${p.slug}`);
-  const [general, org] = await Promise.all([getSettings("general"), publisher(origin)]);
+  const [general, org, website] = await Promise.all([
+    getSettings("general"),
+    publisher(origin),
+    getSettings("website"),
+  ]);
   const zone = general.timeZone;
 
   return (
@@ -171,6 +176,9 @@ export default async function PostPage(props: PageProps<"/insights/[slug]">) {
           )}
           <ShareLinks url={url} title={p.title} />
         </div>
+
+        {/* 06 §9: when the agency runs a newsletter (Website -> Menus -> Footer). */}
+        {website.footer.newsletter && <FooterSignup place="blog" />}
 
         {p.relatedPropertyIds.length > 0 && (
           <Suspense>
