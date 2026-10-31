@@ -52,6 +52,7 @@ All notable changes to Propel. Format: [Keep a Changelog](https://keepachangelog
 ### Performance
 
 - The map stylesheet loads with the map, page builder forms check input without Zod in the browser, and dialogs, the phone menu and the header menus load their code the first time they open.
+- Public pages no longer send their page data twice: a listing page's HTML is about a third smaller (47.7 KB to 30.9 KB compressed). Admin keeps one shared prefetch per screen.
 
 ### Fixed
 

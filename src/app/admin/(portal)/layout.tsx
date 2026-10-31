@@ -9,6 +9,9 @@ import { admin } from "@/lib/i18n";
 
 // Every admin screen depends on the signed-in admin; blocking on the server is fine here.
 export const instant = false;
+// Admin tables and the sidebar hold many links: one shared App Shell per route instead of a
+// prefetch per link. The public site keeps the per-link default (next.config.ts).
+export const prefetch = "partial";
 
 export default async function AdminPortalLayout({ children }: LayoutProps<"/admin">) {
   const { user } = await requireAdminPage();
